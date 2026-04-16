@@ -63,10 +63,10 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
   return (
     <header className="glass-nav sticky top-0 left-0 right-0 z-40 px-4 md:px-6 py-3 md:py-4 flex justify-between items-center md:bg-transparent md:backdrop-blur-none md:border-none">
       <div className="flex items-center gap-1.5 md:gap-2 md:hidden shrink-0">
-        <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center overflow-hidden">
+        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center overflow-hidden">
           <img src="/logo.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
         </div>
-        <h1 className="text-lg md:text-xl tracking-tight font-display font-bold text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
+        <h1 className="text-xl md:text-2xl tracking-tight font-display font-bold text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
       </div>
       
       <div className="hidden md:block">
@@ -179,8 +179,8 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
             </div>
           </button>
           <div className="hidden lg:block">
-            <p className="text-xs font-bold leading-none">{userProfile?.displayName || 'Usuario'}</p>
-            <p className="text-[10px] text-vuttik-text-muted">{ROLE_LABELS[userRole] || 'Comprador'}</p>
+            <p className="text-xs font-bold leading-none">{userProfile?.displayName || userProfile?.display_name || 'Mi Cuenta'}</p>
+            <p className="text-[10px] text-vuttik-text-muted">{ROLE_LABELS[userProfile?.role || userRole] || 'Comprador'}</p>
           </div>
         </div>
       </div>

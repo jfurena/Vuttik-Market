@@ -1,9 +1,17 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Lock, User, ArrowRight, CheckCircle2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { api } from '../lib/api';
-import {
-  GoogleAuthProvider,
+import { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  FacebookAuthProvider,
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface AuthProps {
   onLogin: () => void;
@@ -251,16 +259,17 @@ export default function Auth({ onLogin }: AuthProps) {
       </div>
 
       {/* Form Side */}
-      <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 md:px-16 lg:px-24 py-8 md:py-12 bg-vuttik-gray md:bg-white overflow-y-auto">
-        <div className="max-w-md w-full mx-auto">
+      <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 md:px-16 lg:px-24 py-8 md:py-12 bg-white relative overflow-y-auto">
+        <div className="absolute inset-0 md:hidden bg-gradient-to-br from-white via-vuttik-gray/30 to-vuttik-blue/5 z-0" />
+        <div className="max-w-md w-full mx-auto relative z-10">
           {/* Mobile Logo */}
-          <div className="md:hidden flex flex-col items-center gap-4 mb-10 text-center">
-            <div className="w-28 h-28 flex items-center justify-center overflow-hidden bg-white rounded-[2rem] shadow-xl p-4 transition-transform hover:scale-105">
+          <div className="md:hidden flex flex-col items-center gap-6 mb-12 text-center">
+            <div className="w-40 h-40 flex items-center justify-center overflow-hidden bg-white rounded-[3rem] shadow-2xl p-6 transition-transform hover:scale-105 border border-vuttik-gray">
               <img src="/logo.png" alt="Vuttik Logo" className="w-full h-full object-contain" />
             </div>
             <div className="mt-2">
-              <h1 className="text-3xl tracking-tight font-display font-black text-vuttik-navy leading-none">Vuttik</h1>
-              <span className="text-vuttik-blue font-display font-bold text-xl">Market</span>
+              <h1 className="text-4xl tracking-tight font-display font-black text-vuttik-navy leading-none">Vuttik</h1>
+              <span className="text-vuttik-blue font-display font-bold text-2xl">Market</span>
             </div>
           </div>
 

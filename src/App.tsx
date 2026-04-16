@@ -23,6 +23,9 @@ import ProductDetails from './components/ProductDetails';
 import PublishSelection from './components/PublishSelection';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from './lib/api';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { auth } from './lib/firebase';
+import { trackMetric } from './utils/metrics';
 import { Ban } from 'lucide-react';
 
 export default function App() {
@@ -54,13 +57,15 @@ export default function App() {
     if (user) {
       const loadProfile = async () => {
         try {
+          console.log('[DEBUG] Loading profile for UID:', user.uid);
           const profile = await api.getUser(user.uid);
+          console.log('[DEBUG] Profile loaded successfully:', profile);
           setUserProfile(profile);
           
           // Note: In SQL migration, plan info is currently embedded or fetched separately
-          // For now, we use a default plan if not found
           setUserPlan({ id: profile.plan_id || 'free', name: profile.plan_id || 'free', features: ['profile', 'settings'] });
         } catch (err) {
+          console.error('[DEBUG] Failed to load profile from SQL:', err);
           if (user.email === 'jfurena02@gmail.com') {
             const ownerProfile = {
               uid: user.uid,

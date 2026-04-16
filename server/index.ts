@@ -4,7 +4,7 @@ import { initDB, run, all, get } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3005;
 
 app.use(cors());
 app.use(express.json());
@@ -172,5 +172,5 @@ app.post('/api/metrics', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Vuttik SQL API server running on port ${port}`);
+  console.log(`SQL Backend running at http://localhost:${port}`);
 });

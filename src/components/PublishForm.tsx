@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { trackMetric } from '../utils/metrics';
 import LocationInput from './LocationInput';
 import { api } from '../lib/api';
+import { auth } from '../lib/firebase';
+import { Product } from '../types/index';
 
 interface CategoryField {
   id: string;
