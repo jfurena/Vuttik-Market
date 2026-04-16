@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+
+  --color-vuttik-navy: #002B49;
+  --color-vuttik-blue: #3B82F6;
+  --color-vuttik-sky: #60A5FA;
+  --color-vuttik-cyan: #22D3EE;
+  --color-vuttik-gray: #F8FAFC;
+  --color-vuttik-text-muted: #64748B;
+
+  --radius-vuttik: 22px;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-vuttik-navy font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold;
+  }
+}
+
+@layer components {
+  .glass-nav {
+    @apply bg-white/70 backdrop-blur-xl border-b border-white/20;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-xl shadow-vuttik-navy/5;
+  }
+
+  .bottom-nav {
+    @apply md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-gray-100 px-6 pt-3 flex justify-between items-center z-50;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 1rem));
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-2xl text-vuttik-text-muted hover:bg-vuttik-blue/5 hover:text-vuttik-blue transition-all duration-200 font-semibold;
+  }
+
+  .sidebar-link.active {
+    @apply bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20;
+  }
+
+  .nav-item {
+    @apply flex flex-col items-center justify-center gap-1 text-vuttik-text-muted transition-colors duration-200;
+  }
+
+  .nav-item.active {
+    @apply text-vuttik-blue;
+  }
+
+  .vuttik-button {
+    @apply bg-vuttik-blue text-white font-semibold px-6 py-4 rounded-[20px] shadow-lg shadow-vuttik-blue/30 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom Leaflet Styles */
+.custom-div-icon {
+  background: transparent;
+  border: none;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 0;
+}
+
+.custom-popup .leaflet-popup-tip-container {
+  display: none;
+}

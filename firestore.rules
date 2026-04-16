@@ -1,0 +1,216 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (auth.uid)
+    // Fields:
+    //   - email: string
+    //   - displayName: string
+    //   - role: string (user, admin, mega_guardian, guardian, business, negocio)
+    //
+    // Collection: businessProfiles
+    // Document ID: userId (auth.uid)
+    // Fields:
+    //   - name: string
+    //   - description: string
+    //   - location: string
+    //   - socialLinks: map (instagram, facebook, twitter, website)
+    //   - workingHours: string
+    //   - logo: string
+    //   - banner: string
+    //   - metrics: map (views, followers, sales)
+    //   - inventory: list (productIds)
+    //
+    // Collection: categories
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string
+    //   - icon: string
+    //   - allowedTypes: list (strings)
+    //   - order: number
+    //   - active: bool
+    //
+    // Collection: transactionTypes
+    // Document ID: typeId (e.g., sell, buy)
+    // Fields:
+    //   - id: string
+    //   - label: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isMegaGuardian() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'mega_guardian') ||
+        (request.auth.token.email == "jfurena02@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isGuardian() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'guardian') ||
+        isMegaGuardian()
+      );
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "jfurena02@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isNegocio() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'negocio') ||
+        isMegaGuardian()
+      );
+    }
+
+    function isValidBusinessProfile(data) {
+      return data.name is string && data.name.size() > 0 &&
+             (!('description' in data) || data.description is string) &&
+             (!('location' in data) || data.location is string) &&
+             (!('socialLinks' in data) || data.socialLinks is map) &&
+             (!('workingHours' in data) || data.workingHours is string);
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.allowedTypes is list &&
+             data.order is number &&
+             (!('icon' in data) || data.icon is string) &&
+             (!('active' in data) || data.active is bool) &&
+             (!('description' in data) || data.description is string) &&
+             (!('fields' in data) || data.fields is list) &&
+             (!('systemFields' in data) || data.systemFields is map);
+    }
+
+    function isValidTransactionType(data) {
+      return data.label is string && data.label.size() > 0 &&
+             (!('icon' in data) || data.icon is string) &&
+             (!('active' in data) || data.active is bool);
+    }
+
+    function isValidProductSchema(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.price is number && data.price >= 0 &&
+             data.categoryId is string &&
+             data.authorId is string &&
+             (!('description' in data) || (data.description is string && data.description.size() < 2000)) &&
+             (!('barcode' in data) || (data.barcode is string && data.barcode.size() < 50)) &&
+             (!('isOnSale' in data) || data.isOnSale is bool) &&
+             (!('salePrice' in data) || (data.salePrice is number && data.salePrice >= 0));
+    }
+
+    function isValidSubscriptionPlan(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.price is number && data.price >= 0 &&
+             data.features is list;
+    }
+
+    function isValidPost(data) {
+      return data.authorId is string && data.authorId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() > 0 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
+             (!('image' in data) || (data.image is string && data.image.size() < 1000)) &&
+             (!('location' in data) || (data.location is string && data.location.size() < 200)) &&
+             (!('isVerified' in data) || data.isVerified is bool);
+    }
+
+    function isValidPromotion(data) {
+      return data.businessId is string && data.businessId == request.auth.uid &&
+             data.targetType in ['post', 'product'] &&
+             data.targetId is string &&
+             data.audience in ['global', 'segmented'] &&
+             data.budget is number && data.budget >= 0 &&
+             data.status in ['pending', 'active', 'completed'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isMegaGuardian();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isMegaGuardian();
+    }
+
+    match /transactionTypes/{typeId} {
+      allow read: if true;
+      allow write: if isMegaGuardian();
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidProductSchema(request.resource.data) && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        // Owner can update everything
+        (request.auth.uid == resource.data.authorId && isValidProductSchema(request.resource.data) && request.resource.data.authorId == resource.data.authorId) ||
+        // Guardians can update status
+        (isGuardian() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])) ||
+        // Any user can vote
+        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['upVotes', 'downVotes']) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upVotes', 'downVotes']))
+      );
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.authorId || isAdmin());
+    }
+
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidSubscriptionPlan(request.resource.data);
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidPost(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.authorId && isValidPost(request.resource.data)) ||
+        // Allow users to like/unlike posts
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']))
+      );
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.authorId || isAdmin());
+    }
+
+    match /promotions/{promotionId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.businessId || isAdmin());
+      allow create: if isAuthenticated() && isValidPromotion(request.resource.data);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /businessProfiles/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidBusinessProfile(request.resource.data);
+    }
+    
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
