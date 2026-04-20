@@ -5,6 +5,7 @@ import ProductCard, { ProductCardProps } from './ProductCard';
 import OfferMap from './OfferMap';
 import { api } from '../lib/api';
 import { auth } from '../lib/firebase';
+import { trackMetric } from '../utils/metrics';
 
 interface Category {
   id: string;
@@ -81,12 +82,37 @@ export default function P2PBoard({
   useEffect(() => {
     setActiveCategory(initialCategory);
     setP2pType(initialType);
+    
+    // Tracking
+    trackMetric({
+      userId: auth.currentUser?.uid || 'anonymous',
+      action: 'view',
+      targetId: initialCategory,
+      targetType: 'category'
+    });
   }, [initialCategory, initialType]);
 
+  // Debounced Search Tracking
   useEffect(() => {
-    const currentCat = categories.find(c => c.id === activeCategory);
-    if (currentCat && !currentCat.allowedTypes.includes(p2pType)) {
-      setP2pType(currentCat.allowedTypes[0]);
+    if (!searchQuery) return;
+    const timer = setTimeout(() => {
+      trackMetric({
+        userId: auth.currentUser?.uid || 'anonymous',
+        action: 'search',
+        targetId: searchQuery,
+        targetType: 'category', // Using category as general bucket for now
+        metadata: { query: searchQuery, category: activeCategory }
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeCategory]);
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      const currentCat = categories.find(c => c.id === activeCategory);
+      if (currentCat && currentCat.allowedTypes && !currentCat.allowedTypes.includes(p2pType)) {
+        setP2pType(currentCat.allowedTypes[0]);
+      }
     }
   }, [activeCategory, categories]);
 
@@ -180,8 +206,9 @@ export default function P2PBoard({
         {transactionTypes
           .filter(type => {
             if (activeCategory === 'GLOBAL') return true;
+            if (categories.length === 0) return false;
             const currentCat = categories.find(c => c.id === activeCategory);
-            return currentCat?.allowedTypes.includes(type.id);
+            return currentCat?.allowedTypes?.includes(type.id);
           })
           .map((type) => (
             <button

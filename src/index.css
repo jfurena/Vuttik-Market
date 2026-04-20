@@ -6,11 +6,12 @@
   --font-display: "Outfit", sans-serif;
 
   --color-vuttik-navy: #002B49;
+  --color-vuttik-deep: #020D1A;
   --color-vuttik-blue: #3B82F6;
   --color-vuttik-sky: #60A5FA;
   --color-vuttik-cyan: #22D3EE;
   --color-vuttik-gray: #F8FAFC;
-  --color-vuttik-text-muted: #64748B;
+  --color-vuttik-text-muted: #94A3B8;
 
   --radius-vuttik: 22px;
 }
@@ -58,6 +59,68 @@
 
   .vuttik-button {
     @apply bg-vuttik-blue text-white font-semibold px-6 py-4 rounded-[20px] shadow-lg shadow-vuttik-blue/30 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2;
+  }
+
+  /* Auth UI Redesign */
+  .vuttik-input-group {
+    @apply relative mb-4;
+  }
+
+  .vuttik-input-field {
+    @apply w-full bg-transparent border-2 border-white/5 rounded-[20px] px-12 py-4 text-white focus:bg-white/5 focus:border-vuttik-blue/40 focus:ring-4 focus:ring-vuttik-blue/5 transition-all duration-300 outline-none placeholder:opacity-0;
+  }
+
+  .vuttik-floating-label {
+    @apply absolute left-12 top-1/2 -translate-y-1/2 text-vuttik-text-muted/60 font-medium pointer-events-none transition-all duration-300;
+  }
+
+  .vuttik-input-field:focus ~ .vuttik-floating-label,
+  .vuttik-input-field:not(:placeholder-shown) ~ .vuttik-floating-label {
+    @apply top-2 scale-75 -translate-y-1/2 text-vuttik-cyan font-bold opacity-100;
+  }
+
+  .social-button {
+    @apply flex items-center justify-center gap-3 bg-white/5 border border-white/10 py-3.5 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm active:scale-95 text-white;
+  }
+
+  .stitch-hero-text {
+    @apply text-5xl md:text-7xl font-display font-black tracking-tighter leading-[0.9] text-white;
+  }
+
+  .mesh-gradient-premium {
+    background: radial-gradient(circle at 50% 50%, #003861 0%, #002B49 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-split-layout {
+    @apply grid grid-cols-1 lg:grid-cols-2 min-h-screen bg-vuttik-navy overflow-hidden;
+  }
+
+  .hero-spotlight {
+    @apply absolute inset-0 opacity-40;
+    background: radial-gradient(circle at center, var(--color-vuttik-blue) 0%, transparent 70%);
+    filter: blur(100px);
+  }
+
+  .hero-pane {
+    @apply hidden lg:flex flex-col items-center justify-center p-12 relative overflow-hidden bg-vuttik-navy/90;
+  }
+
+  .form-pane {
+    @apply flex items-center justify-center p-6 md:p-12 relative z-10 bg-[#001f35];
+  }
+
+  .mesh-gradient-premium::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, hsla(217,91%,60%,0.08) 0, transparent 50%);
+    pointer-events: none;
+  }
+
+  .logo-box {
+    @apply bg-white/5 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden p-2;
   }
 }
 

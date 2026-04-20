@@ -3,12 +3,19 @@
  */
 
 async function request(path: string, options: RequestInit = {}) {
+  const token = localStorage.getItem('vuttik_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as any),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(path, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -20,6 +27,13 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 export const api = {
+  // Auth
+  register: (data: any) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  login: (data: any) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  googleCallback: (data: any) => request('/api/auth/google/callback', { method: 'POST', body: JSON.stringify(data) }),
+  facebookCallback: (data: any) => request('/api/auth/facebook/callback', { method: 'POST', body: JSON.stringify(data) }),
+  getMe: () => request('/api/auth/me'),
+
   // Users
   getUser: (uid: string) => request(`/api/users/${uid}`),
   saveUser: (userData: any) => request('/api/users', {
@@ -50,4 +64,9 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(metricData),
   }),
+
+  // Stats
+  getMegaGuardianStats: () => request('/api/stats/mega-guardian'),
+  getTrends: () => request('/api/stats/trends'),
+  getBusinessStats: (userId: string) => request(`/api/stats/business/${userId}`),
 };

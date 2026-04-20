@@ -7,6 +7,7 @@ import {
   Phone
 } from 'lucide-react';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { api } from '../lib/api';
 import { 
   doc, onSnapshot, updateDoc, setDoc, collection, 
   query, where, orderBy, addDoc, serverTimestamp, deleteDoc 
@@ -38,6 +39,7 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
   const [categories, setCategories] = useState<any[]>([]);
   const [profileForm, setProfileForm] = useState<any>({});
   const [selectedProductMetrics, setSelectedProductMetrics] = useState<any>(null);
+  const [realStats, setRealStats] = useState<any>(null);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -79,6 +81,19 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
       unsubscribeCats();
     };
   }, []);
+
+  useEffect(() => {
+    if (!auth.currentUser) return;
+    const loadRealStats = async () => {
+      try {
+        const stats = await api.getBusinessStats(auth.currentUser!.uid);
+        setRealStats(stats);
+      } catch (error) {
+        console.error('Error loading real business stats:', error);
+      }
+    };
+    loadRealStats();
+  }, [activeTab]);
 
   const handleSaveProfile = async () => {
     if (!auth.currentUser) return;
@@ -274,9 +289,9 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
           {/* Quick Stats */}
           <div className="space-y-6">
             {[
-              { label: 'Vistas Totales', value: profile?.metrics?.views || 0, icon: Eye, color: 'text-vuttik-blue' },
-              { label: 'Seguidores', value: profile?.metrics?.followers || 0, icon: Users, color: 'text-vuttik-navy' },
-              { label: 'Ventas', value: profile?.metrics?.sales || 0, icon: CreditCard, color: 'text-green-600' },
+              { label: 'Vistas Totales', value: realStats?.views || 0, icon: Eye, color: 'text-vuttik-blue' },
+              { label: 'Seguidores', value: 0, icon: Users, color: 'text-vuttik-navy' },
+              { label: 'Contactos', value: realStats?.sales || 0, icon: CreditCard, color: 'text-green-600' },
             ].map((stat, i) => (
               <div key={i} className="bg-white border border-gray-100 p-6 rounded-[32px] shadow-sm">
                 <div className="flex items-center gap-4 mb-4">

@@ -1,6 +1,6 @@
 import { Home, Search, PlusCircle, User, Settings, LogOut, MessageSquare, Shield, Briefcase, Globe, ShieldAlert, Store } from 'lucide-react';
 import { motion } from 'motion/react';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -10,6 +10,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab, userRole = 'user', userPlan }: SidebarProps) {
+  const { logout } = useAuth();
 
   const menuItems = [
     { id: 'market', icon: Search, label: 'Mercado' },
@@ -25,9 +26,6 @@ export default function Sidebar({ activeTab, setActiveTab, userRole = 'user', us
     roleItems.push({ id: 'business_dash', icon: Briefcase, label: 'Empresa' });
     roleItems.push({ id: 'guardian_dash', icon: Shield, label: 'Guardian' });
     roleItems.push({ id: 'mega_guardian_dash', icon: ShieldAlert, label: 'Mega Guardian' });
-    if (userRole === 'admin') {
-      roleItems.push({ id: 'admin_dash', icon: ShieldAlert, label: 'Panel Dueño' });
-    }
   } else {
     const features = userPlan?.features || [];
     if (userRole === 'business' && features.includes('business_dash')) {
@@ -44,7 +42,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole = 'user', us
   return (
     <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-100 h-screen sticky top-0 p-6">
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+        <div className="w-16 h-16 flex items-center justify-center overflow-hidden">
           <img src="/logo.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
         </div>
         <div className="flex flex-col">
@@ -107,7 +105,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole = 'user', us
 
       <div className="mt-auto pt-6 border-t border-gray-50">
         <button 
-          onClick={() => auth.signOut()}
+          onClick={() => logout()}
           className="sidebar-link w-full text-red-500 hover:bg-red-50 hover:text-red-600"
         >
           <LogOut size={22} />

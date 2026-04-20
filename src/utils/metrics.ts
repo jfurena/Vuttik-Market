@@ -1,7 +1,4 @@
-/**
- * Simulated Metrics Tracker
- * Collects interaction data for Mega Guardian analytics
- */
+import { api } from '../lib/api';
 
 export interface AppMetric {
   userId: string;
@@ -12,23 +9,43 @@ export interface AppMetric {
   metadata?: Record<string, any>;
 }
 
-const metricsStorage: AppMetric[] = [];
+let metricBuffer: AppMetric[] = [];
+let flushTimeout: NodeJS.Timeout | null = null;
+
+const FLUSH_INTERVAL = 5000; // 5 seconds
+const BUFFER_LIMIT = 10;
+
+const flushMetrics = async () => {
+  if (metricBuffer.length === 0) return;
+  
+  const metricsToFlush = [...metricBuffer];
+  metricBuffer = [];
+  if (flushTimeout) {
+    clearTimeout(flushTimeout);
+    flushTimeout = null;
+  }
+
+  try {
+    // Sending individual requests for now since the API expects single metrics, 
+    // but in a controlled Promise.all to ensure they go out together
+    await Promise.all(metricsToFlush.map(m => api.trackMetric(m)));
+  } catch (err) {
+    console.error('[Telemetry Flush Error]:', err);
+    // Silent fail to not disrupt user experience
+  }
+};
 
 export const trackMetric = (metric: Omit<AppMetric, 'timestamp'>) => {
-  const newMetric: AppMetric = {
+  const newMetric = {
     ...metric,
     timestamp: new Date().toISOString(),
   };
-  metricsStorage.push(newMetric);
   
-  // In a real app, this would be sent to a backend API
-  console.log('[Metric Tracked]:', newMetric);
-};
+  metricBuffer.push(newMetric as AppMetric);
 
-export const getUserMetrics = (userId: string) => {
-  return metricsStorage.filter(m => m.userId === userId);
-};
-
-export const getProductMetrics = (productId: string) => {
-  return metricsStorage.filter(m => m.targetId === productId);
+  if (metricBuffer.length >= BUFFER_LIMIT) {
+    flushMetrics();
+  } else if (!flushTimeout) {
+    flushTimeout = setTimeout(flushMetrics, FLUSH_INTERVAL);
+  }
 };

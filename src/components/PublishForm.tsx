@@ -335,35 +335,7 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
               </div>
             )}
 
-            {/* Offer Toggle */}
-            <div className="flex items-center justify-between p-6 bg-vuttik-gray rounded-3xl">
-              <div>
-                <p className="text-sm font-black text-vuttik-navy uppercase tracking-widest">¿Está en oferta?</p>
-                <p className="text-xs text-vuttik-text-muted font-bold">Marca esta opción si el precio es especial</p>
-              </div>
-              <button 
-                onClick={() => setFormData({ ...formData, isOffer: !formData.isOffer })}
-                className={`w-14 h-8 rounded-full transition-all relative ${formData.isOffer ? 'bg-vuttik-blue' : 'bg-gray-300'}`}
-              >
-                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${formData.isOffer ? 'left-7' : 'left-1'}`} />
-              </button>
-            </div>
 
-            {formData.isOffer && (
-              <div className="space-y-4">
-                <label className="text-xs font-black text-vuttik-navy uppercase tracking-widest">Precio de Oferta</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 text-vuttik-blue" size={24} />
-                  <input 
-                    type="number" 
-                    placeholder="0.00"
-                    className="w-full bg-vuttik-gray border-none rounded-2xl pl-16 pr-6 py-4 font-black text-xl text-vuttik-navy outline-none focus:ring-4 focus:ring-vuttik-blue/10 transition-all"
-                    value={formData.salePrice}
-                    onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Dynamic Custom Fields */}
             {currentCategory?.fields?.map((field) => (
@@ -448,6 +420,45 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   />
                 </div>
+              </div>
+
+              {/* Offer Toggle & Sale Price */}
+              <div className="bg-vuttik-blue/5 border border-vuttik-blue/10 rounded-3xl p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Percent size={14} className="text-vuttik-blue" />
+                      <p className="text-xs font-black text-vuttik-navy uppercase tracking-widest">¿Este precio es una oferta?</p>
+                    </div>
+                    <p className="text-[10px] text-vuttik-text-muted font-bold mt-0.5">Actívalo para destacar el descuento</p>
+                  </div>
+                  <button 
+                    onClick={() => setFormData({ ...formData, isOffer: !formData.isOffer })}
+                    className={`w-12 h-7 rounded-full transition-all relative ${formData.isOffer ? 'bg-vuttik-blue' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-sm transition-all ${formData.isOffer ? 'left-5.5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {formData.isOffer && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    className="space-y-3 pt-4 border-t border-vuttik-blue/10"
+                  >
+                    <label className="text-[10px] font-black text-vuttik-blue uppercase tracking-widest">Precio Final de Oferta</label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-vuttik-blue" size={20} />
+                      <input 
+                        type="number" 
+                        placeholder="0.00"
+                        className="w-full bg-white border border-vuttik-blue/20 rounded-2xl pl-12 pr-6 py-4 font-black text-xl text-vuttik-navy outline-none focus:ring-4 focus:ring-vuttik-blue/10 transition-all"
+                        value={formData.salePrice}
+                        onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                      />
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </div>
 

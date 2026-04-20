@@ -204,7 +204,23 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           {/* Actions */}
           <div className="mt-auto flex flex-col gap-3 md:gap-4">
             <div className="flex gap-3 md:gap-4">
-              <button className="flex-1 vuttik-button !py-3 md:!py-5 !text-sm md:!text-lg !rounded-2xl md:!rounded-3xl shadow-xl shadow-vuttik-blue/20">
+              <button 
+                onClick={() => {
+                  trackMetric({
+                    userId: currentUserId || 'anonymous',
+                    action: 'contact',
+                    targetId: product.id,
+                    targetType: 'product',
+                    metadata: { type: product.typeId, price: product.price }
+                  });
+                  if (product.phone) {
+                    window.open(`https://wa.me/${product.phone.replace(/\D/g, '')}`, '_blank');
+                  } else {
+                    alert('Contactando al vendedor...');
+                  }
+                }}
+                className="flex-1 vuttik-button !py-3 md:!py-5 !text-sm md:!text-lg !rounded-2xl md:!rounded-3xl shadow-xl shadow-vuttik-blue/20"
+              >
                 {product.typeId === 'buy' ? 'Tomar Pedido' : 'Contactar Ahora'}
               </button>
               <button className="p-3 md:p-5 bg-vuttik-gray rounded-xl md:rounded-[24px] text-vuttik-navy hover:bg-vuttik-blue hover:text-white transition-all">

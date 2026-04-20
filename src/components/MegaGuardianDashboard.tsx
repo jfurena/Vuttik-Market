@@ -12,6 +12,7 @@ import {
   ShieldAlert, ShieldCheck, CreditCard, Tag, UserMinus, UserCheck, Mail,
   UserCog, Ban, Unlock, AlertCircle
 } from 'lucide-react';
+import { api } from '../lib/api';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
   collection, 
@@ -106,11 +107,13 @@ interface UserProfile {
 }
 
 export default function MegaGuardianDashboard() {
-  const [activeView, setActiveView] = useState<'overview' | 'categories' | 'subcategories' | 'users' | 'comparison' | 'reports'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'categories' | 'subcategories' | 'users' | 'comparison' | 'reports' | 'subscriptions'>('overview');
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<TransactionType[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [userSearch, setUserSearch] = useState('');
+  const [editingPlan, setEditingPlan] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isEditingType, setIsEditingType] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category>>({});
@@ -119,6 +122,8 @@ export default function MegaGuardianDashboard() {
   const [isAddingType, setIsAddingType] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [flaggedReports, setFlaggedReports] = useState<any[]>([]);
+  const [megaStats, setMegaStats] = useState<any>(null);
+  const [trends, setTrends] = useState<any[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, 'categories'), orderBy('order', 'asc'));
@@ -138,6 +143,14 @@ export default function MegaGuardianDashboard() {
       setUsers(u);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'users');
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'subscriptionPlans'), (snapshot) => {
+      const plansData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPlans(plansData);
     });
     return () => unsubscribe();
   }, []);
@@ -163,6 +176,24 @@ export default function MegaGuardianDashboard() {
     });
     return () => unsubscribe();
   }, [activeView]);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [stats, trendsData] = await Promise.all([
+          api.getMegaGuardianStats(),
+          api.getTrends()
+        ]);
+        setMegaStats(stats);
+        setTrends(trendsData);
+      } catch (error) {
+        console.error('Error loading mega stats:', error);
+      }
+    };
+    loadStats();
+    const interval = setInterval(loadStats, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSaveCategory = async (id?: string) => {
     try {
@@ -385,6 +416,23 @@ export default function MegaGuardianDashboard() {
     }
   };
 
+  const handleSavePlan = async () => {
+    if (!editingPlan) return;
+    try {
+      const { id, ...data } = editingPlan;
+      if (id) {
+        await updateDoc(doc(db, 'subscriptionPlans', id), data);
+      } else {
+        await addDoc(collection(db, 'subscriptionPlans'), data);
+      }
+      setEditingPlan(null);
+      setNotification({ message: 'Plan guardado con éxito', type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'subscriptionPlans');
+    }
+  };
+
   const renderUsers = () => {
     const filteredUsers = users.filter(u => 
       u.email?.toLowerCase().includes(userSearch.toLowerCase()) || 
@@ -437,9 +485,18 @@ export default function MegaGuardianDashboard() {
                   >
                     <option value="user">Usuario Estándar</option>
                     <option value="business">Empresa / Negocio</option>
+                    <option value="negocio">Vendedor Certificado</option>
                     <option value="guardian">Guardian</option>
                     <option value="mega_guardian">Mega Guardian</option>
+                    <option value="admin">Administrador (Dueño)</option>
                   </select>
+                </div>
+
+                <div className="flex flex-col gap-1 w-full sm:w-auto">
+                  <label className="text-[8px] font-black text-vuttik-text-muted uppercase tracking-widest">Plan</label>
+                  <p className="text-xs font-bold text-vuttik-navy bg-vuttik-gray px-3 py-2 rounded-xl">
+                    {plans.find(p => p.id === u.plan_id)?.name || 'Gratis'}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0">
@@ -465,6 +522,114 @@ export default function MegaGuardianDashboard() {
       </div>
     );
   };
+
+  const renderSubscriptions = () => (
+    <div className="space-y-8 px-4 md:px-0">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-display font-black text-vuttik-navy">Planes de Suscripción</h3>
+          <p className="text-vuttik-text-muted text-sm">Gestiona los planes y beneficios de la plataforma.</p>
+        </div>
+        <button 
+          onClick={() => setEditingPlan({ name: '', price: 0, features: [] })}
+          className="bg-vuttik-blue text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-vuttik-blue/20 flex items-center gap-2"
+        >
+          <Plus size={16} />
+          Nuevo Plan
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {plans.map((plan) => (
+          <div key={plan.id} className="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-2xl font-display font-black text-vuttik-navy">{plan.name}</h3>
+                <p className="text-vuttik-blue font-black text-3xl mt-1">${plan.price}<span className="text-sm text-vuttik-text-muted font-bold">/mes</span></p>
+              </div>
+              <button 
+                onClick={() => setEditingPlan(plan)}
+                className="p-3 bg-vuttik-gray text-vuttik-navy rounded-2xl hover:bg-vuttik-blue hover:text-white transition-all"
+              >
+                <Edit2 size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-8">
+              <p className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest">Funciones Habilitadas</p>
+              {plan.features.map((f: string, i: number) => (
+                <div key={i} className="flex items-center gap-2 text-sm font-bold text-vuttik-navy">
+                  <Check size={16} className="text-vuttik-blue" />
+                  {f.replace('_', ' ')}
+                </div>
+              ))}
+            </div>
+
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-vuttik-blue opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-500" />
+          </div>
+        ))}
+      </div>
+
+      {editingPlan && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-vuttik-navy/60 backdrop-blur-sm" onClick={() => setEditingPlan(null)} />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative w-full max-w-md bg-white rounded-[40px] p-8 shadow-2xl"
+          >
+            <h3 className="text-2xl font-display font-black text-vuttik-navy mb-6">{editingPlan.id ? 'Editar Plan' : 'Nuevo Plan'}</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Nombre del Plan</label>
+                <input 
+                  type="text" 
+                  value={editingPlan.name}
+                  onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Precio Mensual ($)</label>
+                <input 
+                  type="number" 
+                  value={editingPlan.price}
+                  onChange={(e) => setEditingPlan({ ...editingPlan, price: parseFloat(e.target.value) })}
+                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Funciones (separadas por coma)</label>
+                <input 
+                  type="text" 
+                  value={editingPlan.features.join(', ')}
+                  onChange={(e) => setEditingPlan({ ...editingPlan, features: e.target.value.split(',').map(s => s.trim()) })}
+                  placeholder="market, social, business_dash..."
+                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button 
+                onClick={() => setEditingPlan(null)}
+                className="flex-1 py-4 text-sm font-black text-vuttik-text-muted uppercase tracking-widest"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSavePlan}
+                className="flex-1 bg-vuttik-blue text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-vuttik-blue/20"
+              >
+                Guardar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
 
   const renderSubcategories = () => (
     <div className="space-y-6 px-4 md:px-0">
@@ -1027,6 +1192,7 @@ export default function MegaGuardianDashboard() {
           { id: 'categories', label: 'Categorías', icon: LayoutGrid },
           { id: 'subcategories', label: 'Subcategorías', icon: Tag },
           { id: 'users', label: 'Usuarios', icon: UserCog },
+          { id: 'subscriptions', label: 'Suscripciones', icon: CreditCard },
           { id: 'comparison', label: 'Comparador', icon: MapPin },
           { id: 'reports', label: 'Informes', icon: Shield },
         ].map((tab) => (
@@ -1048,17 +1214,24 @@ export default function MegaGuardianDashboard() {
       {activeView === 'categories' ? renderCategories() : 
        activeView === 'subcategories' ? renderSubcategories() : 
        activeView === 'users' ? renderUsers() : 
+       activeView === 'subscriptions' ? renderSubscriptions() : 
        activeView === 'reports' ? renderReports() : (
         <>
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-vuttik-navy text-white rounded-xl md:rounded-[20px] flex items-center justify-center shadow-xl shadow-vuttik-navy/20 shrink-0">
-                <Shield size={20} className="md:size-8" />
+          <header className="bg-white border-b border-vuttik-blue/20 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-vuttik-blue p-2 rounded-xl">
+                <Shield className="text-white w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl md:text-3xl font-display font-black text-vuttik-navy">Mega Guardian</h2>
-                <p className="text-vuttik-text-muted text-[10px] md:text-sm font-bold uppercase tracking-widest">Panel de Inteligencia de Mercado</p>
+                <h1 className="text-xl md:text-2xl font-bold text-vuttik-navy">Mega Guardian</h1>
+                <p className="text-sm text-vuttik-blue font-medium flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  Inteligencia de Mercado en Tiempo Real
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 md:gap-3">
@@ -1070,17 +1243,17 @@ export default function MegaGuardianDashboard() {
                 Nuevo Informe
               </button>
             </div>
-          </div>
+          </header>
 
           {activeView === 'overview' && (
             <>
               {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {[
-                  { label: 'Usuarios Activos', value: '12.5k', trend: '+12%', icon: Users, color: 'text-vuttik-blue' },
-                  { label: 'Volumen P2P', value: '$2.4M', trend: '+8%', icon: TrendingUp, color: 'text-green-600' },
-                  { label: 'Nuevos Negocios', value: '154', trend: '+24%', icon: Store, color: 'text-vuttik-navy' },
-                  { label: 'Reportes Pendientes', value: '42', trend: '-5%', icon: Shield, color: 'text-orange-500' },
+                  { label: 'Usuarios Activos', value: megaStats?.overview?.activeUsers || '...', trend: '+12%', icon: Users, color: 'text-vuttik-blue' },
+                  { label: 'Volumen P2P', value: megaStats?.overview?.p2pVolume ? `$${(megaStats.overview.p2pVolume / 1000).toFixed(1)}k` : '...', trend: '+8%', icon: TrendingUp, color: 'text-green-600' },
+                  { label: 'Nuevos Negocios', value: megaStats?.overview?.newBusinesses || '0', trend: '+24%', icon: Store, color: 'text-vuttik-navy' },
+                  { label: 'Reportes Pendientes', value: megaStats?.overview?.pendingReports || '0', trend: '-5%', icon: Shield, color: 'text-orange-500' },
                 ].map((stat, i) => (
                   <div key={i} className="bg-white border border-gray-100 p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm">
                     <div className="flex items-center justify-between mb-3 md:mb-4">
@@ -1132,7 +1305,7 @@ export default function MegaGuardianDashboard() {
                   </div>
                   <div className="h-[250px] md:h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={DATA_TRENDS}>
+                      <AreaChart data={trends.length > 0 ? trends : DATA_TRENDS}>
                         <defs>
                           <linearGradient id="colorBusquedas" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>
@@ -1159,13 +1332,13 @@ export default function MegaGuardianDashboard() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={CATEGORY_DATA}
+                          data={megaStats?.distribution || CATEGORY_DATA}
                           innerRadius={50}
                           outerRadius={70}
                           paddingAngle={5}
                           dataKey="value"
                         >
-                          {CATEGORY_DATA.map((entry, index) => (
+                          {(megaStats?.distribution || CATEGORY_DATA).map((entry: any, index: number) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
@@ -1174,10 +1347,10 @@ export default function MegaGuardianDashboard() {
                     </ResponsiveContainer>
                   </div>
                   <div className="space-y-2 md:space-y-3 mt-4">
-                    {CATEGORY_DATA.map((item, i) => (
+                    {(megaStats?.distribution || CATEGORY_DATA).map((item: any, i: number) => (
                       <div key={i} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></div>
                           <span className="text-xs md:text-sm font-bold text-vuttik-navy">{item.name}</span>
                         </div>
                         <span className="text-xs md:text-sm font-bold text-vuttik-text-muted">{item.value} pts</span>

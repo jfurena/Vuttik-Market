@@ -23,16 +23,13 @@ import ProductDetails from './components/ProductDetails';
 import PublishSelection from './components/PublishSelection';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from './lib/api';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { auth } from './lib/firebase';
 import { trackMetric } from './utils/metrics';
 import { Ban } from 'lucide-react';
+import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [userPlan, setUserPlan] = useState<any>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const { user, isLoading, logout } = useAuth();
+  
   const [activeTab, setActiveTab] = useState('market');
   const [marketCategory, setMarketCategory] = useState<string | null>(null);
   const [marketType, setMarketType] = useState('sell');
@@ -41,48 +38,8 @@ export default function App() {
   const [showPublishSelection, setShowPublishSelection] = useState(false);
   const [viewProfileUserId, setViewProfileUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsAuthReady(true);
-      if (!currentUser) {
-        setUserProfile(null);
-        setUserPlan(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      const loadProfile = async () => {
-        try {
-          console.log('[DEBUG] Loading profile for UID:', user.uid);
-          const profile = await api.getUser(user.uid);
-          console.log('[DEBUG] Profile loaded successfully:', profile);
-          setUserProfile(profile);
-          
-          // Note: In SQL migration, plan info is currently embedded or fetched separately
-          setUserPlan({ id: profile.plan_id || 'free', name: profile.plan_id || 'free', features: ['profile', 'settings'] });
-        } catch (err) {
-          console.error('[DEBUG] Failed to load profile from SQL:', err);
-          if (user.email === 'jfurena02@gmail.com') {
-            const ownerProfile = {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName || 'Mega Guardian',
-              role: 'admin',
-              plan_id: 'mega',
-              created_at: new Date().toISOString()
-            };
-            setUserProfile(ownerProfile);
-            await api.saveUser(ownerProfile);
-          }
-        }
-      };
-      loadProfile();
-    }
-  }, [user]);
+  const userProfile = user;
+  const userPlan = user ? { id: user.planId || 'free', name: user.planId || 'free', features: ['profile', 'settings'] } : null;
 
   useEffect(() => {
     if (selectedProductId) {
@@ -113,7 +70,7 @@ export default function App() {
     }
   }, [activeTab, user]);
 
-  if (!isAuthReady) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="w-12 h-12 border-4 border-vuttik-blue border-t-transparent rounded-full animate-spin"></div>
@@ -135,7 +92,7 @@ export default function App() {
           <h1 className="text-3xl font-display font-black text-vuttik-navy">Cuenta Suspendida</h1>
           <p className="text-vuttik-text-muted">Tu cuenta ha sido suspendida por un Mega Guardian debido a infracciones de las normas de la comunidad.</p>
           <button 
-            onClick={() => auth.signOut()}
+            onClick={() => logout()}
             className="w-full py-4 bg-vuttik-navy text-white rounded-2xl font-black uppercase tracking-widest"
           >
             Cerrar Sesión
@@ -218,9 +175,8 @@ export default function App() {
       case 'guardian_dash':
         return <GuardianDashboard onViewProduct={(id) => setSelectedProductId(id)} />;
       case 'mega_guardian_dash':
-        return <MegaGuardianDashboard />;
       case 'admin_dash':
-        return <AdminDashboard />;
+        return <MegaGuardianDashboard />;
       case 'publish':
         return (
           <PublishForm 
@@ -254,8 +210,7 @@ export default function App() {
             if (tab === 'business') setActiveTab('business_dash');
             else if (tab === 'negocio') setActiveTab('negocio_dash');
             else if (tab === 'guardian') setActiveTab('guardian_dash');
-            else if (tab === 'mega-guardian') setActiveTab('mega_guardian_dash');
-            else if (tab === 'admin') setActiveTab('admin_dash');
+            else if (tab === 'mega-guardian' || tab === 'admin') setActiveTab('mega_guardian_dash');
             else if (tab === 'settings' || tab === 'profile') {
               setViewProfileUserId(null);
               setActiveTab('profile');

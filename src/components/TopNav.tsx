@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 const NOTIFICATIONS = [
   { id: '1', title: 'Nueva oferta', body: 'El arroz premium bajó a 40 DOP en Negocio Bravo.', time: '5 min' },
@@ -26,6 +26,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function TopNav({ userRole = 'user', userPlan, userProfile, onNavigate }: TopNavProps) {
+  const { logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -63,7 +64,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
   return (
     <header className="glass-nav sticky top-0 left-0 right-0 z-40 px-4 md:px-6 py-3 md:py-4 flex justify-between items-center md:bg-transparent md:backdrop-blur-none md:border-none">
       <div className="flex items-center gap-1.5 md:gap-2 md:hidden shrink-0">
-        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center overflow-hidden">
+        <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
           <img src="/logo.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
         </div>
         <h1 className="text-xl md:text-2xl tracking-tight font-display font-bold text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
@@ -114,7 +115,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
                     ))}
                     <div className="h-px bg-gray-50 my-2 mx-4" />
                     <button 
-                      onClick={() => auth.signOut()}
+                      onClick={() => logout()}
                       className="w-full flex items-center gap-3 p-4 hover:bg-red-50 rounded-2xl transition-colors text-red-500 group"
                     >
                       <div className="p-2 bg-red-50/50 rounded-xl group-hover:bg-white transition-colors">
@@ -172,17 +173,6 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
           </AnimatePresence>
         </div>
         
-        <div className="hidden md:flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-1.5 pr-4 shadow-sm">
-          <button className="w-9 h-9 rounded-xl overflow-hidden border-2 border-vuttik-blue/20 p-0.5">
-            <div className="w-full h-full rounded-xl bg-gray-200 flex items-center justify-center">
-              <User size={20} className="text-gray-400" />
-            </div>
-          </button>
-          <div className="hidden lg:block">
-            <p className="text-xs font-bold leading-none">{userProfile?.displayName || userProfile?.display_name || 'Mi Cuenta'}</p>
-            <p className="text-[10px] text-vuttik-text-muted">{ROLE_LABELS[userProfile?.role || userRole] || 'Comprador'}</p>
-          </div>
-        </div>
       </div>
     </header>
   );

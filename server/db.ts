@@ -26,9 +26,17 @@ export async function initDB() {
       role TEXT DEFAULT 'user',
       plan_id TEXT DEFAULT 'free',
       is_banned BOOLEAN DEFAULT 0,
-      created_at TEXT
+      created_at TEXT,
+      password_hash TEXT,
+      oauth_provider TEXT,
+      oauth_id TEXT
     )
   `);
+
+  // Add columns to existing DB if they don't exist
+  try { await run("ALTER TABLE users ADD COLUMN password_hash TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE users ADD COLUMN oauth_provider TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE users ADD COLUMN oauth_id TEXT"); } catch (e) {}
 
   // Categories Table
   await run(`
@@ -118,26 +126,175 @@ export async function initDB() {
     )
   `);
 
+  // Daily Aggregated Stats (For performance)
+  await run(`
+    CREATE TABLE IF NOT EXISTS daily_stats (
+      date TEXT PRIMARY KEY,
+      views INTEGER DEFAULT 0,
+      searches INTEGER DEFAULT 0,
+      contacts INTEGER DEFAULT 0,
+      total_p2p_volume REAL DEFAULT 0
+    )
+  `);
+
+  // Indices for analytics performance
+  await run('CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)');
+  await run('CREATE INDEX IF NOT EXISTS idx_metrics_action ON metrics(action)');
+  await run('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_products_created ON products(created_at)');
+
   console.log('Database schema created successfully.');
   
   // Seed initial categories if empty
-  const count = await get('SELECT COUNT(*) as count FROM categories');
-  if (count.count === 0) {
-    console.log('Seeding initial categories...');
-    const initialCategories = [
-      { id: 'ALIMENTOS', name: 'Alimentos', order: 1, types: ['sell', 'buy'], fields: [], sys: { title: { label: 'Nombre del producto', required: true }, price: { label: 'Precio', required: true }, location: { label: 'Ubicación', required: true }, description: { label: 'Descripción', required: false }, barcode: { label: 'Código de barras', required: false, active: true } } },
-      { id: 'HOGAR', name: 'Hogar', order: 2, types: ['sell', 'buy'], fields: [], sys: { title: { label: 'Título', required: true }, price: { label: 'Precio', required: true }, location: { label: 'Ubicación', required: true }, description: { label: 'Descripción', required: true } } },
-    ];
+  try {
+    const result: any = await get('SELECT COUNT(*) as count FROM categories');
+    const categoryCount = result?.count ?? 0;
+    console.log('Current category count:', categoryCount);
     
-    for (const cat of initialCategories) {
-      await run(
-        'INSERT INTO categories (id, name, order_index, allowed_types, fields, system_fields) VALUES (?, ?, ?, ?, ?, ?)',
-        [cat.id, cat.name, cat.order, JSON.stringify(cat.types), JSON.stringify(cat.fields), JSON.stringify(cat.sys)]
-      );
+    if (categoryCount === 0) {
+      console.log('Seeding initial categories...');
+      const initialCategories = [
+        { 
+          id: 'COMIDA', 
+          name: 'Comida', 
+          order: 1, 
+          types: ['sell', 'buy'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Nombre del producto', required: true }, 
+            price: { label: 'Precio', required: true }, 
+            location: { label: 'Ubicación', required: true }, 
+            description: { label: 'Descripción', required: false }, 
+            barcode: { label: 'Código de barras', required: false, active: true } 
+          } 
+        },
+        { 
+          id: 'TERRENOS', 
+          name: 'Terrenos', 
+          order: 2, 
+          types: ['sell', 'buy'], 
+          fields: [
+            { id: 'size', name: 'Tamaño (m²)', type: 'number', required: true }
+          ], 
+          sys: { 
+            title: { label: 'Título del terreno', required: true }, 
+            price: { label: 'Precio', required: true }, 
+            location: { label: 'Ubicación', required: true }, 
+            description: { label: 'Descripción', required: true } 
+          } 
+        },
+        { 
+          id: 'DIVISAS', 
+          name: 'Divisas', 
+          order: 3, 
+          types: ['sell', 'buy'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Moneda / Activo', required: true }, 
+            price: { label: 'Tasa/Precio', required: true }, 
+            location: { label: 'Punto de intercambio', required: true }, 
+            description: { label: 'Detalles finales', required: false } 
+          } 
+        },
+        { 
+          id: 'VEHICULOS', 
+          name: 'Vehículos', 
+          order: 4, 
+          types: ['sell', 'buy'], 
+          fields: [
+            { id: 'brand', name: 'Marca', type: 'text', required: true },
+            { id: 'model', name: 'Modelo', type: 'text', required: true },
+            { id: 'year', name: 'Año', type: 'number', required: true },
+            { id: 'km', name: 'Kilometraje', type: 'number', required: false }
+          ], 
+          sys: { 
+            title: { label: 'Título del anuncio', required: true }, 
+            price: { label: 'Precio', required: true }, 
+            location: { label: 'Ubicación', required: true }, 
+            description: { label: 'Descripción del vehículo', required: true } 
+          } 
+        },
+        { 
+          id: 'ELECTRONICA', 
+          name: 'Electrónica', 
+          order: 5, 
+          types: ['sell', 'buy'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Producto', required: true }, 
+            price: { label: 'Precio', required: true }, 
+            location: { label: 'Ubicación', required: true }, 
+            description: { label: 'Estado y detalles', required: true } 
+          } 
+        },
+        { 
+          id: 'HOGAR', 
+          name: 'Hogar', 
+          order: 6, 
+          types: ['sell', 'buy'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Título', required: true }, 
+            price: { label: 'Precio', required: true }, 
+            location: { label: 'Ubicación', required: true }, 
+            description: { label: 'Descripción', required: true } 
+          } 
+        },
+        { 
+          id: 'EMPLEO', 
+          name: 'Empleo', 
+          order: 7, 
+          types: ['sell', 'buy'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Puesto / Vacante', required: true }, 
+            price: { label: 'Sueldo (opcional)', required: false }, 
+            location: { label: 'Ubicación del trabajo', required: true }, 
+            description: { label: 'Requisitos y funciones', required: true } 
+          } 
+        },
+        { 
+          id: 'ALQUILER', 
+          name: 'Alquiler', 
+          order: 8, 
+          types: ['rent'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Inmueble / Objeto', required: true }, 
+            price: { label: 'Precio por período', required: true }, 
+            location: { label: 'Ubicación', required: true }, 
+            description: { label: 'Términos del alquiler', required: true } 
+          } 
+        },
+        { 
+          id: 'PRESTAMO', 
+          name: 'Préstamo', 
+          order: 9, 
+          types: ['sell', 'buy'], 
+          fields: [], 
+          sys: { 
+            title: { label: 'Tipo de préstamo', required: true }, 
+            price: { label: 'Monto / Tasa', required: true }, 
+            location: { label: 'Zona de servicio', required: true }, 
+            description: { label: 'Requisitos', required: true } 
+          } 
+        }
+      ];
+      
+      for (const cat of initialCategories) {
+        await run(
+          'INSERT OR REPLACE INTO categories (id, name, order_index, allowed_types, fields, system_fields) VALUES (?, ?, ?, ?, ?, ?)',
+          [cat.id, cat.name, cat.order, JSON.stringify(cat.types), JSON.stringify(cat.fields), JSON.stringify(cat.sys)]
+        );
+      }
+      
+      await run('INSERT OR REPLACE INTO transaction_types (id, label) VALUES (?, ?)', ['sell', 'Venta']);
+      await run('INSERT OR REPLACE INTO transaction_types (id, label) VALUES (?, ?)', ['buy', 'Compra']);
+      await run('INSERT OR REPLACE INTO transaction_types (id, label) VALUES (?, ?)', ['rent', 'Renta']);
+      console.log('Seeding completed successfully.');
     }
-    
-    await run('INSERT INTO transaction_types (id, label) VALUES (?, ?)', ['sell', 'Venta']);
-    await run('INSERT INTO transaction_types (id, label) VALUES (?, ?)', ['buy', 'Compra']);
+  } catch (err) {
+    console.error('Error during seeding check:', err);
   }
 }
 
