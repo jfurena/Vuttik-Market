@@ -65,7 +65,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
     <header className="glass-nav sticky top-0 left-0 right-0 z-40 px-4 md:px-6 py-3 md:py-4 flex justify-between items-center md:bg-transparent md:backdrop-blur-none md:border-none">
       <div className="flex items-center gap-1.5 md:gap-2 md:hidden shrink-0">
         <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
-          <img src="/logo.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+          <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
         </div>
         <h1 className="text-xl md:text-2xl tracking-tight font-display font-bold text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
       </div>
@@ -76,6 +76,50 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
       </div>
       
       <div className="flex items-center gap-2 md:gap-4 ml-auto relative">
+        <div className="relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className={`relative p-2 md:p-2.5 bg-white border border-gray-100 rounded-xl transition-all shadow-sm ${showNotifications ? 'text-vuttik-blue border-vuttik-blue' : 'text-vuttik-navy/70 hover:text-vuttik-blue'}`}
+          >
+            <Bell size={18} className="md:size-5" />
+            <span className="absolute top-2 md:top-2.5 right-2 md:right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </button>
+
+          <AnimatePresence>
+            {showNotifications && (
+              <>
+                <div className="fixed inset-0 z-[-1]" onClick={() => setShowNotifications(false)} />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-4 w-80 bg-white border border-gray-100 rounded-[32px] shadow-2xl overflow-hidden z-50"
+                >
+                  <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+                    <h3 className="text-sm font-black text-vuttik-navy uppercase tracking-widest">Notificaciones</h3>
+                    <button onClick={() => setShowNotifications(false)}><X size={16} className="text-vuttik-text-muted" /></button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto no-scrollbar">
+                    {NOTIFICATIONS.map((n) => (
+                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-vuttik-gray transition-colors cursor-pointer">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="text-xs font-bold text-vuttik-navy">{n.title}</h4>
+                          <span className="text-[10px] text-vuttik-text-muted">{n.time}</span>
+                        </div>
+                        <p className="text-[11px] text-vuttik-text-muted leading-relaxed">{n.body}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="w-full p-4 text-xs font-bold text-vuttik-blue hover:bg-vuttik-blue/5 transition-colors">
+                    Ver todas las notificaciones
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Menu button — after bell */}
         <div className="relative">
           <button 
             onClick={() => setShowMenu(!showMenu)}
@@ -124,49 +168,6 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
                       <span className="text-xs font-bold">Cerrar Sesión</span>
                     </button>
                   </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="relative">
-          <button 
-            onClick={() => setShowNotifications(!showNotifications)}
-            className={`relative p-2 md:p-2.5 bg-white border border-gray-100 rounded-xl transition-all shadow-sm ${showNotifications ? 'text-vuttik-blue border-vuttik-blue' : 'text-vuttik-navy/70 hover:text-vuttik-blue'}`}
-          >
-            <Bell size={18} className="md:size-5" />
-            <span className="absolute top-2 md:top-2.5 right-2 md:right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
-
-          <AnimatePresence>
-            {showNotifications && (
-              <>
-                <div className="fixed inset-0 z-[-1]" onClick={() => setShowNotifications(false)} />
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-4 w-80 bg-white border border-gray-100 rounded-[32px] shadow-2xl overflow-hidden z-50"
-                >
-                  <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-                    <h3 className="text-sm font-black text-vuttik-navy uppercase tracking-widest">Notificaciones</h3>
-                    <button onClick={() => setShowNotifications(false)}><X size={16} className="text-vuttik-text-muted" /></button>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto no-scrollbar">
-                    {NOTIFICATIONS.map((n) => (
-                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-vuttik-gray transition-colors cursor-pointer">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="text-xs font-bold text-vuttik-navy">{n.title}</h4>
-                          <span className="text-[10px] text-vuttik-text-muted">{n.time}</span>
-                        </div>
-                        <p className="text-[11px] text-vuttik-text-muted leading-relaxed">{n.body}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <button className="w-full p-4 text-xs font-bold text-vuttik-blue hover:bg-vuttik-blue/5 transition-colors">
-                    Ver todas las notificaciones
-                  </button>
                 </motion.div>
               </>
             )}

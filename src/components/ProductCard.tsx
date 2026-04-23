@@ -128,10 +128,10 @@ const ProductCard = (props: ProductCardProps) => {
         <div className="hidden md:block absolute bottom-3 left-3 right-3 bg-black/40 backdrop-blur-md rounded-xl p-2 text-white">
           <div className="flex items-center gap-1.5">
             <div className="w-6 h-6 rounded-full bg-vuttik-blue flex items-center justify-center text-[10px] font-bold">
-              {authorName.charAt(0)}
+              {(authorName || 'U').charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold truncate">{authorName}</p>
+              <p className="text-[10px] font-bold truncate">{authorName || 'Usuario'}</p>
               <div className="flex items-center gap-1">
                 <div className="flex items-center text-yellow-400">
                   <Star size={8} fill="currentColor" />
@@ -189,7 +189,7 @@ const ProductCard = (props: ProductCardProps) => {
             
             <div className="flex items-center gap-1 md:hidden">
               <div className="w-4 h-4 rounded-full bg-vuttik-blue flex items-center justify-center text-[7px] font-bold text-white">
-                {authorName.charAt(0)}
+                {(authorName || 'U').charAt(0)}
               </div>
               <div className="flex items-center text-yellow-400">
                 <Star size={7} fill="currentColor" />

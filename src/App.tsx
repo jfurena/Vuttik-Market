@@ -21,6 +21,7 @@ import SocialFeed from './components/SocialFeed';
 import PublishForm from './components/PublishForm';
 import ProductDetails from './components/ProductDetails';
 import PublishSelection from './components/PublishSelection';
+import AuditLog from './components/AuditLog';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from './lib/api';
 import { trackMetric } from './utils/metrics';
@@ -177,6 +178,8 @@ export default function App() {
       case 'mega_guardian_dash':
       case 'admin_dash':
         return <MegaGuardianDashboard />;
+      case 'audit_log':
+        return <AuditLog />;
       case 'publish':
         return (
           <PublishForm 

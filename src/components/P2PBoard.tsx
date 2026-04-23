@@ -14,6 +14,17 @@ interface Category {
   order: number;
 }
 
+const safeDate = (dateStr: any) => {
+  if (!dateStr) return 'Fecha no disponible';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Fecha no disponible';
+    return d.toLocaleDateString();
+  } catch (e) {
+    return 'Fecha no disponible';
+  }
+};
+
 export default function P2PBoard({ 
   onViewDetails, 
   onBack,
@@ -122,17 +133,26 @@ export default function P2PBoard({
   };
 
   const filteredProducts = products.filter(p => {
-    const matchesType = p.typeId === p2pType;
-    const matchesCategory = activeCategory === 'GLOBAL' || p.categoryId === activeCategory;
+    const displayTypeMap: Record<string, string> = {
+      'buy': 'sell',
+      'sell': 'buy',
+      'rent': 'rent'
+    };
+    
+    const typeId = p.typeId || p.type_id;
+    const categoryId = p.categoryId || p.category_id;
+    
+    const matchesType = typeId === (displayTypeMap[p2pType] || p2pType);
+    const matchesCategory = activeCategory === 'GLOBAL' || categoryId === activeCategory;
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         p.authorName?.toLowerCase().includes(searchQuery.toLowerCase());
+                         (p.authorName || p.author_name || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLocation = !locationFilter || p.location?.toLowerCase().includes(locationFilter.toLowerCase());
     
     const price = p.price;
     const matchesMinPrice = !minPrice || price >= parseFloat(minPrice);
     const matchesMaxPrice = !maxPrice || price <= parseFloat(maxPrice);
     const matchesCurrency = p.currency === currencyFilter;
-    const matchesIsOffer = !isOfferFilter || p.isOnSale === true;
+    const matchesIsOffer = !isOfferFilter || (p.isOnSale === true || p.is_on_sale === true || p.is_on_sale === 1);
 
     return matchesType && matchesCategory && matchesSearch && matchesLocation && matchesMinPrice && matchesMaxPrice && matchesCurrency && matchesIsOffer;
   });
@@ -329,20 +349,21 @@ export default function P2PBoard({
             <ProductCard 
               key={product.id} 
               {...product} 
-              price={product.price.toString()}
-              category={categories.find(c => c.id === product.categoryId)?.name || 'General'}
-              type={product.typeId}
-              typeLabel={transactionTypes.find(t => t.id === product.typeId)?.label}
+              id={product.id}
+              price={String(product.price ?? 0)}
+              category={categories.find(c => c.id === (product.categoryId || product.category_id))?.name || 'General'}
+              type={product.typeId || product.type_id}
+              typeLabel={transactionTypes.find(t => t.id === (product.typeId || product.type_id))?.label}
               image={product.images?.[0]}
-              upvotes={product.upVotes?.length || 0}
-              downvotes={product.downVotes?.length || 0}
-              userVote={product.upVotes?.includes(auth.currentUser?.uid) ? 'up' : product.downVotes?.includes(auth.currentUser?.uid) ? 'down' : null}
+              upvotes={product.upVotes?.length || product.up_votes?.length || 0}
+              downvotes={product.downVotes?.length || product.down_votes?.length || 0}
+              authorName={product.authorName || product.author_name || 'Usuario'}
+              registeredAt={safeDate(product.createdAt || product.created_at)}
+              phone={product.phone}
               onViewDetails={onViewDetails} 
               onVote={handleVote}
               trustLevel="High"
               authorRating={4.5}
-              registeredAt={new Date(product.createdAt).toLocaleDateString()}
-              phone={product.phone}
             />
           ))
         }

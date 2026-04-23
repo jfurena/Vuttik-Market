@@ -40,24 +40,62 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(userData),
   }),
+  searchUsers: (q: string) => request(`/api/users/search?q=${encodeURIComponent(q)}`),
 
   // Categories & Types
   getCategories: () => request('/api/categories'),
   getTransactionTypes: () => request('/api/transaction-types'),
 
   // Products
-  getProducts: (categoryId?: string) => request(`/api/products${categoryId ? `?categoryId=${categoryId}` : ''}`),
+  getProducts: (categoryId?: string, authorId?: string) => {
+    const params = new URLSearchParams();
+    if (categoryId && categoryId !== 'GLOBAL') params.set('categoryId', categoryId);
+    if (authorId) params.set('authorId', authorId);
+    const qs = params.toString();
+    return request(`/api/products${qs ? `?${qs}` : ''}`);
+  },
   publishProduct: (productData: any) => request('/api/products', {
     method: 'POST',
     body: JSON.stringify(productData),
   }),
 
-  // Social
-  getPosts: () => request('/api/posts'),
+  // Social Posts
+  getPosts: (filter?: 'all' | 'following', userId?: string) => {
+    const params = new URLSearchParams();
+    if (filter) params.set('filter', filter);
+    if (userId) params.set('userId', userId);
+    const qs = params.toString();
+    return request(`/api/posts/feed${qs ? `?${qs}` : ''}`);
+  },
   publishPost: (postData: any) => request('/api/posts', {
     method: 'POST',
     body: JSON.stringify(postData),
   }),
+
+  // Follows
+  followUser: (followerId: string, followingId: string) => request('/api/follows', {
+    method: 'POST',
+    body: JSON.stringify({ followerId, followingId }),
+  }),
+  unfollowUser: (followerId: string, followingId: string) => request('/api/follows', {
+    method: 'DELETE',
+    body: JSON.stringify({ followerId, followingId }),
+  }),
+  getFollowing: (userId: string) => request(`/api/follows/${userId}/following`),
+
+  // Conversations
+  getConversations: (userId: string) => request(`/api/conversations/${userId}`),
+  getOrCreateConversation: (userId1: string, userId2: string) => request('/api/conversations', {
+    method: 'POST',
+    body: JSON.stringify({ userId1, userId2 }),
+  }),
+
+  // Messages
+  getMessages: (conversationId: string) => request(`/api/messages/${conversationId}`),
+  sendMessage: (data: { conversationId: string; senderId: string; content: string }) =>
+    request('/api/messages', { method: 'POST', body: JSON.stringify(data) }),
+  markMessagesRead: (conversationId: string, userId: string) =>
+    request('/api/messages/read', { method: 'PATCH', body: JSON.stringify({ conversationId, userId }) }),
 
   // Metrics
   trackMetric: (metricData: any) => request('/api/metrics', {
@@ -69,4 +107,16 @@ export const api = {
   getMegaGuardianStats: () => request('/api/stats/mega-guardian'),
   getTrends: () => request('/api/stats/trends'),
   getBusinessStats: (userId: string) => request(`/api/stats/business/${userId}`),
+  getUserAnalytics: (uid: string) => request(`/api/users/${uid}/analytics`),
+  getAuditLog: () => request('/api/admin/audit-log'),
+
+  // Comments & Verification
+  getComments: (postId: string) => request(`/api/posts/${postId}/comments`),
+  addComment: (postId: string, data: any) => request(`/api/posts/${postId}/comments`, { method: 'POST', body: JSON.stringify(data) }),
+  verifyPost: (postId: string, data: any) => request(`/api/posts/${postId}/verify`, { method: 'POST', body: JSON.stringify(data) }),
+
+  // Deletions
+  deleteProduct: (id: string, userId: string) => request(`/api/products/${id}?userId=${userId}`, { method: 'DELETE' }),
+  deletePost: (id: string, userId: string) => request(`/api/posts/${id}?userId=${userId}`, { method: 'DELETE' }),
+  banUser: (uid: string, adminId: string) => request(`/api/users/${uid}/ban`, { method: 'POST', body: JSON.stringify({ adminId }) }),
 };

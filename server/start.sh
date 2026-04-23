@@ -3,7 +3,7 @@
 
 # 1. Environment Setup
 export NODE_HOME="/home/sinagjwx/nodejs"
-export PATH="$NODE_HOME/bin:$PATH"
+export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 export PORT=3005
 
 APP_DIR="/home/sinagjwx/domains/vuttik.com/server"

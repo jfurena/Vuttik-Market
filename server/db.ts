@@ -85,6 +85,14 @@ export async function initDB() {
     )
   `);
 
+  // Migrations for products table
+  try { await run("ALTER TABLE products ADD COLUMN barcode TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE products ADD COLUMN phone TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE products ADD COLUMN lat REAL"); } catch (e) {}
+  try { await run("ALTER TABLE products ADD COLUMN lng REAL"); } catch (e) {}
+  try { await run("ALTER TABLE products ADD COLUMN is_on_sale BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE products ADD COLUMN sale_price REAL"); } catch (e) {}
+
   // Social Posts Table
   await run(`
     CREATE TABLE IF NOT EXISTS posts (
@@ -142,6 +150,86 @@ export async function initDB() {
   await run('CREATE INDEX IF NOT EXISTS idx_metrics_action ON metrics(action)');
   await run('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_products_created ON products(created_at)');
+
+  // Follows Table (Who follows whom)
+  await run(`
+    CREATE TABLE IF NOT EXISTS follows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      follower_id TEXT NOT NULL,
+      following_id TEXT NOT NULL,
+      created_at TEXT,
+      UNIQUE(follower_id, following_id),
+      FOREIGN KEY(follower_id) REFERENCES users(uid),
+      FOREIGN KEY(following_id) REFERENCES users(uid)
+    )
+  `);
+
+  // Conversations Table (like WhatsApp chats)
+  await run(`
+    CREATE TABLE IF NOT EXISTS conversations (
+      id TEXT PRIMARY KEY,
+      participant_1 TEXT NOT NULL,
+      participant_2 TEXT NOT NULL,
+      last_message TEXT,
+      last_message_at TEXT,
+      created_at TEXT,
+      FOREIGN KEY(participant_1) REFERENCES users(uid),
+      FOREIGN KEY(participant_2) REFERENCES users(uid)
+    )
+  `);
+
+  // Messages Table (persistent messages per conversation)
+  await run(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      sender_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      sent_at TEXT NOT NULL,
+      is_read BOOLEAN DEFAULT 0,
+      FOREIGN KEY(conversation_id) REFERENCES conversations(id),
+      FOREIGN KEY(sender_id) REFERENCES users(uid)
+    )
+  `);
+
+  // Comments Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id TEXT PRIMARY KEY,
+      post_id TEXT,
+      author_id TEXT,
+      author_name TEXT,
+      author_avatar TEXT,
+      content TEXT NOT NULL,
+      created_at TEXT,
+      FOREIGN KEY(post_id) REFERENCES posts(id),
+      FOREIGN KEY(author_id) REFERENCES users(uid)
+    )
+  `);
+
+  // Post Verifications Table (Veracity Votes)
+  await run(`
+    CREATE TABLE IF NOT EXISTS post_verifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id TEXT,
+      user_id TEXT,
+      is_veracious BOOLEAN, -- 1 for True, 0 for False
+      created_at TEXT,
+      UNIQUE(post_id, user_id),
+      FOREIGN KEY(post_id) REFERENCES posts(id),
+      FOREIGN KEY(user_id) REFERENCES users(uid)
+    )
+  `);
+
+  // Indices for performance
+  await run('CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_verifications_post ON post_verifications(post_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_messages_sent ON messages(sent_at)');
+  await run('CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON conversations(participant_1)');
+  await run('CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON conversations(participant_2)');
 
   console.log('Database schema created successfully.');
   

@@ -226,13 +226,13 @@ function Auth({ onLogin }: AuthProps) {
             }}
             className="mb-10 inline-block"
           >
-            <img src="/logo_solo.png" alt="Vuttik Logo" className="w-48 h-48 md:w-64 md:h-64 object-contain filter drop-shadow-[0_0_80px_rgba(34,211,238,0.2)]" />
+            <img src="/favicon.png" alt="Vuttik Logo" className="w-48 h-48 md:w-64 md:h-64 object-contain filter drop-shadow-[0_0_80px_rgba(34,211,238,0.2)]" />
           </motion.div>
           <h1 className="stitch-hero-text !mb-4">
             Vuttik <span className="text-vuttik-cyan">Market</span>
           </h1>
           <p className="text-vuttik-text-muted text-xl font-medium tracking-wide max-w-sm mx-auto leading-relaxed">
-            La plataforma líder de intercambio con <span className="text-white">seguridad de grado bancario</span>.
+            La plataforma líder de intercambio con <span className="text-vuttik-blue">seguridad de grado bancario</span>.
           </p>
         </div>
       </motion.div>
@@ -246,31 +246,31 @@ function Auth({ onLogin }: AuthProps) {
         >
           {/* Mobile-only Branding */}
           <div className="lg:hidden text-center mb-10">
-            <img src="/logo_solo.png" alt="Vuttik Logo" className="w-24 h-24 mx-auto mb-4" />
-            <h1 className="text-4xl font-display font-black text-white">Vuttik <span className="text-vuttik-cyan">Market</span></h1>
+            <img src="/favicon.png" alt="Vuttik Logo" className="w-24 h-24 mx-auto mb-4" />
+            <h1 className="text-4xl font-display font-black text-vuttik-navy">Vuttik <span className="text-vuttik-cyan">Market</span></h1>
           </div>
 
-          <div className="bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded-[3rem] p-8 md:p-12 shadow-xl relative overflow-hidden">
             {/* Subtle light effect for form */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-vuttik-blue/5 blur-[80px] pointer-events-none"></div>
             
             <div className="flex items-center justify-between mb-10">
               <div>
-                <h2 className="text-3xl font-display font-black text-white">{isLogin ? 'Bienvenido' : 'Únete'}</h2>
+                <h2 className="text-3xl font-display font-black text-vuttik-navy">{isLogin ? 'Bienvenido' : 'Únete'}</h2>
                 <p className="text-vuttik-text-muted text-[10px] font-black uppercase tracking-[0.2em] mt-1 opacity-60">
                   {isLogin ? 'Acceso Seguro' : 'Nueva Cuenta'}
                 </p>
               </div>
-              <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+              <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100">
                 <button 
                   onClick={() => { setIsLogin(true); clearMessages(); }}
-                  className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${isLogin ? 'bg-white text-vuttik-deep shadow-lg scale-[1.02]' : 'text-vuttik-text-muted hover:text-white'}`}
+                  className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${isLogin ? 'bg-white text-vuttik-deep shadow-sm scale-[1.02] border border-gray-100' : 'text-vuttik-text-muted hover:text-vuttik-navy'}`}
                 >
                   Entrar
                 </button>
                 <button 
                   onClick={() => { setIsLogin(false); clearMessages(); }}
-                  className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${!isLogin ? 'bg-white text-vuttik-deep shadow-lg scale-[1.02]' : 'text-vuttik-text-muted hover:text-white'}`}
+                  className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${!isLogin ? 'bg-white text-vuttik-deep shadow-sm scale-[1.02] border border-gray-100' : 'text-vuttik-text-muted hover:text-vuttik-navy'}`}
                 >
                   Unirme
                 </button>
@@ -347,7 +347,7 @@ function Auth({ onLogin }: AuthProps) {
                       className="vuttik-input-field pr-14" />
                     <label className="vuttik-floating-label">Contraseña</label>
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-vuttik-text-muted hover:text-white transition-colors z-20">
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-vuttik-text-muted hover:text-vuttik-navy transition-colors z-20">
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -372,7 +372,7 @@ function Auth({ onLogin }: AuthProps) {
           </div>
 
           <p className="mt-10 text-center text-vuttik-text-muted text-[10px] font-black uppercase tracking-[0.2em] leading-relaxed">
-            Al entrar aceptas los <span className="text-white cursor-pointer hover:text-vuttik-cyan transition-colors">Términos</span> <br className="lg:hidden" /> & <span className="text-white cursor-pointer hover:text-vuttik-cyan transition-colors">Privacidad</span>
+            Al entrar aceptas los <span className="text-vuttik-navy cursor-pointer hover:text-vuttik-cyan transition-colors">Términos</span> <br className="lg:hidden" /> & <span className="text-vuttik-navy cursor-pointer hover:text-vuttik-cyan transition-colors">Privacidad</span>
           </p>
         </motion.div>
       </div>

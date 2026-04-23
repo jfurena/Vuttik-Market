@@ -23,7 +23,8 @@ export enum OperationType {
   READ = 'READ',
   UPDATE = 'UPDATE',
   DELETE = 'DELETE',
-  LIST = 'LIST'
+  LIST = 'LIST',
+  WRITE = 'WRITE'
 }
 
 export const handleFirestoreError = (error: any, type: OperationType, collection: string) => {

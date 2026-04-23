@@ -26,6 +26,7 @@ export default function Sidebar({ activeTab, setActiveTab, userRole = 'user', us
     roleItems.push({ id: 'business_dash', icon: Briefcase, label: 'Empresa' });
     roleItems.push({ id: 'guardian_dash', icon: Shield, label: 'Guardian' });
     roleItems.push({ id: 'mega_guardian_dash', icon: ShieldAlert, label: 'Mega Guardian' });
+    roleItems.push({ id: 'audit_log', icon: History, label: 'Actividad Global' });
   } else {
     const features = userPlan?.features || [];
     if (userRole === 'business' && features.includes('business_dash')) {
@@ -41,9 +42,9 @@ export default function Sidebar({ activeTab, setActiveTab, userRole = 'user', us
 
   return (
     <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-100 h-screen sticky top-0 p-6">
-      <div className="flex items-center gap-3 mb-10 px-2">
+      <div className="flex items-center gap-3 mb-10 px-2 justify-center">
         <div className="w-16 h-16 flex items-center justify-center overflow-hidden">
-          <img src="/logo.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+          <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
         </div>
         <div className="flex flex-col">
           <h1 className="text-2xl leading-none tracking-tighter font-display font-black text-vuttik-navy">

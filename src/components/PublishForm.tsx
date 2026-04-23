@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Camera, MapPin, Tag, DollarSign, Info, ChevronRight, CheckCircle2, Plus, Barcode, Percent, Search } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Camera, DollarSign, CheckCircle2, Plus, Percent, Search, X, ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackMetric } from '../utils/metrics';
 import LocationInput from './LocationInput';
 import { api } from '../lib/api';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { Product } from '../types/index';
 
 interface CategoryField {
@@ -36,11 +36,17 @@ interface PublishFormProps {
 }
 
 export default function PublishForm({ onComplete, onCancel }: PublishFormProps) {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<{id: string, label: string}[]>([]);
   const [categorySearch, setCategorySearch] = useState('');
   const currencies = ['DOP', 'USD', 'EUR', 'BTC', 'ETH', 'GBP', 'CAD'];
+
+  // Image upload state
+  const [selectedImages, setSelectedImages] = useState<string[]>([]); // base64 previews
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -60,6 +66,67 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
     type: 'sell',
     customFields: {} as Record<string, any>
   });
+
+  // Compress and resize image before upload
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 1200;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Quality 0.7 for good balance between size and quality
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleImageFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const newImages: string[] = [];
+    for (const file of Array.from(files)) {
+      if (file.type.startsWith('image/')) {
+        try {
+          const b64 = await compressImage(file);
+          newImages.push(b64);
+        } catch (error) {
+          console.error('Compression error:', error);
+        }
+      }
+    }
+    setSelectedImages(prev => [...prev, ...newImages].slice(0, 6)); // max 6 images
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -92,11 +159,40 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
     }
   }, [formData.category, categories]);
 
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+
   const handleNext = async () => {
+    setPublishError(null);
+
     if (step === 3) {
+      // --- Validación antes de publicar ---
+      if (!user) {
+        setPublishError('Debes iniciar sesión para publicar un producto.');
+        return;
+      }
+      if (!formData.title.trim()) {
+        setPublishError('El título del producto es obligatorio.');
+        return;
+      }
+      if (!formData.category) {
+        setPublishError('Debes seleccionar una categoría.');
+        return;
+      }
+      if (!formData.price || isNaN(parseFloat(formData.price))) {
+        setPublishError('El precio es obligatorio y debe ser un número válido.');
+        return;
+      }
+      // --- Fin validación ---
+
+      setIsPublishing(true);
       try {
-        const user = auth.currentUser;
         if (!user) throw new Error('User not authenticated');
+
+        // Use real images if selected, fallback to placeholder
+        const images = selectedImages.length > 0
+          ? selectedImages
+          : ['https://picsum.photos/seed/' + Math.random() + '/800/600'];
 
         const productData = {
           title: formData.title,
@@ -115,22 +211,26 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
           isOnSale: formData.isOffer,
           salePrice: formData.isOffer ? parseFloat(formData.salePrice) : null,
           customFields: formData.customFields,
-          images: ['https://picsum.photos/seed/' + Math.random() + '/800/600'] // Placeholder
+          images
         };
 
         await api.publishProduct(productData);
-        
+
         await api.trackMetric({
           userId: user.uid,
           action: 'publish',
           targetId: 'new_product',
           targetType: 'product',
-          metadata: formData
+          metadata: { category: formData.category, type: formData.type, price: formData.price }
         });
+        setStep(prev => prev + 1);
       } catch (error) {
         console.error('Error publishing product:', error);
-        return;
+        setPublishError('Error al publicar: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+      } finally {
+        setIsPublishing(false);
       }
+      return;
     }
     setStep(prev => prev + 1);
   };
@@ -200,6 +300,8 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
   };
 
   const isStep3Valid = () => {
+    // If categories haven't loaded yet, allow the attempt (validation in handleNext will catch it)
+    if (!currentCategory) return true;
     const sys = currentCategory?.systemFields;
     if (sys?.price?.required && !formData.price) return false;
     if (sys?.location?.required && !formData.location) return false;
@@ -485,26 +587,94 @@ export default function PublishForm({ onComplete, onCancel }: PublishFormProps) 
 
             <div className="space-y-4">
               <label className="text-xs font-black text-vuttik-navy uppercase tracking-widest">Fotos del producto/precio</label>
+
+              {/* Hidden inputs for camera and gallery */}
+              <input
+                id="camera-input"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => handleImageFiles(e.target.files)}
+              />
+              <input
+                id="gallery-input"
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleImageFiles(e.target.files)}
+              />
+
+              {/* Image previews */}
+              {selectedImages.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {selectedImages.map((img, i) => (
+                    <div key={i} className="relative aspect-square rounded-2xl overflow-hidden group">
+                      <img src={img} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removeImage(i)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
-                <button className="aspect-square bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all">
+                <label
+                  htmlFor="camera-input"
+                  className="aspect-square bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                >
                   <Camera size={32} />
                   <span className="text-[10px] font-black uppercase">Tomar Foto</span>
-                </button>
-                <div className="aspect-square bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted">
-                  <Plus size={32} />
-                  <span className="text-[10px] font-black uppercase">Añadir más</span>
-                </div>
+                </label>
+                <label
+                  htmlFor="gallery-input"
+                  className="aspect-square bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                >
+                  <ImageIcon size={32} />
+                  <span className="text-[10px] font-black uppercase">Subir Fotos</span>
+                </label>
               </div>
+              {selectedImages.length > 0 && (
+                <p className="text-[10px] text-vuttik-text-muted text-center">{selectedImages.length} foto(s) seleccionada(s) · Máx. 6</p>
+              )}
             </div>
 
+            {/* Error banner - visible en móvil y desktop */}
+            {publishError && (
+              <div className="w-full mt-2 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-semibold flex items-start gap-2">
+                <span className="text-lg leading-none">⚠️</span>
+                <span>{publishError}</span>
+              </div>
+            )}
+
             <div className="flex gap-4">
-              <button onClick={handleBack} className="flex-1 bg-vuttik-gray text-vuttik-navy font-bold py-5 rounded-2xl">Atrás</button>
+              <button 
+                onClick={handleBack} 
+                disabled={isPublishing}
+                className="flex-1 bg-vuttik-gray text-vuttik-navy font-bold py-5 rounded-2xl disabled:opacity-50"
+              >
+                Atrás
+              </button>
               <button 
                 onClick={handleNext}
-                disabled={!isStep3Valid()}
-                className="flex-[2] bg-vuttik-navy text-white font-black py-5 rounded-2xl shadow-xl shadow-vuttik-navy/20"
+                disabled={!isStep3Valid() || isPublishing}
+                className={`flex-[2] text-white font-black py-5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 ${
+                  isPublishing ? 'bg-vuttik-navy/70 cursor-not-allowed' : 'bg-vuttik-navy shadow-vuttik-navy/20 active:scale-95'
+                }`}
               >
-                Publicar Ahora
+                {isPublishing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Publicando...</span>
+                  </>
+                ) : (
+                  <span>Publicar Ahora</span>
+                )}
               </button>
             </div>
           </motion.div>
