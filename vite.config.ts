@@ -7,12 +7,17 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     plugins: [react(), tailwindcss()],
+    optimizeDeps: {
+      include: ['leaflet'],
+    },
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY),
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, 'src'),
+        'framer-motion': path.resolve(__dirname, 'src/lib/framer-motion-mock.tsx'),
+        'motion/react': path.resolve(__dirname, 'src/lib/framer-motion-mock.tsx')
       },
     },
     server: {
@@ -28,22 +33,16 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: false,
-      // Use esbuild (fast, no type-checking) for transforms
+      sourcemap: true,
+      minify: false,
       target: 'es2020',
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-            maps: ['leaflet', 'react-leaflet'],
-            motion: ['motion'],
-          },
+          manualChunks: undefined,
         },
       },
     },
     esbuild: {
-      // Skip type checking for fast builds
       logOverride: { 'this-is-undefined-in-esm': 'silent' },
     },
   };

@@ -3,8 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { X, Tag, ShoppingBag, MapPin, Star, ChevronRight, Info, Loader2, Search, SlidersHorizontal, DollarSign, Building2, Globe, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { api } from '../lib/api';
 
 // Fix for Leaflet default icon
 const DefaultIcon = L.icon({
@@ -58,14 +57,11 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
   const [onlyOffers, setOnlyOffers] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'categories'), orderBy('order', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    api.getCategories().then(cats => {
       setCategories(cats);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'categories');
+    }).catch(err => {
+      console.error('Error loading categories:', err);
     });
-    return () => unsubscribe();
   }, []);
 
   // Apply Filters

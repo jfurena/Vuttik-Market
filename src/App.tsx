@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
@@ -15,13 +16,11 @@ import MegaGuardianDashboard from './components/MegaGuardianDashboard';
 import GuardianDashboard from './components/GuardianDashboard';
 import BusinessDashboard from './components/BusinessDashboard';
 import NegocioDashboard from './components/NegocioDashboard';
-import AdminDashboard from './components/AdminDashboard';
 import CategoryExplorer from './components/CategoryExplorer';
 import SocialFeed from './components/SocialFeed';
 import PublishForm from './components/PublishForm';
 import ProductDetails from './components/ProductDetails';
 import PublishSelection from './components/PublishSelection';
-import AuditLog from './components/AuditLog';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from './lib/api';
 import { trackMetric } from './utils/metrics';
@@ -30,14 +29,14 @@ import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
   const { user, isLoading, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState('market');
   const [marketCategory, setMarketCategory] = useState<string | null>(null);
   const [marketType, setMarketType] = useState('sell');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showPublishSelection, setShowPublishSelection] = useState(false);
-  const [viewProfileUserId, setViewProfileUserId] = useState<string | null>(null);
 
   const userProfile = user;
   const userPlan = user ? { id: user.planId || 'free', name: user.planId || 'free', features: ['profile', 'settings'] } : null;
@@ -64,12 +63,12 @@ export default function App() {
       trackMetric({
         userId: user.uid,
         action: 'click',
-        targetId: activeTab,
+        targetId: location.pathname,
         targetType: 'user',
-        metadata: { tab: activeTab }
+        metadata: { path: location.pathname }
       });
     }
-  }, [activeTab, user]);
+  }, [location.pathname, user]);
 
   if (isLoading) {
     return (
@@ -118,90 +117,37 @@ export default function App() {
     }
   };
 
-  const handleTabChange = (tab: string) => {
-    if (tab === 'publish') {
-      setShowPublishSelection(true);
-      return;
-    }
-    if (tab === 'market') {
-      setMarketCategory(null);
-    }
-    if (tab === 'profile') {
-      setViewProfileUserId(null);
-    }
-    setActiveTab(tab);
-  };
-
   const handlePublishSelect = (type: 'product' | 'social') => {
     setShowPublishSelection(false);
     if (type === 'product') {
-      setActiveTab('publish');
+      navigate('/publicar');
     } else {
-      setActiveTab('social');
-      // In a real app, we might trigger the social publish modal directly
+      navigate('/social');
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'market':
-        if (!marketCategory) {
-          return <CategoryExplorer onSelectCategory={handleCategorySelect} />;
-        }
-        return (
-          <P2PBoard 
-            initialCategory={marketCategory} 
-            initialType={marketType}
-            onViewDetails={(id) => setSelectedProductId(id)} 
-            onBack={() => setMarketCategory(null)}
-          />
-        );
-      case 'social':
-        return <SocialFeed onNavigateToProfile={(uid) => {
-          setViewProfileUserId(uid);
-          setActiveTab('profile');
-        }} />;
-      case 'messages':
-        return <Chat />;
-      case 'profile':
-        return <Profile 
-          userId={viewProfileUserId || undefined} 
-          currentUserId={user.uid} 
-          onViewProduct={(id) => setSelectedProductId(id)}
-        />;
-      case 'business_dash':
-        return <BusinessDashboard onViewProduct={(id) => setSelectedProductId(id)} />;
-      case 'negocio_dash':
-        return <NegocioDashboard onViewProduct={(id) => setSelectedProductId(id)} />;
-      case 'guardian_dash':
-        return <GuardianDashboard onViewProduct={(id) => setSelectedProductId(id)} />;
-      case 'mega_guardian_dash':
-      case 'admin_dash':
-        return <MegaGuardianDashboard />;
-      case 'audit_log':
-        return <AuditLog />;
-      case 'publish':
-        return (
-          <PublishForm 
-            onComplete={() => {
-              setMarketCategory('GLOBAL');
-              setActiveTab('market');
-            }} 
-            onCancel={() => setActiveTab('market')} 
-          />
-        );
-      default:
-        return <P2PBoard />;
-    }
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path.startsWith('/social')) return 'social';
+    if (path.startsWith('/mensajes')) return 'messages';
+    if (path.startsWith('/perfil')) return 'profile';
+    if (path.startsWith('/panel/negocio')) return 'negocio_dash';
+    if (path.startsWith('/panel/empresa')) return 'business_dash';
+    if (path.startsWith('/panel/guardian')) return 'guardian_dash';
+    if (path.startsWith('/panel/mega-guardian')) return 'mega_guardian_dash';
+    if (path.startsWith('/publicar')) return 'publish';
+    return 'market';
   };
+
+  const activeTab = getActiveTab();
 
   return (
     <div className="min-h-screen flex bg-white">
       <Sidebar 
         activeTab={activeTab} 
-        setActiveTab={handleTabChange} 
         userRole={userProfile?.role || 'user'}
         userPlan={userPlan}
+        onPublishClick={() => setShowPublishSelection(true)}
       />
       
       <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -209,34 +155,45 @@ export default function App() {
           userRole={userProfile?.role || 'user'} 
           userPlan={userPlan}
           userProfile={userProfile}
-          onNavigate={(tab) => {
-            if (tab === 'business') setActiveTab('business_dash');
-            else if (tab === 'negocio') setActiveTab('negocio_dash');
-            else if (tab === 'guardian') setActiveTab('guardian_dash');
-            else if (tab === 'mega-guardian' || tab === 'admin') setActiveTab('mega_guardian_dash');
-            else if (tab === 'settings' || tab === 'profile') {
-              setViewProfileUserId(null);
-              setActiveTab('profile');
-            }
-          }} 
         />
         
         <main className="flex-1 overflow-y-auto no-scrollbar pt-6 pb-24 md:pb-10">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab + (viewProfileUserId || '')}
+              key={location.pathname}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="max-w-[1600px] mx-auto w-full"
             >
-              {renderContent()}
+              <Routes location={location}>
+                <Route path="/" element={
+                  !marketCategory ? 
+                    <CategoryExplorer onSelectCategory={handleCategorySelect} /> :
+                    <P2PBoard 
+                      initialCategory={marketCategory} 
+                      initialType={marketType}
+                      onViewDetails={(id) => setSelectedProductId(id)} 
+                      onBack={() => setMarketCategory(null)}
+                    />
+                } />
+                <Route path="/social" element={<SocialFeed onNavigateToProfile={(uid) => navigate('/perfil/' + uid)} />} />
+                <Route path="/mensajes" element={<Chat />} />
+                <Route path="/perfil/:userId" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
+                <Route path="/perfil" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
+                <Route path="/panel/empresa" element={<BusinessDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
+                <Route path="/panel/negocio" element={<NegocioDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
+                <Route path="/panel/guardian" element={<GuardianDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
+                <Route path="/panel/mega-guardian" element={<MegaGuardianDashboard />} />
+                <Route path="/publicar" element={<PublishForm onComplete={() => navigate('/')} onCancel={() => navigate('/')} />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </motion.div>
           </AnimatePresence>
         </main>
 
-        <BottomNav activeTab={activeTab} setActiveTab={handleTabChange} />
+        <BottomNav activeTab={activeTab} onPublishClick={() => setShowPublishSelection(true)} />
       </div>
 
       {/* Product Detail Modal */}
@@ -264,5 +221,3 @@ export default function App() {
     </div>
   );
 }
-
-

@@ -1,0 +1,53 @@
+name: 🚀 Deploy to DirectAdmin
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+    
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        
+    - name: 🔨 Install Dependencies
+      run: npm install
+      
+    - name: 🏗️ Build Application
+      run: npm run build
+    
+    - name: 📂 Sync Frontend Files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.3
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./dist/
+        server-dir: /domains/vuttik.com/public_html/
+        # Ignoramos el .htaccess para no romper las reglas de CloudLinux Passenger
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/.htaccess
+          
+    - name: ⚙️ Sync Backend Files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.3
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./server/
+        server-dir: /domains/vuttik.com/server/
+        # Ignorar archivos temporales
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/*.log

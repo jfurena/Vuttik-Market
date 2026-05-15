@@ -2,6 +2,10 @@
  * API client to replace direct Firestore calls with SQL backend calls.
  */
 
+// Use relative paths so the server proxy (.htaccess / LiteSpeed) forwards /api/ to Node.js backend.
+// This avoids mixed-content errors when the site runs on HTTPS.
+const API_BASE = '';
+
 async function request(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('vuttik_token');
   const headers: Record<string, string> = {
@@ -13,7 +17,7 @@ async function request(path: string, options: RequestInit = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(path, {
+  const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
   });
@@ -35,7 +39,9 @@ export const api = {
   getMe: () => request('/api/auth/me'),
 
   // Users
+  // Users
   getUser: (uid: string) => request(`/api/users/${uid}`),
+  getAllUsers: () => request('/api/users'),
   saveUser: (userData: any) => request('/api/users', {
     method: 'POST',
     body: JSON.stringify(userData),
@@ -44,7 +50,16 @@ export const api = {
 
   // Categories & Types
   getCategories: () => request('/api/categories'),
+  saveCategory: (categoryData: any) => request('/api/categories', { method: 'POST', body: JSON.stringify(categoryData) }),
+  deleteCategory: (id: string) => request(`/api/categories/${id}`, { method: 'DELETE' }),
   getTransactionTypes: () => request('/api/transaction-types'),
+  saveTransactionType: (typeData: any) => request('/api/transaction-types', { method: 'POST', body: JSON.stringify(typeData) }),
+  deleteTransactionType: (id: string) => request(`/api/transaction-types/${id}`, { method: 'DELETE' }),
+
+  // Subscription Plans
+  getSubscriptionPlans: () => request('/api/subscription-plans'),
+  saveSubscriptionPlan: (planData: any) => request('/api/subscription-plans', { method: 'POST', body: JSON.stringify(planData) }),
+  deleteSubscriptionPlan: (id: string) => request(`/api/subscription-plans/${id}`, { method: 'DELETE' }),
 
   // Products
   getProducts: (categoryId?: string, authorId?: string) => {

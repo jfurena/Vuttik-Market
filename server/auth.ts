@@ -36,7 +36,7 @@ authRouter.post('/register', async (req, res) => {
   if (!name || !email || !password) return res.status(400).json({ error: 'Missing required fields' });
 
   try {
-    const existing = await get('SELECT uid FROM users WHERE email = ?', [email]);
+    const existing = await get('SELECT uid FROM vuttik_users WHERE email = ?', [email]);
     if (existing) return res.status(409).json({ error: 'Email already registered' });
 
     const salt = await bcrypt.genSalt(10);
@@ -44,7 +44,7 @@ authRouter.post('/register', async (req, res) => {
     const uid = uuidv4();
 
     await run(
-      'INSERT INTO users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [uid, email, name, 'user', 'free', new Date().toISOString(), hash, 'local']
     );
 
@@ -60,7 +60,7 @@ authRouter.post('/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
 
   try {
-    const user: any = await get('SELECT * FROM users WHERE email = ?', [email]);
+    const user: any = await get('SELECT * FROM vuttik_users WHERE email = ?', [email]);
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
     if (user.oauth_provider && user.oauth_provider !== 'local') {
@@ -92,7 +92,7 @@ authRouter.post('/login', async (req, res) => {
 
 authRouter.get('/me', authenticateToken, async (req: any, res) => {
   try {
-    const user: any = await get('SELECT * FROM users WHERE uid = ?', [req.user.uid]);
+    const user: any = await get('SELECT * FROM vuttik_users WHERE uid = ?', [req.user.uid]);
     if (!user) return res.status(404).json({ error: 'No user found' });
     delete user.password_hash;
     res.json({
@@ -138,19 +138,19 @@ authRouter.post('/google/callback', async (req, res) => {
     const profile = await userResponse.json();
     if (!profile.id || !profile.email) return res.status(400).json({ error: 'Failed to retrieve Google profile' });
 
-    let user: any = await get('SELECT * FROM users WHERE email = ?', [profile.email]);
+    let user: any = await get('SELECT * FROM vuttik_users WHERE email = ?', [profile.email]);
     
     if (user) {
         if (user.oauth_provider !== 'google') {
-           await run('UPDATE users SET oauth_provider = ?, oauth_id = ?, display_name = ? WHERE email = ?', ['google', profile.id, profile.name, profile.email]);
+           await run('UPDATE vuttik_users SET oauth_provider = ?, oauth_id = ?, display_name = ? WHERE email = ?', ['google', profile.id, profile.name, profile.email]);
         }
     } else {
         const uid = uuidv4();
         await run(
-          'INSERT INTO users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [uid, profile.email, profile.name, profile.picture, 'user', 'free', new Date().toISOString(), 'google', profile.id]
         );
-        user = await get('SELECT * FROM users WHERE email = ?', [profile.email]);
+        user = await get('SELECT * FROM vuttik_users WHERE email = ?', [profile.email]);
     }
 
     const token = generateOAuthJWT(user.uid, user.email, user.role);
@@ -184,19 +184,19 @@ authRouter.post('/facebook/callback', async (req, res) => {
     
     const email = profile.email || `${profile.id}@facebook.local`;
 
-    let user: any = await get('SELECT * FROM users WHERE email = ?', [email]);
+    let user: any = await get('SELECT * FROM vuttik_users WHERE email = ?', [email]);
     
     if (user) {
         if (user.oauth_provider !== 'facebook') {
-           await run('UPDATE users SET oauth_provider = ?, oauth_id = ?, display_name = ? WHERE email = ?', ['facebook', profile.id, profile.name, email]);
+           await run('UPDATE vuttik_users SET oauth_provider = ?, oauth_id = ?, display_name = ? WHERE email = ?', ['facebook', profile.id, profile.name, email]);
         }
     } else {
         const uid = uuidv4();
         await run(
-          'INSERT INTO users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [uid, email, profile.name, profile.picture?.data?.url || null, 'user', 'free', new Date().toISOString(), 'facebook', profile.id]
         );
-        user = await get('SELECT * FROM users WHERE email = ?', [email]);
+        user = await get('SELECT * FROM vuttik_users WHERE email = ?', [email]);
     }
 
     const token = generateOAuthJWT(user.uid, user.email, user.role);

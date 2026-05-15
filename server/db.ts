@@ -16,9 +16,28 @@ const get = promisify(db.get.bind(db));
 export async function initDB() {
   console.log('Initializing SQL database at:', dbPath);
 
+  // Auto-migration to new table prefixes
+  const tables_to_migrate = [
+    "users", "categories", "transaction_types", "subscription_plans",
+    "products", "posts", "post_likes", "metrics", "daily_stats",
+    "follows", "conversations", "messages", "comments", "post_verifications"
+  ];
+  for (const t of tables_to_migrate) {
+    try {
+      const exists = await get(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [t]);
+      if (exists) {
+        console.log(`Migrating table ${t} to vuttik_${t}...`);
+        await run(`ALTER TABLE ${t} RENAME TO vuttik_${t}`);
+      }
+    } catch (e) {
+      console.error(`Migration error for ${t}:`, e);
+    }
+  }
+
+
   // Users Table
   await run(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS vuttik_users (
       uid TEXT PRIMARY KEY,
       email TEXT,
       display_name TEXT,
@@ -34,13 +53,13 @@ export async function initDB() {
   `);
 
   // Add columns to existing DB if they don't exist
-  try { await run("ALTER TABLE users ADD COLUMN password_hash TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE users ADD COLUMN oauth_provider TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE users ADD COLUMN oauth_id TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN password_hash TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN oauth_provider TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN oauth_id TEXT"); } catch (e) {}
 
   // Categories Table
   await run(`
-    CREATE TABLE IF NOT EXISTS categories (
+    CREATE TABLE IF NOT EXISTS vuttik_categories (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       order_index INTEGER DEFAULT 0,
@@ -52,15 +71,27 @@ export async function initDB() {
 
   // Transaction Types Table
   await run(`
-    CREATE TABLE IF NOT EXISTS transaction_types (
+    CREATE TABLE IF NOT EXISTS vuttik_transaction_types (
       id TEXT PRIMARY KEY,
-      label TEXT NOT NULL
+      label TEXT NOT NULL,
+      icon TEXT,
+      active BOOLEAN DEFAULT 1
+    )
+  `);
+
+  // Subscription Plans Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_subscription_plans (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      price REAL DEFAULT 0,
+      features TEXT -- JSON array
     )
   `);
 
   // Products Table
   await run(`
-    CREATE TABLE IF NOT EXISTS products (
+    CREATE TABLE IF NOT EXISTS vuttik_products (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT,
@@ -80,22 +111,22 @@ export async function initDB() {
       images TEXT, -- JSON array
       custom_fields TEXT, -- JSON object
       created_at TEXT,
-      FOREIGN KEY(category_id) REFERENCES categories(id),
-      FOREIGN KEY(author_id) REFERENCES users(uid)
+      FOREIGN KEY(category_id) REFERENCES vuttik_categories(id),
+      FOREIGN KEY(author_id) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Migrations for products table
-  try { await run("ALTER TABLE products ADD COLUMN barcode TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE products ADD COLUMN phone TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE products ADD COLUMN lat REAL"); } catch (e) {}
-  try { await run("ALTER TABLE products ADD COLUMN lng REAL"); } catch (e) {}
-  try { await run("ALTER TABLE products ADD COLUMN is_on_sale BOOLEAN DEFAULT 0"); } catch (e) {}
-  try { await run("ALTER TABLE products ADD COLUMN sale_price REAL"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN barcode TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN phone TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN lat REAL"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN lng REAL"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN is_on_sale BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN sale_price REAL"); } catch (e) {}
 
   // Social Posts Table
   await run(`
-    CREATE TABLE IF NOT EXISTS posts (
+    CREATE TABLE IF NOT EXISTS vuttik_posts (
       id TEXT PRIMARY KEY,
       author_id TEXT,
       author_name TEXT,
@@ -105,25 +136,25 @@ export async function initDB() {
       location TEXT,
       is_verified BOOLEAN DEFAULT 0,
       created_at TEXT,
-      FOREIGN KEY(author_id) REFERENCES users(uid)
+      FOREIGN KEY(author_id) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Post Likes Table (Relation)
   await run(`
-    CREATE TABLE IF NOT EXISTS post_likes (
+    CREATE TABLE IF NOT EXISTS vuttik_post_likes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       post_id TEXT,
       user_id TEXT,
-      FOREIGN KEY(post_id) REFERENCES posts(id),
-      FOREIGN KEY(user_id) REFERENCES users(uid),
+      FOREIGN KEY(post_id) REFERENCES vuttik_posts(id),
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid),
       UNIQUE(post_id, user_id)
     )
   `);
 
   // Metrics Table
   await run(`
-    CREATE TABLE IF NOT EXISTS metrics (
+    CREATE TABLE IF NOT EXISTS vuttik_metrics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT,
       action TEXT,
@@ -136,7 +167,7 @@ export async function initDB() {
 
   // Daily Aggregated Stats (For performance)
   await run(`
-    CREATE TABLE IF NOT EXISTS daily_stats (
+    CREATE TABLE IF NOT EXISTS vuttik_daily_stats (
       date TEXT PRIMARY KEY,
       views INTEGER DEFAULT 0,
       searches INTEGER DEFAULT 0,
@@ -146,55 +177,55 @@ export async function initDB() {
   `);
 
   // Indices for analytics performance
-  await run('CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)');
-  await run('CREATE INDEX IF NOT EXISTS idx_metrics_action ON metrics(action)');
-  await run('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id)');
-  await run('CREATE INDEX IF NOT EXISTS idx_products_created ON products(created_at)');
+  await run('CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON vuttik_metrics(timestamp)');
+  await run('CREATE INDEX IF NOT EXISTS idx_metrics_action ON vuttik_metrics(action)');
+  await run('CREATE INDEX IF NOT EXISTS idx_products_category ON vuttik_products(category_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_products_created ON vuttik_products(created_at)');
 
   // Follows Table (Who follows whom)
   await run(`
-    CREATE TABLE IF NOT EXISTS follows (
+    CREATE TABLE IF NOT EXISTS vuttik_follows (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       follower_id TEXT NOT NULL,
       following_id TEXT NOT NULL,
       created_at TEXT,
       UNIQUE(follower_id, following_id),
-      FOREIGN KEY(follower_id) REFERENCES users(uid),
-      FOREIGN KEY(following_id) REFERENCES users(uid)
+      FOREIGN KEY(follower_id) REFERENCES vuttik_users(uid),
+      FOREIGN KEY(following_id) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Conversations Table (like WhatsApp chats)
   await run(`
-    CREATE TABLE IF NOT EXISTS conversations (
+    CREATE TABLE IF NOT EXISTS vuttik_conversations (
       id TEXT PRIMARY KEY,
       participant_1 TEXT NOT NULL,
       participant_2 TEXT NOT NULL,
       last_message TEXT,
       last_message_at TEXT,
       created_at TEXT,
-      FOREIGN KEY(participant_1) REFERENCES users(uid),
-      FOREIGN KEY(participant_2) REFERENCES users(uid)
+      FOREIGN KEY(participant_1) REFERENCES vuttik_users(uid),
+      FOREIGN KEY(participant_2) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Messages Table (persistent messages per conversation)
   await run(`
-    CREATE TABLE IF NOT EXISTS messages (
+    CREATE TABLE IF NOT EXISTS vuttik_messages (
       id TEXT PRIMARY KEY,
       conversation_id TEXT NOT NULL,
       sender_id TEXT NOT NULL,
       content TEXT NOT NULL,
       sent_at TEXT NOT NULL,
       is_read BOOLEAN DEFAULT 0,
-      FOREIGN KEY(conversation_id) REFERENCES conversations(id),
-      FOREIGN KEY(sender_id) REFERENCES users(uid)
+      FOREIGN KEY(conversation_id) REFERENCES vuttik_conversations(id),
+      FOREIGN KEY(sender_id) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Comments Table
   await run(`
-    CREATE TABLE IF NOT EXISTS comments (
+    CREATE TABLE IF NOT EXISTS vuttik_comments (
       id TEXT PRIMARY KEY,
       post_id TEXT,
       author_id TEXT,
@@ -202,40 +233,40 @@ export async function initDB() {
       author_avatar TEXT,
       content TEXT NOT NULL,
       created_at TEXT,
-      FOREIGN KEY(post_id) REFERENCES posts(id),
-      FOREIGN KEY(author_id) REFERENCES users(uid)
+      FOREIGN KEY(post_id) REFERENCES vuttik_posts(id),
+      FOREIGN KEY(author_id) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Post Verifications Table (Veracity Votes)
   await run(`
-    CREATE TABLE IF NOT EXISTS post_verifications (
+    CREATE TABLE IF NOT EXISTS vuttik_post_verifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       post_id TEXT,
       user_id TEXT,
       is_veracious BOOLEAN, -- 1 for True, 0 for False
       created_at TEXT,
       UNIQUE(post_id, user_id),
-      FOREIGN KEY(post_id) REFERENCES posts(id),
-      FOREIGN KEY(user_id) REFERENCES users(uid)
+      FOREIGN KEY(post_id) REFERENCES vuttik_posts(id),
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid)
     )
   `);
 
   // Indices for performance
-  await run('CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)');
-  await run('CREATE INDEX IF NOT EXISTS idx_verifications_post ON post_verifications(post_id)');
-  await run('CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id)');
-  await run('CREATE INDEX IF NOT EXISTS idx_messages_sent ON messages(sent_at)');
-  await run('CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id)');
-  await run('CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id)');
-  await run('CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON conversations(participant_1)');
-  await run('CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON conversations(participant_2)');
+  await run('CREATE INDEX IF NOT EXISTS idx_comments_post ON vuttik_comments(post_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_verifications_post ON vuttik_post_verifications(post_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_messages_conversation ON vuttik_messages(conversation_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_messages_sent ON vuttik_messages(sent_at)');
+  await run('CREATE INDEX IF NOT EXISTS idx_follows_follower ON vuttik_follows(follower_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_follows_following ON vuttik_follows(following_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON vuttik_conversations(participant_1)');
+  await run('CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON vuttik_conversations(participant_2)');
 
   console.log('Database schema created successfully.');
   
   // Seed initial categories if empty
   try {
-    const result: any = await get('SELECT COUNT(*) as count FROM categories');
+    const result: any = await get('SELECT COUNT(*) as count FROM vuttik_categories');
     const categoryCount = result?.count ?? 0;
     console.log('Current category count:', categoryCount);
     
@@ -371,14 +402,29 @@ export async function initDB() {
       
       for (const cat of initialCategories) {
         await run(
-          'INSERT OR REPLACE INTO categories (id, name, order_index, allowed_types, fields, system_fields) VALUES (?, ?, ?, ?, ?, ?)',
+          'INSERT OR REPLACE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields) VALUES (?, ?, ?, ?, ?, ?)',
           [cat.id, cat.name, cat.order, JSON.stringify(cat.types), JSON.stringify(cat.fields), JSON.stringify(cat.sys)]
         );
       }
       
-      await run('INSERT OR REPLACE INTO transaction_types (id, label) VALUES (?, ?)', ['sell', 'Venta']);
-      await run('INSERT OR REPLACE INTO transaction_types (id, label) VALUES (?, ?)', ['buy', 'Compra']);
-      await run('INSERT OR REPLACE INTO transaction_types (id, label) VALUES (?, ?)', ['rent', 'Renta']);
+      await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', ['sell', 'Venta', 'ArrowUpCircle', 1]);
+      await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', ['buy', 'Compra', 'ArrowDownCircle', 1]);
+      await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', ['rent', 'Alquiler', 'Key', 1]);
+      await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', ['loan', 'Préstamo', 'Banknote', 1]);
+      await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', ['hire', 'Contratación', 'BriefcaseBusiness', 1]);
+      await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', ['service', 'Servicio', 'ShieldCheck', 1]);
+      
+      const initialPlans = [
+        { id: 'free', name: 'Gratis', price: 0, features: ['market', 'social'] },
+        { id: 'business', name: 'Empresa', price: 29.99, features: ['market', 'social', 'business_dash', 'priority_support'] },
+        { id: 'negocio', name: 'Negocio', price: 9.99, features: ['market', 'social', 'negocio_dash'] },
+        { id: 'guardian', name: 'Guardian', price: 0, features: ['market', 'social', 'guardian_dash'] },
+      ];
+      
+      for (const plan of initialPlans) {
+        await run('INSERT OR REPLACE INTO vuttik_subscription_plans (id, name, price, features) VALUES (?, ?, ?, ?)', [plan.id, plan.name, plan.price, JSON.stringify(plan.features)]);
+      }
+
       console.log('Seeding completed successfully.');
     }
   } catch (err) {

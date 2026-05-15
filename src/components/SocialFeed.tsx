@@ -202,7 +202,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
   };
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 pb-32 px-4 md:px-6 max-w-2xl mx-auto">
+    <div className="flex flex-col gap-6 md:gap-8 pb-32 px-4 md:px-6 w-full">
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h2 className="text-3xl md:text-4xl font-display font-black text-vuttik-navy">Social</h2>

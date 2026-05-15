@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const NOTIFICATIONS = [
   { id: '1', title: 'Nueva oferta', body: 'El arroz premium bajó a 40 DOP en Negocio Bravo.', time: '5 min' },
@@ -13,7 +14,7 @@ interface TopNavProps {
   userRole?: string;
   userPlan?: any;
   userProfile?: any;
-  onNavigate?: (tab: string) => void;
+  
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -25,25 +26,25 @@ const ROLE_LABELS: Record<string, string> = {
   user: 'Comprador',
 };
 
-export default function TopNav({ userRole = 'user', userPlan, userProfile, onNavigate }: TopNavProps) {
+export default function TopNav({ userRole = 'user', userPlan, userProfile, }: TopNavProps) {
   const { logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
+  const navigate = useNavigate();
+
   const menuItems = [
-    { id: 'profile', label: 'Mi Perfil', icon: User, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
-    { id: 'negocio', label: 'Modo Negocio', icon: Store, role: ['negocio', 'mega_guardian', 'admin'], feature: 'negocio_dash' },
-    { id: 'business', label: 'Modo Empresa', icon: Briefcase, role: ['business', 'mega_guardian', 'admin'], feature: 'business_dash' },
-    { id: 'guardian', label: 'Modo Guardian', icon: Shield, role: ['guardian', 'mega_guardian', 'admin'], feature: 'guardian_dash' },
-    { id: 'mega-guardian', label: 'Modo Mega Guardian', icon: ShieldAlert, role: ['mega_guardian', 'admin'], feature: 'mega_guardian_dash' },
-    { id: 'admin', label: 'Panel Dueño', icon: ShieldAlert, role: ['admin'], feature: 'admin_dash' },
-    { id: 'settings', label: 'Ajustes', icon: Settings, role: ['user', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'settings' },
+    { id: 'profile', path: '/perfil', label: 'Mi Perfil', icon: User, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
+    { id: 'negocio', path: '/panel/negocio', label: 'Modo Negocio', icon: Store, role: ['negocio', 'mega_guardian', 'admin'], feature: 'negocio_dash' },
+    { id: 'business', path: '/panel/empresa', label: 'Modo Empresa', icon: Briefcase, role: ['business', 'mega_guardian', 'admin'], feature: 'business_dash' },
+    { id: 'guardian', path: '/panel/guardian', label: 'Modo Guardian', icon: Shield, role: ['guardian', 'mega_guardian', 'admin'], feature: 'guardian_dash' },
+    { id: 'mega-guardian', path: '/panel/mega-guardian', label: 'Modo Mega Guardian', icon: ShieldAlert, role: ['mega_guardian', 'admin'], feature: 'mega_guardian_dash' },
+    { id: 'settings', path: '/perfil', label: 'Ajustes', icon: Settings, role: ['user', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'settings' },
   ];
 
   const filteredMenu = menuItems.filter(item => {
     // Admin and Mega Guardian bypass feature checks for their specific modes
     if (userRole === 'admin' || userRole === 'mega_guardian') {
-      if (item.id === 'admin' && userRole !== 'admin') return false;
       return true;
     }
     
@@ -146,7 +147,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, onNav
                       <button 
                         key={item.id}
                         onClick={() => {
-                          onNavigate?.(item.id);
+                          navigate(item.path);
                           setShowMenu(false);
                         }}
                         className="w-full flex items-center gap-3 p-4 hover:bg-vuttik-gray rounded-2xl transition-colors text-vuttik-navy group"

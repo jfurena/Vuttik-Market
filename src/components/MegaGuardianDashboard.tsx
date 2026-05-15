@@ -10,8 +10,9 @@ import {
   Search, ArrowUpRight, ArrowDownRight, MapPin, Store, BarChart2,
   Plus, Edit2, Trash2, Check, X, ChevronRight, LayoutGrid,
   ShieldAlert, ShieldCheck, CreditCard, Tag, UserMinus, UserCheck, Mail,
-  UserCog, Ban, Unlock, AlertCircle
+  UserCog, Ban, Unlock, AlertCircle, ClipboardList
 } from 'lucide-react';
+import AuditLog from './AuditLog';
 import { api } from '../lib/api';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
@@ -107,7 +108,7 @@ interface UserProfile {
 }
 
 export default function MegaGuardianDashboard() {
-  const [activeView, setActiveView] = useState<'overview' | 'categories' | 'subcategories' | 'users' | 'comparison' | 'reports' | 'subscriptions'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'categories' | 'subcategories' | 'users' | 'comparison' | 'reports' | 'subscriptions' | 'auditoria'>('overview');
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<TransactionType[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -126,55 +127,31 @@ export default function MegaGuardianDashboard() {
   const [trends, setTrends] = useState<any[]>([]);
 
   useEffect(() => {
-    const q = query(collection(db, 'categories'), orderBy('order', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
-      setCategories(cats);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'categories');
-    });
-    return () => unsubscribe();
-  }, []);
+    const fetchData = async () => {
+      try {
+        const [cats, txTypes, usrs, pls] = await Promise.all([
+          api.getCategories(),
+          api.getTransactionTypes(),
+          api.getAllUsers(),
+          api.getSubscriptionPlans()
+        ]);
+        setCategories(cats);
+        setTransactionTypes(txTypes);
+        setUsers(usrs);
+        setPlans(pls);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      }
+    };
 
-  useEffect(() => {
-    const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const u = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
-      setUsers(u);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'users');
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'subscriptionPlans'), (snapshot) => {
-      const plansData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPlans(plansData);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const q = query(collection(db, 'transactionTypes'), orderBy('label', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const types = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransactionType));
-      setTransactionTypes(types);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'transactionTypes');
-    });
-    return () => unsubscribe();
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (activeView !== 'reports') return;
-    const q = query(collection(db, 'flaggedProducts'), orderBy('flaggedAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setFlaggedReports(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'flaggedProducts');
-    });
-    return () => unsubscribe();
+    setFlaggedReports([]);
   }, [activeView]);
 
   useEffect(() => {
@@ -197,23 +174,22 @@ export default function MegaGuardianDashboard() {
 
   const handleSaveCategory = async (id?: string) => {
     try {
-      // Create a clean data object without the ID
       const { id: _, ...dataToSave } = editForm as any;
+      const categoryData = { ...dataToSave, id };
+      
+      await api.saveCategory(categoryData);
       
       if (id) {
-        await updateDoc(doc(db, 'categories', id), dataToSave);
         setIsEditing(null);
       } else {
-        await addDoc(collection(db, 'categories'), {
-          ...dataToSave,
-          active: true,
-          order: categories.length + 1
-        });
         setIsAdding(false);
       }
       setEditForm({});
+      // To trigger a re-fetch, we could rely on the interval, or we could update local state
+      // For simplicity, we just reload window or rely on polling.
+      // We will just let polling pick it up.
     } catch (error) {
-      handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, 'categories');
+      console.error('Error saving category:', error);
     }
   };
 
@@ -253,9 +229,9 @@ export default function MegaGuardianDashboard() {
   const handleDeleteCategory = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
     try {
-      await deleteDoc(doc(db, 'categories', id));
+      await api.deleteCategory(id);
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, 'categories');
+      console.error('Error deleting category:', error);
     }
   };
 
@@ -349,28 +325,25 @@ export default function MegaGuardianDashboard() {
   const handleSaveType = async (id?: string) => {
     try {
       const { id: _, ...dataToSave } = typeForm as any;
+      await api.saveTransactionType({ ...dataToSave, id });
+      
       if (id) {
-        await updateDoc(doc(db, 'transactionTypes', id), dataToSave);
         setIsEditingType(null);
       } else {
-        await addDoc(collection(db, 'transactionTypes'), {
-          ...dataToSave,
-          active: true
-        });
         setIsAddingType(false);
       }
       setTypeForm({});
     } catch (error) {
-      handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, 'transactionTypes');
+      console.error('Error saving transaction type:', error);
     }
   };
 
   const handleDeleteType = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este tipo de transacción?')) return;
     try {
-      await deleteDoc(doc(db, 'transactionTypes', id));
+      await api.deleteTransactionType(id);
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, 'transactionTypes');
+      console.error('Error deleting transaction type:', error);
     }
   };
 
@@ -390,17 +363,22 @@ export default function MegaGuardianDashboard() {
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
     try {
-      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      const userToUpdate = users.find(u => u.id === userId);
+      if (userToUpdate) {
+        await api.saveUser({ ...userToUpdate, role: newRole, uid: userId });
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'users');
+      console.error('Error updating user role:', error);
     }
   };
 
   const handleToggleBan = async (userId: string, currentStatus: boolean) => {
     try {
-      await updateDoc(doc(db, 'users', userId), { isBanned: !currentStatus });
+      await api.banUser(userId, 'admin'); // or whatever current admin ID is
+      setUsers(users.map(u => u.id === userId ? { ...u, isBanned: !currentStatus } : u));
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'users');
+      console.error('Error toggling ban:', error);
     }
   };
 
@@ -419,17 +397,12 @@ export default function MegaGuardianDashboard() {
   const handleSavePlan = async () => {
     if (!editingPlan) return;
     try {
-      const { id, ...data } = editingPlan;
-      if (id) {
-        await updateDoc(doc(db, 'subscriptionPlans', id), data);
-      } else {
-        await addDoc(collection(db, 'subscriptionPlans'), data);
-      }
+      await api.saveSubscriptionPlan(editingPlan);
       setEditingPlan(null);
       setNotification({ message: 'Plan guardado con éxito', type: 'success' });
       setTimeout(() => setNotification(null), 3000);
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'subscriptionPlans');
+      console.error('Error saving plan:', error);
     }
   };
 
@@ -1195,6 +1168,7 @@ export default function MegaGuardianDashboard() {
           { id: 'subscriptions', label: 'Suscripciones', icon: CreditCard },
           { id: 'comparison', label: 'Comparador', icon: MapPin },
           { id: 'reports', label: 'Informes', icon: Shield },
+          { id: 'auditoria', label: 'Actividad Global', icon: ClipboardList },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1215,7 +1189,8 @@ export default function MegaGuardianDashboard() {
        activeView === 'subcategories' ? renderSubcategories() : 
        activeView === 'users' ? renderUsers() : 
        activeView === 'subscriptions' ? renderSubscriptions() : 
-       activeView === 'reports' ? renderReports() : (
+       activeView === 'reports' ? renderReports() : 
+       activeView === 'auditoria' ? <AuditLog /> : (
         <>
           {/* Header */}
           <header className="bg-white border-b border-vuttik-blue/20 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">

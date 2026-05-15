@@ -1,18 +1,21 @@
 import { Home, Search, PlusCircle, User, MessageSquare, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 interface BottomNavProps {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  onPublishClick: () => void;
 }
 
-export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
+export default function BottomNav({ activeTab, onPublishClick }: BottomNavProps) {
+  const navigate = useNavigate();
+
   const tabs = [
-    { id: 'market', icon: Search, label: 'Mercado' },
-    { id: 'social', icon: Globe, label: 'Social' },
-    { id: 'publish', icon: PlusCircle, label: 'Publicar', isCenter: true },
-    { id: 'messages', icon: MessageSquare, label: 'Mensajes' },
-    { id: 'profile', icon: User, label: 'Perfil' },
+    { id: 'market', path: '/', icon: Search, label: 'Mercado' },
+    { id: 'social', path: '/social', icon: Globe, label: 'Social' },
+    { id: 'publish', action: onPublishClick, icon: PlusCircle, label: 'Publicar', isCenter: true },
+    { id: 'messages', path: '/mensajes', icon: MessageSquare, label: 'Mensajes' },
+    { id: 'profile', path: '/perfil', icon: User, label: 'Perfil' },
   ];
 
   const getProfileIcon = () => {
@@ -36,7 +39,7 @@ export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => tab.action ? tab.action() : navigate(tab.path)}
               className="relative flex-1 flex flex-col items-center py-1"
             >
               <div className="relative w-12 h-12 bg-vuttik-blue text-white rounded-xl flex items-center justify-center shadow-lg shadow-vuttik-blue/30 hover:scale-110 active:scale-90 transition-all">
@@ -52,7 +55,7 @@ export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
         return (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => navigate(tab.path)}
             className={`nav-item flex-1 py-1 ${isActive ? 'active' : ''}`}
           >
             <motion.div
