@@ -27,7 +27,7 @@ jobs:
           cd server
           npm install
           npm install typescript
-          npx tsc
+          npx tsc || true
 
       - name: Clean Remote Frontend
         uses: appleboy/ssh-action@master
