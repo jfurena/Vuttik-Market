@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store, LayoutGrid } from 'lucide-react';
+import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store, LayoutGrid, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -117,7 +117,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-4 w-80 md:w-96 bg-white border border-gray-100 rounded-[32px] shadow-2xl overflow-hidden z-50"
+                  className="fixed left-0 right-0 top-20 w-full rounded-b-3xl md:absolute md:left-auto md:right-0 md:top-auto md:mt-4 md:w-96 bg-white border border-gray-100 md:rounded-[32px] shadow-2xl overflow-hidden z-50"
                 >
                   <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-vuttik-navy text-white">
                     <div className="flex items-center gap-2">
@@ -126,8 +126,30 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                     </div>
                     <button onClick={() => setShowNotifications(false)} className="hover:text-vuttik-blue transition-colors"><X size={18} /></button>
                   </div>
-                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                    {notifications.length === 0 ? (
+                  <div className="max-h-[70vh] md:max-h-96 overflow-y-auto custom-scrollbar">
+                    {unreadMessagesCount > 0 && (
+                      <div 
+                        onClick={() => {
+                          setShowNotifications(false);
+                          navigate('/mensajes');
+                        }}
+                        className="p-5 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer flex gap-4 relative overflow-hidden bg-blue-50/40"
+                      >
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-vuttik-blue" />
+                        <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20">
+                          <MessageSquare size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1.5">
+                            <h4 className="text-sm font-black leading-tight pr-2 text-vuttik-blue">Nuevos Mensajes</h4>
+                          </div>
+                          <p className="text-xs text-vuttik-text-muted leading-relaxed">
+                            Tienes {unreadMessagesCount} {unreadMessagesCount === 1 ? 'mensaje sin leer' : 'mensajes sin leer'} en tu bandeja.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {notifications.length === 0 && unreadMessagesCount === 0 ? (
                       <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
                           <Bell size={24} />

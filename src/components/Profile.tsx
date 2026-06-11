@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2 } from 'lucide-react';
+import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2, ImageIcon, UserPlus, UserMinus, Users } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { api } from '../lib/api';
 import ProductCard from './ProductCard';
 import UserAvatar from './UserAvatar';
 import PromotionModal from './PromotionModal';
+import CameraModal from './CameraModal';
 
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { trackMetric } from '../utils/metrics';
 
 const safeDate = (dateStr: any) => {
@@ -22,6 +23,7 @@ const safeDate = (dateStr: any) => {
 };
 
 export default function Profile({ currentUserId, onViewProduct }: { currentUserId?: string, onViewProduct?: (id: string) => void }) {
+  const navigate = useNavigate();
   const { userId, username } = useParams<{ userId?: string, username?: string }>();
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
   const [profileUser, setProfileUser] = useState<any>(null);
@@ -31,11 +33,16 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const [promoTarget, setPromoTarget] = useState<{id: string, type: 'product' | 'post'} | null>(null);
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [newPhotoURL, setNewPhotoURL] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [newBio, setNewBio] = useState('');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [followersList, setFollowersList] = useState<any[]>([]);
+  const [isTogglingFollow, setIsTogglingFollow] = useState(false);
 
   const targetUserId = userId || (!username ? currentUserId : undefined);
 
@@ -102,6 +109,16 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
           categoryId: p.categoryId || p.category_id
         }));
         setUserProducts(mapped);
+        
+        // Fetch followers
+        const followers = await api.getFollowers(targetUserId);
+        setFollowersList(followers);
+        
+        // Check following status
+        if (currentUserId && currentUserId !== targetUserId) {
+          const following = await api.getFollowing(currentUserId);
+          setIsFollowing(following.includes(targetUserId));
+        }
       } catch (error) {
         console.error('Error loading user products:', error);
         setUserProducts([]);
@@ -111,7 +128,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     loadUserProducts();
     const interval = setInterval(loadUserProducts, 30000);
     return () => clearInterval(interval);
-  }, [targetUserId]);
+  }, [targetUserId, currentUserId]);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -150,6 +167,58 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     }
   };
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 1200;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleImageFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (file.type.startsWith('image/')) {
+      try {
+        const b64 = await compressImage(file);
+        setNewPhotoURL(b64);
+      } catch (error) {
+        console.error('Compression error:', error);
+      }
+    }
+  };
+
   const handleUpdatePhoto = async () => {
     if (!targetUserId || !newPhotoURL) return;
     setIsSubmitting(true);
@@ -182,6 +251,57 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
       console.error('Error updating bio:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleVoteProduct = async (productId: string, voteType: 'up' | 'down') => {
+    if (!currentUserId) {
+      alert("Debes iniciar sesión para votar.");
+      return;
+    }
+    
+    const productIndex = userProducts.findIndex(p => p.id === productId);
+    if (productIndex === -1) return;
+    
+    const product = userProducts[productIndex];
+    const upVotes = [...(product.upVotes || [])];
+    const downVotes = [...(product.downVotes || [])];
+    
+    const isUpvoted = upVotes.includes(currentUserId);
+    const isDownvoted = downVotes.includes(currentUserId);
+    
+    let newVoteType: 'up' | 'down' | null = voteType;
+    
+    if (voteType === 'up') {
+      if (isUpvoted) {
+        newVoteType = null;
+        upVotes.splice(upVotes.indexOf(currentUserId), 1);
+      } else {
+        upVotes.push(currentUserId);
+        if (isDownvoted) downVotes.splice(downVotes.indexOf(currentUserId), 1);
+      }
+    } else {
+      if (isDownvoted) {
+        newVoteType = null;
+        downVotes.splice(downVotes.indexOf(currentUserId), 1);
+      } else {
+        downVotes.push(currentUserId);
+        if (isUpvoted) upVotes.splice(upVotes.indexOf(currentUserId), 1);
+      }
+    }
+
+    const newUserProducts = [...userProducts];
+    newUserProducts[productIndex] = { ...product, upVotes, downVotes };
+    setUserProducts(newUserProducts);
+
+    try {
+      await api.voteProduct(productId, currentUserId, newVoteType);
+    } catch (err) {
+      console.error('Failed to vote:', err);
+      // Revert if needed
+      const revertedProducts = [...userProducts];
+      revertedProducts[productIndex] = product;
+      setUserProducts(revertedProducts);
     }
   };
 
@@ -249,6 +369,67 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                   Verificado
                 </span>
+                {currentUserId && currentUserId !== targetUserId && (
+                  <button 
+                    onClick={async () => {
+                      if (!currentUserId || !targetUserId) return;
+                      try {
+                        const conv = await api.getOrCreateConversation(currentUserId, targetUserId);
+                        navigate('/mensajes', { state: { targetConversationId: conv.id } });
+                      } catch (err) {
+                        console.error('Failed to start chat:', err);
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-vuttik-blue text-white rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm hover:bg-blue-600 transition-colors"
+                  >
+                    <MessageSquare size={14} />
+                    Mensaje
+                  </button>
+                )}
+                {currentUserId && currentUserId !== targetUserId && (
+                  <button 
+                    disabled={isTogglingFollow}
+                    onClick={async () => {
+                      if (!currentUserId || !targetUserId) return;
+                      setIsTogglingFollow(true);
+                      try {
+                        if (isFollowing) {
+                          await api.unfollowUser(currentUserId, targetUserId);
+                          setIsFollowing(false);
+                          setProfileUser((prev: any) => ({ ...prev, followerCount: Math.max(0, (prev.followerCount || 1) - 1) }));
+                          setFollowersList(prev => prev.filter(f => f.follower_id !== currentUserId));
+                        } else {
+                          await api.followUser(currentUserId, targetUserId);
+                          setIsFollowing(true);
+                          setProfileUser((prev: any) => ({ ...prev, followerCount: (prev.followerCount || 0) + 1 }));
+                          // Ideally we add the current user to the list, but it requires full user details
+                          api.getFollowers(targetUserId).then(setFollowersList).catch(console.error);
+                        }
+                      } catch (err) {
+                        console.error('Failed to toggle follow:', err);
+                      } finally {
+                        setIsTogglingFollow(false);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm transition-colors ${
+                      isFollowing 
+                        ? 'bg-gray-100 text-vuttik-text-muted hover:bg-red-50 hover:text-red-500' 
+                        : 'bg-vuttik-blue text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    {isFollowing ? (
+                      <>
+                        <UserMinus size={14} />
+                        Siguiendo
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={14} />
+                        Seguir
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
             
@@ -325,7 +506,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             )}
 
             {/* Stats Cards (Floating Style) */}
-            <div className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl mx-auto">
               <div className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform">
                 <div className="text-2xl md:text-3xl font-black text-vuttik-navy mb-1">98%</div>
                 <div className="text-[9px] md:text-[10px] text-vuttik-text-muted font-black uppercase tracking-widest opacity-60">Confianza</div>
@@ -333,6 +514,13 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               <div className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform">
                 <div className="text-2xl md:text-3xl font-black text-vuttik-navy mb-1">{userProducts.length}</div>
                 <div className="text-[9px] md:text-[10px] text-vuttik-text-muted font-black uppercase tracking-widest opacity-60">Publicaciones</div>
+              </div>
+              <div 
+                onClick={() => setShowFollowersModal(true)}
+                className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform cursor-pointer"
+              >
+                <div className="text-2xl md:text-3xl font-black text-vuttik-navy mb-1">{profileUser.followerCount || 0}</div>
+                <div className="text-[9px] md:text-[10px] text-vuttik-text-muted font-black uppercase tracking-widest opacity-60">Seguidores</div>
               </div>
             </div>
           </div>
@@ -380,8 +568,10 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                         category={categories.find(c => c.id === (product.categoryId || product.category_id))?.name || 'General'}
                         type={product.typeId || product.type_id}
                         image={product.images?.[0]}
-                        upvotes={product.upVotes?.length || product.up_votes?.length || 0}
-                        downvotes={product.downVotes?.length || product.down_votes?.length || 0}
+                        upvotes={product.upVotes?.length || 0}
+                        downvotes={product.downVotes?.length || 0}
+                        userVote={product.upVotes?.includes(currentUserId) ? 'up' : product.downVotes?.includes(currentUserId) ? 'down' : null}
+                        onVote={handleVoteProduct}
                         onViewDetails={() => onViewProduct?.(product.id)}
                         trustLevel="High"
                         authorRating={4.5}
@@ -527,6 +717,16 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
         />
       )}
 
+      {showCamera && (
+        <CameraModal 
+          onCapture={(b64) => {
+            setNewPhotoURL(b64);
+            setShowCamera(false);
+          }} 
+          onClose={() => setShowCamera(false)} 
+        />
+      )}
+
       {/* Edit Photo Modal */}
       <AnimatePresence>
         {isEditingPhoto && (
@@ -558,15 +758,34 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-vuttik-text-muted uppercase tracking-widest ml-1">URL de la Imagen</label>
-                  <input 
-                    type="text" 
-                    value={newPhotoURL}
-                    onChange={(e) => setNewPhotoURL(e.target.value)}
-                    placeholder="https://ejemplo.com/foto.jpg"
-                    className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:ring-2 focus:ring-vuttik-blue/20"
+                <div className="space-y-4">
+                  <label className="text-[10px] font-bold text-vuttik-text-muted uppercase tracking-widest text-center block">Sube una imagen o toma una foto</label>
+                  
+                  <input
+                    id="profile-gallery-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleImageFiles(e.target.files)}
                   />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowCamera(true)}
+                      className="aspect-[3/2] bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                    >
+                      <Camera size={28} />
+                      <span className="text-[10px] font-black uppercase text-center leading-tight">Tomar<br/>Foto</span>
+                    </button>
+                    <label
+                      htmlFor="profile-gallery-input"
+                      className="aspect-[3/2] bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                    >
+                      <ImageIcon size={28} />
+                      <span className="text-[10px] font-black uppercase text-center leading-tight">Subir<br/>Foto</span>
+                    </label>
+                  </div>
                 </div>
 
                 <button 

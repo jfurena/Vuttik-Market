@@ -1,5 +1,5 @@
 import express from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { get, run } from './db.js';
@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-import { sendVerificationEmail, sendPasswordResetEmail } from './mailer.js';
+import { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } from './mailer.js';
 
 export const authRouter = express.Router();
 
@@ -182,7 +182,7 @@ authRouter.get('/verify-email', async (req, res) => {
 
 authRouter.post('/resend-verification', authenticateToken, async (req: any, res) => {
   try {
-    const user = await get('SELECT email, email_verified FROM vuttik_users WHERE uid = ?', [req.user.uid]);
+    const user = await get('SELECT email, email_verified, display_name FROM vuttik_users WHERE uid = ?', [req.user.uid]);
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
     if (user.email_verified) return res.status(400).json({ error: 'El correo ya está verificado' });
 
@@ -298,6 +298,9 @@ authRouter.post('/google/callback', async (req, res) => {
           [uid, profile.email, profile.name, profile.picture, 'user', 'free', new Date().toISOString(), 'google', profile.id]
         );
         user = await get('SELECT * FROM vuttik_users WHERE email = ?', [profile.email]);
+        
+        // Enviar correo de bienvenida al registrarse por primera vez con Google
+        sendWelcomeEmail(profile.email, profile.name).catch(console.error);
     }
 
     const token = generateOAuthJWT(user.uid, user.email, user.role);
@@ -346,6 +349,9 @@ authRouter.post('/facebook/callback', async (req, res) => {
           [uid, email, profile.name, profile.picture?.data?.url, 'user', 'free', new Date().toISOString(), 'facebook', profile.id]
         );
         user = await get('SELECT * FROM vuttik_users WHERE email = ?', [profile.email]);
+
+        // Enviar correo de bienvenida al registrarse por primera vez con Facebook
+        sendWelcomeEmail(email, profile.name).catch(console.error);
     }
 
     const token = generateOAuthJWT(user.uid, user.email, user.role);

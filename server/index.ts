@@ -302,6 +302,11 @@ app.get('/api/users/:uid', async (req, res) => {
         }
       }
 
+      const followerCountRow = await get('SELECT COUNT(*) as count FROM vuttik_follows WHERE following_id = ?', [user.uid]);
+      const followingCountRow = await get('SELECT COUNT(*) as count FROM vuttik_follows WHERE follower_id = ?', [user.uid]);
+      const followerCount = followerCountRow?.count || 0;
+      const followingCount = followingCountRow?.count || 0;
+
       const mappedUser = {
         ...user,
         displayName,
@@ -316,7 +321,9 @@ app.get('/api/users/:uid', async (req, res) => {
         age: user.age,
         gender: user.gender,
         country: user.country,
-        username: user.username
+        username: user.username,
+        followerCount,
+        followingCount
       };
       res.json(mappedUser);
     } else {
@@ -1881,6 +1888,22 @@ app.get('/api/follows/:userId/following', async (req, res) => {
       [req.params.userId]
     );
     res.json(rows.map((r: any) => r.following_id));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get list of users that follow userId
+app.get('/api/follows/:userId/followers', async (req, res) => {
+  try {
+    const rows = await all(`
+      SELECT f.follower_id, u.display_name, u.photo_url, u.username, u.role
+      FROM vuttik_follows f
+      JOIN vuttik_users u ON f.follower_id = u.uid
+      WHERE f.following_id = ?
+      ORDER BY f.created_at DESC
+    `, [req.params.userId]);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

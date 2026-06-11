@@ -116,24 +116,24 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           <X size={20} className="md:size-6" />
         </button>
 
-        {/* Image Section (60% on PC, 100% on Mobile) */}
-        <div className="w-full md:w-[60%] bg-vuttik-navy relative flex flex-col h-[40vh] md:h-auto shrink-0">
-          <div className="flex-1 relative">
+        {/* Image Section */}
+        <div className="w-full md:w-[50%] bg-gray-50 relative flex flex-col min-h-[35vh] md:min-h-0 shrink-0 border-b md:border-b-0 md:border-r border-gray-100">
+          <div className="flex-1 relative w-full h-full min-h-[300px] md:min-h-0 flex items-center justify-center p-4">
             <img 
               src={(product.images && product.images.length > 0 ? product.images[selectedImageIndex] : null) || product.image || product.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200'} 
-              className="absolute inset-0 w-full h-full object-contain bg-black" 
+              className="absolute inset-0 w-full h-full object-contain drop-shadow-sm p-2 md:p-6" 
               referrerPolicy="no-referrer" 
             />
           </div>
           
           {product.images && product.images.length > 1 && (
-            <div className="h-24 md:h-32 bg-gray-900 p-4 flex gap-3 overflow-x-auto no-scrollbar border-t border-gray-800">
+            <div className="h-20 md:h-24 bg-white/80 backdrop-blur-sm p-3 flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-100">
               {product.images.map((img: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImageIndex(idx)}
-                  className={`h-full aspect-square rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
-                    selectedImageIndex === idx ? 'border-vuttik-blue opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-vuttik-blue'
+                  className={`h-full aspect-square rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-gray-50 ${
+                    selectedImageIndex === idx ? 'border-vuttik-blue opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'
                   }`}
                 >
                   <img src={img} className="w-full h-full object-cover" />
@@ -142,16 +142,16 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
             </div>
           )}
           {product.isOnSale && (
-            <div className="absolute top-4 left-4 md:top-8 md:left-8 bg-red-500 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-xl">
+            <div className="absolute top-4 left-4 md:top-6 md:left-6 bg-red-500 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-xl z-10">
               Oferta Especial
             </div>
           )}
         </div>
 
-        {/* Content Section (40% on PC) */}
-        <div className="w-full md:w-[40%] p-4 md:p-6 overflow-y-auto no-scrollbar flex flex-col bg-white">
+        {/* Content Section */}
+        <div className="w-full md:w-[50%] p-5 md:p-8 overflow-y-auto no-scrollbar flex flex-col bg-white">
           {/* Title and Tags */}
-          <div className="mb-4">
+          <div className="mb-5">
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="bg-vuttik-blue/10 text-vuttik-blue text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
                 {product.category}

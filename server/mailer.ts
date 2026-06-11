@@ -104,3 +104,28 @@ export const sendPasswordResetEmail = async (email: string, name: string, token:
     return false;
   }
 };
+
+export const sendWelcomeEmail = async (email: string, name: string) => {
+  const loginLink = `https://vuttik.com/`;
+  
+  const mailOptions = {
+    from: '"Vuttik" <' + process.env.SMTP_USER + '>',
+    to: email,
+    subject: '¡Bienvenido a Vuttik!',
+    html: getEmailTemplate(
+      `¡Hola, ${name}!`,
+      'Nos alegra mucho darte la bienvenida a Vuttik. Tu cuenta ha sido creada exitosamente mediante Google/Facebook y ya está verificada. ¡Empieza a explorar el mercado ahora!',
+      'Ir a Vuttik',
+      loginLink
+    )
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Welcome email sent: %s', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    return false;
+  }
+};

@@ -66,8 +66,8 @@ export default function Chat({ currentUserId: propUserId, conversationId: propCo
   };
 
   const getOtherAvatar = (conv: Conversation) => {
-    const isMe1 = conv.user1_id === (currentUser?.originalUid || currentUser?.uid);
-    return isMe1 ? conv.user2_avatar : conv.user1_avatar;
+    if (!currentUser) return undefined;
+    return conv.participant_1 === currentUser.uid ? conv.p2_photo : conv.p1_photo;
   };
 
   const getOtherPhoto = (conv: Conversation) => {
