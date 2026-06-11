@@ -29,7 +29,6 @@ interface Category {
     description?: { label: string; required: boolean };
     barcode?: { label: string; required: boolean; active: boolean };
     images?: { label: string; required: boolean };
-    images?: { label: string; required: boolean };
   };
   requiresEan?: boolean;
   isService?: boolean;
