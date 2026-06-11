@@ -56,14 +56,14 @@ const getEmailTemplate = (title: string, message: string, buttonText: string, bu
 `;
 
 export const sendVerificationEmail = async (email: string, name: string, token: string) => {
-  const verificationLink = \`https://vuttik.com/verify-email?token=\${token}\`;
+  const verificationLink = `https://vuttik.com/verificar?token=${token}`;
   
   const mailOptions = {
     from: '"Vuttik" <' + process.env.SMTP_USER + '>',
     to: email,
     subject: 'Verifica tu cuenta en Vuttik',
     html: getEmailTemplate(
-      \`¡Hola, \${name}!\`,
+      `¡Hola, ${name}!`,
       'Gracias por registrarte en Vuttik. Para completar tu registro y asegurar tu cuenta, por favor haz clic en el siguiente botón.',
       'Verificar mi cuenta',
       verificationLink
@@ -81,15 +81,15 @@ export const sendVerificationEmail = async (email: string, name: string, token: 
 };
 
 export const sendPasswordResetEmail = async (email: string, name: string, token: string) => {
-  const resetLink = \`https://vuttik.com/reset-password?token=\${token}\`;
+  const resetLink = `https://vuttik.com/reset-password?token=${token}`;
   
   const mailOptions = {
     from: '"Vuttik" <' + process.env.SMTP_USER + '>',
     to: email,
     subject: 'Recuperación de contraseña en Vuttik',
     html: getEmailTemplate(
-      \`Recuperación de contraseña\`,
-      \`Hola \${name}, hemos recibido una solicitud para cambiar tu contraseña. Haz clic en el botón de abajo para establecer una nueva contraseña. Este enlace expirará en 24 horas.\`,
+      `Recuperación de contraseña`,
+      `Hola ${name}, hemos recibido una solicitud para cambiar tu contraseña. Haz clic en el botón de abajo para establecer una nueva contraseña. Este enlace expirará en 24 horas.`,
       'Restablecer contraseña',
       resetLink
     )
