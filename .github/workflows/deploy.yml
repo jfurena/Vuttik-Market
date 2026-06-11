@@ -28,25 +28,35 @@ jobs:
           npm install
           npx tsc
 
-      - name: Deploy Frontend via rsync
-        uses: easingthemes/ssh-deploy@main
+      - name: Clean Remote Frontend
+        uses: appleboy/ssh-action@master
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-avz --delete"
-          SOURCE: "dist/"
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          TARGET: "/home/sinagjwx/domains/vuttik.com/public_html/"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Safe removal of frontend assets
+            find /home/sinagjwx/domains/vuttik.com/public_html/assets -mindepth 1 -delete || true
 
-      - name: Deploy Backend via rsync
-        uses: easingthemes/ssh-deploy@main
+      - name: Deploy Frontend via scp
+        uses: appleboy/scp-action@master
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-avz --exclude 'vuttik.db' --exclude 'uploads' --exclude 'node_modules'"
-          SOURCE: "server/"
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          TARGET: "/home/sinagjwx/domains/vuttik.com/server/"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/home/sinagjwx/domains/vuttik.com/public_html/"
+          strip_components: 1
+
+      - name: Deploy Backend via scp
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "server/*"
+          target: "/home/sinagjwx/domains/vuttik.com/server/"
+          strip_components: 1
 
       - name: Restart Backend
         uses: appleboy/ssh-action@master
