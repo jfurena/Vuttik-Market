@@ -14,8 +14,10 @@ cd $APP_DIR || exit 1
 echo "--- [$(date)] Starting Vuttik Backend ---" >> "$LOG_FILE"
 
 # 2. Stop existing process on port 3005
-# We'll use pkill specifically for the node process in this dir
+pkill -f "node index.js" || true
 pkill -f "tsx index.ts" || true
+pkill -f "npx tsx index.ts" || true
+fuser -k 3005/tcp || true
 
 # 3. Start with nohup
 echo "Launching npm start..." >> "$LOG_FILE"
