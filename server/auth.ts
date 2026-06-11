@@ -8,6 +8,8 @@ import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
+import { sendVerificationEmail, sendPasswordResetEmail } from './mailer.js';
+
 export const authRouter = express.Router();
 
 // Security: throw at startup if JWT_SECRET is not configured
@@ -64,8 +66,8 @@ authRouter.post('/register', async (req, res) => {
     );
 
     if (isProd) {
-      // TODO: Implement real email sending here
-      console.log(`\n\n=== EN PRODUCCIÓN SE ENVIARÍA UN CORREO REAL ===\nPara: ${email}\nEnlace de Verificación: https://vuttik.com/verificar?token=${verificationToken}\n==================================================\n\n`);
+      // Send real verification email
+      await sendVerificationEmail(email, name, verificationToken);
     } else {
       console.log(`\n\n=== MODO LOCAL: CORREO AUTO-VERIFICADO ===\nPara: ${email}\nEl sistema saltó la verificación porque estás en entorno local.\n==========================================\n\n`);
     }
@@ -187,9 +189,66 @@ authRouter.post('/resend-verification', authenticateToken, async (req: any, res)
     const newToken = uuidv4();
     await run('UPDATE vuttik_users SET verification_token = ? WHERE uid = ?', [newToken, req.user.uid]);
 
-    console.log(`\n\n=== REENVÍO DE SIMULACIÓN DE CORREO ===\nPara: ${user.email}\nEnlace de Verificación: http://localhost:3000/verificar?token=${newToken}\n=====================================\n\n`);
+    if (process.env.NODE_ENV === 'production') {
+      await sendVerificationEmail(user.email, user.display_name || 'Usuario', newToken);
+    } else {
+      console.log(`\n\n=== REENVÍO DE SIMULACIÓN DE CORREO ===\nPara: ${user.email}\nEnlace de Verificación: http://localhost:3000/verificar?token=${newToken}\n=====================================\n\n`);
+    }
 
     res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Password Reset Routes ---
+authRouter.post('/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Falta el correo electrónico' });
+
+  try {
+    const user: any = await get('SELECT uid, display_name FROM vuttik_users WHERE email = ? AND oauth_provider = "local"', [email]);
+    if (!user) {
+      // Return success even if user not found to prevent email enumeration
+      return res.json({ success: true, message: 'Si el correo existe, recibirás un enlace de recuperación.' });
+    }
+
+    const resetToken = uuidv4();
+    const expirationDate = new Date();
+    expirationDate.setHours(expirationDate.getHours() + 24); // Token valid for 24 hours
+
+    await run('UPDATE vuttik_users SET reset_password_token = ?, reset_password_expires = ? WHERE uid = ?', [resetToken, expirationDate.toISOString(), user.uid]);
+
+    if (process.env.NODE_ENV === 'production') {
+      await sendPasswordResetEmail(email, user.display_name || 'Usuario', resetToken);
+    } else {
+      console.log(`\n\n=== MODO LOCAL: RECUPERACIÓN DE CONTRASEÑA ===\nPara: ${email}\nEnlace: http://localhost:3000/reset-password?token=${resetToken}\n==========================================\n\n`);
+    }
+
+    res.json({ success: true, message: 'Si el correo existe, recibirás un enlace de recuperación.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+authRouter.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!token || !newPassword) return res.status(400).json({ error: 'Faltan datos requeridos' });
+
+  try {
+    const user: any = await get('SELECT uid, reset_password_expires FROM vuttik_users WHERE reset_password_token = ?', [token]);
+    if (!user) return res.status(400).json({ error: 'El enlace es inválido o ya fue utilizado.' });
+
+    const now = new Date();
+    const expiresAt = new Date(user.reset_password_expires);
+    if (now > expiresAt) return res.status(400).json({ error: 'El enlace ha expirado. Solicita uno nuevo.' });
+
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+
+    await run('UPDATE vuttik_users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE uid = ?', [hash, user.uid]);
+
+    res.json({ success: true, message: 'Contraseña actualizada con éxito. Ya puedes iniciar sesión.' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

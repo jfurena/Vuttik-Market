@@ -176,8 +176,20 @@ function Auth({ onLogin }: AuthProps) {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('La recuperación de contraseña estará disponible próximamente. Contacta a soporte si necesitas acceder a tu cuenta.');
+    clearMessages();
+    if (!resetEmail) {
+      setError('Por favor, ingresa tu correo electrónico.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.requestPasswordReset(resetEmail);
+      setSuccess(res.message || 'Se ha enviado un enlace a tu correo.');
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un error. Inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- RENDER FORGOT PASSWORD ---
@@ -198,7 +210,7 @@ function Auth({ onLogin }: AuthProps) {
               className="w-32 h-32 mx-auto mb-6 object-contain" 
             />
             <h2 className="text-3xl font-display font-black text-white mb-2">Recuperar Acceso</h2>
-            <p className="text-vuttik-text-muted">La recuperación por correo estará disponible próximamente. Contacta a soporte para ayuda inmediata.</p>
+            <p className="text-vuttik-text-muted">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
           </div>
 
           <div className="bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-10 shadow-2xl">

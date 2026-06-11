@@ -26,6 +26,7 @@ jobs:
         run: |
           cd server
           npm install
+          npm install typescript
           npx tsc
 
       - name: Clean Remote Frontend
@@ -69,5 +70,5 @@ jobs:
             export NODE_HOME="/home/sinagjwx/nodejs"
             export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
             npm install --production
-            chmod +x start.sh
-            ./start.sh
+            touch ../tmp/restart.txt
+            pkill -9 lsnode || true

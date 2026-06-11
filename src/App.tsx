@@ -12,6 +12,8 @@ import P2PBoard from './components/P2PBoard';
 import Auth from './components/Auth';
 import Chat from './components/Chat';
 import Profile from './components/Profile';
+import ResetPassword from './components/ResetPassword';
+import VerifyEmail from './components/VerifyEmail';
 import MegaGuardianDashboard from './components/MegaGuardianDashboard';
 import GuardianDashboard from './components/GuardianDashboard';
 import BusinessDashboard from './components/BusinessDashboard';
@@ -26,7 +28,6 @@ import Settings from './components/Settings';
 import OnboardingModal from './components/OnboardingModal';
 import NotificationsPage from './components/NotificationsPage';
 import LemonSqueezyMockCheckout from './components/LemonSqueezyMockCheckout';
-import VerifyEmail from './components/VerifyEmail';
 import GlobalBusinessSelector from './components/GlobalBusinessSelector';
 import MissingDemographicsModal from './components/MissingDemographicsModal';
 import Herramientas from './components/Herramientas';
@@ -99,6 +100,12 @@ export default function App() {
   }
 
   if (!user) {
+    if (location.pathname === '/reset-password') {
+      return <ResetPassword />;
+    }
+    if (location.pathname === '/verificar') {
+      return <VerifyEmail />;
+    }
     return <Auth onLogin={() => {}} />;
   }
 
@@ -288,7 +295,6 @@ export default function App() {
                 <Route path="/publicar" element={<PublishForm onComplete={() => navigate('/')} onCancel={() => navigate('/')} />} />
                 <Route path="/editar/:id" element={<EditFormWrapper />} />
                 <Route path="/checkout" element={<LemonSqueezyMockCheckout isOpen={true} onClose={() => {}} onSuccess={() => {}} planName="Plan" planPrice={0} />} />
-                <Route path="/verificar" element={<VerifyEmail />} />
                 <Route path="/mi-plan" element={<MyPlan />} />
                 <Route path="/herramientas" element={<Herramientas />} />
                 <Route path="/herramientas/ean-recollector" element={<EanRecollector />} />

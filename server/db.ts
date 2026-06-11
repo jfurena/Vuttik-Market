@@ -57,7 +57,9 @@ export async function initDB() {
       username TEXT,
       username_changes TEXT DEFAULT '[]',
       email_verified BOOLEAN DEFAULT 0,
-      verification_token TEXT
+      verification_token TEXT,
+      reset_password_token TEXT,
+      reset_password_expires TEXT
     )
   `);
 
@@ -77,6 +79,8 @@ export async function initDB() {
   try { await run("ALTER TABLE vuttik_users ADD COLUMN active_profile_mode TEXT DEFAULT 'personal'"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN is_banned BOOLEAN DEFAULT 0"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN strikes INTEGER DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN reset_password_token TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN reset_password_expires TEXT"); } catch (e) {}
 
   // Notifications Table
   await run(`
@@ -366,6 +370,11 @@ export async function initDB() {
     )
   `);
 
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p1_name TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p1_photo TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p2_name TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p2_photo TEXT"); } catch (e) {}
+
   // Seed the Guardian Global Chat if it doesn't exist
   await run(`
     INSERT OR IGNORE INTO vuttik_conversations (id, participant_1, participant_2, p1_name, p2_name, last_message, created_at)
@@ -373,10 +382,6 @@ export async function initDB() {
   `, [new Date().toISOString()]);
 
   // Messages Table (persistent messages per conversation)
-  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p1_name TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p1_photo TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p2_name TEXT"); } catch (e) {}
-  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p2_photo TEXT"); } catch (e) {}
 
   await run(`
     CREATE TABLE IF NOT EXISTS vuttik_messages (
