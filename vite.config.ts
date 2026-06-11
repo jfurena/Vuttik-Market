@@ -28,6 +28,10 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:3005',
           changeOrigin: true,
         },
+        '/pos/api': {
+          target: 'http://localhost:3005',
+          changeOrigin: true,
+        },
       },
       hmr: process.env.DISABLE_HMR !== 'true',
     },

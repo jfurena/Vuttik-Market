@@ -20,18 +20,15 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const COLOR_MAP: Record<string, string> = {
-  Comida: 'bg-orange-500',
-  Terrenos: 'bg-emerald-600',
-  Divisas: 'bg-vuttik-blue',
-  Vehículos: 'bg-red-500',
-  Electrónica: 'bg-blue-600',
-  Hogar: 'bg-amber-600',
-  Empleo: 'bg-purple-600',
-  Alquiler: 'bg-indigo-600',
-  Préstamo: 'bg-cyan-600',
   GLOBAL: 'bg-vuttik-navy'
 };
 
+const PALETTE = [
+  'bg-blue-500', 'bg-red-500', 'bg-emerald-500', 'bg-amber-500', 
+  'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500',
+  'bg-cyan-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-violet-500',
+  'bg-orange-500', 'bg-sky-500'
+];
 interface CategoryExplorerProps {
   onSelectCategory: (categoryId: string, type: string) => void;
 }
@@ -82,14 +79,21 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
 
   const handleCategoryClick = (cat: Category) => {
     if (cat.id === 'GLOBAL') {
-      onSelectCategory('GLOBAL', 'sell');
+      onSelectCategory('GLOBAL', 'buy');
     } else {
       setSelectedCategory(cat);
     }
   };
 
-  const getIcon = (name: string) => ICON_MAP[name] || LayoutGrid;
-  const getColor = (name: string) => COLOR_MAP[name] || 'bg-vuttik-navy';
+  const getIcon = (name: string) => (LucideIcons as any)[name] || LayoutGrid;
+  const getColor = (name: string) => {
+    if (COLOR_MAP[name]) return COLOR_MAP[name];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return PALETTE[Math.abs(hash) % PALETTE.length];
+  };
 
   return (
     <div className="flex flex-col gap-6 md:gap-8 pb-32 px-4 md:px-6">
@@ -103,18 +107,18 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
       </div>
 
       <div className="relative">
-        <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-vuttik-text-muted" size={20} />
+        <Search className="absolute left-6 md:left-8 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <input 
           type="text" 
           placeholder="Buscar categoría..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-vuttik-gray border-none rounded-2xl md:rounded-[32px] px-12 md:px-16 py-4 md:py-6 focus:ring-4 focus:ring-vuttik-blue/10 transition-all outline-none text-sm md:text-lg font-medium"
+          className="w-full bg-white border border-gray-100/80 rounded-[24px] md:rounded-[32px] px-14 md:px-16 py-4 md:py-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] focus:shadow-[0_8px_30px_rgba(59,130,246,0.1)] focus:border-vuttik-blue/30 transition-all outline-none text-sm md:text-lg font-medium placeholder:text-gray-400"
         />
       </div>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {filteredCategories.map((cat, index) => {
           const Icon = getIcon(cat.icon);
           const color = getColor(cat.name);
@@ -125,21 +129,21 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               onClick={() => handleCategoryClick(cat)}
-              className="group relative bg-white border border-gray-100 p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-left hover:shadow-2xl hover:shadow-vuttik-navy/5 hover:border-vuttik-blue/20 transition-all duration-300 overflow-hidden"
+              className="group relative bg-white border border-gray-100/60 p-8 md:p-10 rounded-[32px] md:rounded-[40px] text-left hover:shadow-pro-hover hover:-translate-y-1 transition-all duration-300 overflow-hidden shadow-pro"
             >
-              <div className={`w-12 h-12 md:w-16 md:h-16 ${color} rounded-2xl md:rounded-3xl flex items-center justify-center text-white mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                <Icon size={24} className="md:size-8" />
+              <div className={`w-14 h-14 md:w-16 md:h-16 ${color} rounded-[20px] md:rounded-3xl flex items-center justify-center text-white mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+                <Icon size={28} className="md:size-8" />
               </div>
               
-              <h3 className="text-xl md:text-2xl font-display font-black text-vuttik-navy mb-1 md:mb-2">{cat.name}</h3>
-              <p className="text-vuttik-text-muted text-xs md:text-sm leading-relaxed mb-4 md:mb-6 line-clamp-2 md:line-clamp-none">{cat.description || `Explora el mercado de ${cat.name}`}</p>
+              <h3 className="text-xl md:text-2xl font-display font-black text-gray-900 mb-2 md:mb-3 group-hover:text-vuttik-blue transition-colors">{cat.name}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6 md:mb-8 line-clamp-2 md:line-clamp-none font-medium">{cat.description || `Explora el mercado de ${cat.name}`}</p>
               
-              <div className="flex items-center gap-2 text-vuttik-blue font-black text-[10px] md:text-xs uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-vuttik-blue font-black text-[10px] md:text-xs uppercase tracking-[0.15em]">
                 Explorar Mercado
-                <ChevronRight size={14} className="md:size-4 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={14} className="md:size-4 group-hover:translate-x-1.5 transition-transform" />
               </div>
 
-              <div className={`absolute -right-4 -bottom-4 w-20 h-20 md:w-24 md:h-24 ${color} opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-500`} />
+              <div className={`absolute -right-4 -bottom-4 w-32 h-32 md:w-40 md:h-40 ${color} opacity-[0.02] rounded-full group-hover:scale-[2] transition-transform duration-700 ease-out`} />
             </motion.button>
           );
         })}
@@ -177,7 +181,8 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
               </div>
 
               <h3 className="text-3xl font-display font-black text-vuttik-navy mb-2">{selectedCategory.name}</h3>
-              <p className="text-vuttik-text-muted mb-10">¿Qué deseas hacer en esta categoría?</p>
+              <p className="text-vuttik-text-muted mb-6 text-sm">{selectedCategory.description}</p>
+              <p className="text-vuttik-text-muted mb-10 font-bold">¿Qué deseas hacer en esta categoría?</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {selectedCategory.allowedTypes.map(typeId => {
@@ -205,7 +210,29 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
             <Search size={40} />
           </div>
           <h3 className="text-xl font-bold text-vuttik-navy">No encontramos esa categoría</h3>
-          <p className="text-vuttik-text-muted">Prueba con términos más generales o explora el Global.</p>
+          <p className="text-vuttik-text-muted mb-6">Prueba con términos más generales o explora el Global.</p>
+          <button 
+            onClick={async () => {
+              const name = prompt('¿Qué categoría sugieres que agreguemos?');
+              if (!name) return;
+              try {
+                // Generar id estilo uuid simple o timestamp
+                const id = 'cat_' + Date.now();
+                await api.submitCategoryProposal({
+                  id,
+                  name,
+                  suggested_by_id: 'user', // En un caso real usar currentUser
+                  suggested_by_name: 'Comunidad'
+                });
+                alert('¡Sugerencia enviada! Los guardianes votarán si se aprueba tu categoría en los próximos 2 días.');
+              } catch (e) {
+                alert('Error al enviar sugerencia.');
+              }
+            }}
+            className="px-6 py-3 bg-vuttik-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-lg shadow-vuttik-blue/20"
+          >
+            Sugerir Nueva Categoría
+          </button>
         </div>
       )}
     </div>

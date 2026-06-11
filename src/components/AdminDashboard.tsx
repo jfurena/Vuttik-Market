@@ -1,24 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import UserAvatar from './UserAvatar';
 import { 
   Users, Shield, ShieldAlert, Briefcase, User, Search, 
   MoreVertical, Mail, Key, Trash2, Check, X, ShieldCheck,
   CreditCard, Plus, Edit2, Save
 } from 'lucide-react';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  updateDoc, 
-  doc, 
-  query, 
-  orderBy,
-  addDoc,
-  deleteDoc,
-  setDoc
-} from 'firebase/firestore';
-import { auth } from '../lib/firebase';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { api } from '../lib/api';
 
 interface UserProfile {
   id: string;
@@ -46,47 +34,43 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
 
-  useEffect(() => {
-    const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
+  const loadData = async () => {
+    try {
+      const [usersData, plansData] = await Promise.all([
+        api.getAllUsers(),
+        api.getSubscriptionPlans()
+      ]);
       setUsers(usersData);
+      setPlans(plansData);
+    } catch (error) {
+      console.error('Error loading Admin data:', error);
+    } finally {
       setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'users');
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'subscriptionPlans'), (snapshot) => {
-      if (snapshot.empty) {
-        // Bootstrap default plans
-        const defaultPlans = [
-          { name: 'Gratis', price: 0, features: ['market', 'social', 'messages'], isDefault: true },
-          { name: 'Business', price: 29.99, features: ['market', 'social', 'messages', 'business_dash'] }
-        ];
-        defaultPlans.forEach(p => addDoc(collection(db, 'subscriptionPlans'), p));
-      }
-      const plansData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SubscriptionPlan));
-      setPlans(plansData);
-    });
-    return () => unsubscribe();
+    loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateRole = async (userId: string, newRole: UserProfile['role']) => {
     try {
-      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      const userToUpdate = users.find(u => u.id === userId);
+      if (userToUpdate) {
+        await api.saveUser({ ...userToUpdate, role: newRole, uid: userId });
+        await loadData();
+      }
       setSelectedUser(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, 'users');
+      console.error('Error updating user role:', error);
     }
   };
 
   const handleResetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
-      alert('Correo de restablecimiento enviado a ' + email);
+      alert(`Simulando envío de correo de restablecimiento a ${email} en entorno local.`);
     } catch (error) {
       console.error('Error sending reset email:', error);
       alert('Error al enviar el correo');
@@ -96,15 +80,11 @@ export default function AdminDashboard() {
   const handleSavePlan = async () => {
     if (!editingPlan) return;
     try {
-      const { id, ...data } = editingPlan;
-      if (id) {
-        await updateDoc(doc(db, 'subscriptionPlans', id), data);
-      } else {
-        await addDoc(collection(db, 'subscriptionPlans'), data);
-      }
+      await api.saveSubscriptionPlan(editingPlan);
+      await loadData();
       setEditingPlan(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'subscriptionPlans');
+      console.error('Error saving subscription plan:', error);
     }
   };
 
@@ -181,8 +161,8 @@ export default function AdminDashboard() {
                     <tr key={user.id} className="hover:bg-vuttik-gray/50 transition-colors">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-vuttik-gray rounded-xl flex items-center justify-center text-vuttik-navy font-bold">
-                            {user.displayName?.charAt(0) || user.email.charAt(0).toUpperCase()}
+                          <div className="w-10 h-10 rounded-full bg-vuttik-gray/50 text-vuttik-navy overflow-hidden font-bold flex items-center justify-center shrink-0">
+                            <UserAvatar src={user.photoURL} alt={user.displayName || user.email} />
                           </div>
                           <div>
                             <p className="text-sm font-black text-vuttik-navy">{user.displayName || 'Sin nombre'}</p>
@@ -271,43 +251,71 @@ export default function AdminDashboard() {
 
       {/* Plan Edit Modal */}
       {editingPlan && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-0">
           <div className="absolute inset-0 bg-vuttik-navy/60 backdrop-blur-sm" onClick={() => setEditingPlan(null)} />
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full max-w-md bg-white rounded-[40px] p-8 shadow-2xl"
+            className="relative w-full max-w-md md:max-w-none md:w-full md:h-full bg-white rounded-[40px] md:rounded-none p-8 md:p-16 shadow-2xl flex flex-col"
           >
-            <h3 className="text-2xl font-display font-black text-vuttik-navy mb-6">{editingPlan.id ? 'Editar Plan' : 'Nuevo Plan'}</h3>
+            <h3 className="text-2xl md:text-4xl font-display font-black text-vuttik-navy mb-6 md:mb-10">{editingPlan.id ? 'Editar Plan' : 'Nuevo Plan'}</h3>
             
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Nombre del Plan</label>
-                <input 
-                  type="text" 
-                  value={editingPlan.name}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
-                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
-                />
+            <div className="flex-1 flex flex-col md:flex-row gap-6 md:gap-12 mt-2">
+              <div className="flex flex-col gap-4 md:gap-8 md:w-1/3">
+                <div>
+                  <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Nombre del Plan</label>
+                  <input 
+                    type="text" 
+                    value={editingPlan.name}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                    className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Precio Mensual ($)</label>
+                  <input 
+                    type="number" 
+                    value={editingPlan.price}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, price: parseFloat(e.target.value) })}
+                    className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Precio Mensual ($)</label>
-                <input 
-                  type="number" 
-                  value={editingPlan.price}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, price: parseFloat(e.target.value) })}
-                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Funciones (separadas por coma)</label>
-                <input 
-                  type="text" 
-                  value={editingPlan.features.join(', ')}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, features: e.target.value.split(',').map(s => s.trim()) })}
-                  placeholder="market, social, business_dash..."
-                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
-                />
+
+              <div className="md:w-2/3 flex flex-col">
+                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-3 block">Funciones del Plan</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 flex-1">
+                  {[
+                    { id: 'market', label: 'Marketplace' },
+                    { id: 'social', label: 'Red Social' },
+                    { id: 'business_dash', label: 'Panel de Negocios' },
+                    { id: 'admin_dash', label: 'Panel de Admin' },
+                    { id: 'analytics', label: 'Analíticas Avanzadas' },
+                    { id: 'premium_support', label: 'Soporte Premium' },
+                    { id: 'promotions', label: 'Crear Promociones' }
+                  ].map(feature => {
+                    const isSelected = editingPlan.features.includes(feature.id);
+                    return (
+                      <label key={feature.id} className="flex items-center justify-between p-4 bg-vuttik-gray/50 rounded-2xl cursor-pointer hover:bg-vuttik-gray transition-colors h-16">
+                        <span className="text-sm md:text-base font-bold text-vuttik-navy">{feature.label}</span>
+                        <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${isSelected ? 'bg-vuttik-blue' : 'bg-gray-300'}`}>
+                          <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${isSelected ? 'left-6' : 'left-1'}`} />
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={isSelected}
+                          onChange={() => {
+                            const newFeatures = isSelected 
+                              ? editingPlan.features.filter((f: string) => f !== feature.id)
+                              : [...editingPlan.features, feature.id];
+                            setEditingPlan({ ...editingPlan, features: newFeatures });
+                          }}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -345,7 +353,6 @@ export default function AdminDashboard() {
               {[
                 { id: 'user', label: 'Usuario Estándar', icon: User },
                 { id: 'business', label: 'Empresa / Negocio', icon: Briefcase },
-                { id: 'guardian', label: 'Guardian', icon: Shield },
                 { id: 'mega_guardian', label: 'Mega Guardian', icon: ShieldCheck },
                 { id: 'admin', label: 'Administrador (Dueño)', icon: ShieldAlert },
               ].map((role) => (

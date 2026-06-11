@@ -1,10 +1,9 @@
 import { motion } from 'motion/react';
-import { X, MapPin, Calendar, ShieldCheck, Star, Share2, Edit2, Trash2, Clock, Info, Building2, TrendingUp, Users, Eye, Tag, Phone } from 'lucide-react';
+import { X, MapPin, Calendar, ShieldCheck, Star, Share2, Edit2, Trash2, Clock, Info, Building2, TrendingUp, Users, Eye, Tag, Phone, Bookmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ProductCardProps } from './ProductCard';
 import { useEffect, useState } from 'react';
-import { trackMetric } from '../utils/metrics';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { api } from '../lib/api';
 
 interface ProductDetailsProps {
   product: any;
@@ -16,26 +15,80 @@ interface ProductDetailsProps {
 
 export default function ProductDetails({ product, onClose, onEdit, onDelete, currentUserId }: ProductDetailsProps) {
   const [transactionTypes, setTransactionTypes] = useState<{ id: string; label: string }[]>([]);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isSubmittingFollow, setIsSubmittingFollow] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    trackMetric({
-      userId: currentUserId || 'anonymous',
-      action: 'view',
-      targetId: product.id,
-      targetType: 'product',
-      metadata: { category: product.category, type: product.type }
-    });
+    const fetchFollowStatus = async () => {
+      if (currentUserId && product?.id) {
+        try {
+          const followedProducts = await api.getFollowingProducts(currentUserId);
+          setIsFollowing(followedProducts.includes(product.id));
+        } catch (e) {
+          console.error('Error fetching follow status:', e);
+        }
+      }
+    };
+    fetchFollowStatus();
+  }, [currentUserId, product?.id]);
+
+  const handleFollowToggle = async () => {
+    if (!currentUserId) {
+      alert('Debes iniciar sesión para guardar productos');
+      return;
+    }
+    setIsSubmittingFollow(true);
+    try {
+      if (isFollowing) {
+        await api.unfollowProduct(product.id, currentUserId);
+        setIsFollowing(false);
+      } else {
+        await api.followProduct(product.id, currentUserId);
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+    } finally {
+      setIsSubmittingFollow(false);
+    }
+  };
+
+  const getCleanLocation = () => {
+    let loc = product.location || '';
+    
+    // Remove Business name from the beginning if it exists
+    if (product.business && loc.toLowerCase().includes(product.business.toLowerCase())) {
+      // Escape special regex characters to prevent regex errors
+      const escapedBusiness = (product.business || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`^${escapedBusiness}[,\\s]*`, 'i');
+      loc = loc.replace(regex, '');
+    }
+    
+    // Remove Country name from the end if it exists
+    if (product.authorCountry && loc.toLowerCase().includes(product.authorCountry.toLowerCase())) {
+      // Create a regex to replace the country name (case insensitive) and any preceding commas/spaces
+      const regex = new RegExp(`[,\\s]*${product.authorCountry}$`, 'i');
+      loc = loc.replace(regex, '');
+    }
+    
+    return loc || 'No especificada';
+  };
+
+  useEffect(() => {
+    // Track product view
+    setSelectedImageIndex(0);
   }, [product.id]);
 
   useEffect(() => {
-    const q = query(collection(db, 'transactionTypes'), orderBy('label', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const types = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as { id: string; label: string }));
-      setTransactionTypes(types);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'transactionTypes');
-    });
-    return () => unsubscribe();
+    // transactionTypes used to be loaded from firebase, now using static fallback for rendering
+    setTransactionTypes([
+      { id: 'sell', label: 'Venta' },
+      { id: 'buy', label: 'Compra' },
+      { id: 'rent', label: 'Alquiler' }
+    ]);
   }, []);
 
   const isAuthor = currentUserId === product.authorId;
@@ -63,13 +116,31 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           <X size={20} className="md:size-6" />
         </button>
 
-        {/* Image Section */}
-        <div className="w-full md:w-1/2 bg-gray-100 relative group h-[30vh] md:h-auto shrink-0">
-          <img 
-            src={product.image || product.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200'} 
-            className="w-full h-full object-cover" 
-            referrerPolicy="no-referrer" 
-          />
+        {/* Image Section (60% on PC, 100% on Mobile) */}
+        <div className="w-full md:w-[60%] bg-vuttik-navy relative flex flex-col h-[40vh] md:h-auto shrink-0">
+          <div className="flex-1 relative">
+            <img 
+              src={(product.images && product.images.length > 0 ? product.images[selectedImageIndex] : null) || product.image || product.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200'} 
+              className="absolute inset-0 w-full h-full object-contain bg-black" 
+              referrerPolicy="no-referrer" 
+            />
+          </div>
+          
+          {product.images && product.images.length > 1 && (
+            <div className="h-24 md:h-32 bg-gray-900 p-4 flex gap-3 overflow-x-auto no-scrollbar border-t border-gray-800">
+              {product.images.map((img: string, idx: number) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  className={`h-full aspect-square rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                    selectedImageIndex === idx ? 'border-vuttik-blue opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-vuttik-blue'
+                  }`}
+                >
+                  <img src={img} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           {product.isOnSale && (
             <div className="absolute top-4 left-4 md:top-8 md:left-8 bg-red-500 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-xl">
               Oferta Especial
@@ -77,171 +148,179 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           )}
         </div>
 
-        {/* Content Section */}
-        <div className="w-full md:w-1/2 p-6 md:p-12 overflow-y-auto no-scrollbar flex flex-col">
-          <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-            <span className="bg-vuttik-blue/10 text-vuttik-blue text-[8px] md:text-[10px] font-black px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest">
-              {product.category}
-            </span>
-            <span className={`text-white text-[8px] md:text-[10px] font-black px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest ${
-              product.typeId === 'sell' ? 'bg-green-500' : 
-              product.typeId === 'buy' ? 'bg-vuttik-blue' : 'bg-vuttik-navy'
-            }`}>
-              {transactionTypes.find(t => t.id === product.typeId)?.label || product.typeId}
-            </span>
-          </div>
-          
-          <h2 className="text-2xl md:text-4xl font-display font-black text-vuttik-navy mb-2">{product.title}</h2>
-          
-          <div className="flex flex-col gap-1 md:gap-2 mb-6 md:mb-8">
-            <div className="flex items-center gap-2 text-vuttik-text-muted">
-              <MapPin size={14} className="text-vuttik-blue md:size-[18px]" />
-              <span className="text-xs md:text-sm font-bold">{product.location || 'Ubicación no especificada'}</span>
-              {product.location && (
-                <button 
-                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(product.location)}`, '_blank')}
-                  className="ml-2 p-1.5 bg-vuttik-blue/10 text-vuttik-blue rounded-lg hover:bg-vuttik-blue hover:text-white transition-all flex items-center gap-1.5"
-                >
-                  <MapPin size={12} />
-                  <span className="text-[10px] font-black uppercase">Ver en Mapa</span>
-                </button>
+        {/* Content Section (40% on PC) */}
+        <div className="w-full md:w-[40%] p-4 md:p-6 overflow-y-auto no-scrollbar flex flex-col bg-white">
+          {/* Title and Tags */}
+          <div className="mb-4">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="bg-vuttik-blue/10 text-vuttik-blue text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                {product.category}
+              </span>
+              <span className={`text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${
+                product.typeId === 'sell' ? 'bg-green-500' : 
+                product.typeId === 'buy' ? 'bg-vuttik-blue' : 'bg-vuttik-navy'
+              }`}>
+                {transactionTypes.find(t => t.id === product.typeId)?.label || product.typeId}
+              </span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-display font-black text-vuttik-navy leading-tight mb-2">{product.title}</h2>
+            
+            {/* Price Box */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="bg-vuttik-gray/50 px-4 py-2 md:px-5 md:py-3 rounded-2xl border border-gray-100 flex items-baseline gap-2">
+                <span className="text-2xl md:text-3xl font-display font-black text-vuttik-navy">{product.isOnSale ? product.salePrice : product.price}</span>
+                <span className="text-xs font-bold text-vuttik-text-muted">{product.currency}</span>
+              </div>
+              {product.isOnSale && (
+                <div className="bg-red-50 px-4 py-2 md:px-5 md:py-3 rounded-2xl border border-red-100 flex items-baseline gap-2">
+                  <span className="text-lg md:text-xl font-display font-black text-red-400 line-through">{product.price}</span>
+                  <span className="text-xs font-bold text-red-300">{product.currency}</span>
+                </div>
               )}
             </div>
-            {product.business && (
-              <div className="flex items-center gap-2 text-vuttik-text-muted">
-                <Building2 size={14} className="text-vuttik-blue md:size-[18px]" />
-                <span className="text-xs md:text-sm font-bold">Cadena: {product.business}</span>
-              </div>
-            )}
-            {product.phone && (
-              <div className="flex items-center gap-2 text-vuttik-text-muted">
-                <Phone size={14} className="text-vuttik-blue md:size-[18px]" />
-                <a href={`tel:${product.phone}`} className="text-xs md:text-sm font-bold hover:text-vuttik-blue transition-colors">
-                  {product.phone}
-                </a>
-              </div>
-            )}
-            {product.barcode && (
-              <div className="flex items-center gap-2 text-vuttik-text-muted">
-                <Info size={14} className="text-vuttik-blue md:size-[18px]" />
-                <span className="text-xs md:text-sm font-bold">Código: {product.barcode}</span>
-              </div>
-            )}
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-10">
-            <div className="bg-vuttik-gray p-4 md:p-6 rounded-[24px] md:rounded-[32px] border border-gray-100">
-              <p className="text-[8px] md:text-[10px] text-vuttik-text-muted font-bold uppercase tracking-widest mb-1">Precio</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl md:text-4xl font-display font-black text-vuttik-navy">{product.isOnSale ? product.salePrice : product.price}</span>
-                <span className="text-[10px] md:text-sm font-bold text-vuttik-text-muted">{product.currency}</span>
+            {/* Description */}
+            {product.description && (
+              <div className="mb-4">
+                <p className="text-sm text-vuttik-navy leading-relaxed whitespace-pre-wrap">
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+            {/* Quick Details right under description */}
+            <div className="flex flex-col gap-2 mb-4 bg-vuttik-gray/30 px-4 py-3 rounded-2xl border border-gray-50">
+              <div className="flex items-start gap-2 text-vuttik-text-muted">
+                <Building2 size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
+                <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Local:</span>
+                <span className="text-xs font-bold leading-tight flex-1 break-words">{product.business || 'No especificado'}</span>
+              </div>
+
+              <div className="flex items-start gap-2 text-vuttik-text-muted">
+                <MapPin size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
+                <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Ubic.:</span>
+                <span className="text-xs font-bold leading-tight flex-1 break-words">{getCleanLocation()}</span>
+                {product.location && (
+                  <button 
+                    onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(product.location)}`, '_blank')}
+                    className="shrink-0 p-1 text-vuttik-blue hover:bg-vuttik-blue/10 rounded transition-all -mt-1"
+                  >
+                    <span className="text-[8px] font-black uppercase">Mapa</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-start gap-2 text-vuttik-text-muted">
+                <MapPin size={14} className="text-vuttik-blue shrink-0 opacity-70 mt-0.5" />
+                <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Provincia:</span>
+                <span className="text-xs font-bold leading-tight flex-1 break-words">{product.province || 'No especificada'}</span>
+              </div>
+
+              <div className="flex items-start gap-2 text-vuttik-text-muted">
+                <MapPin size={14} className="text-vuttik-blue shrink-0 opacity-50 mt-0.5" />
+                <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">País:</span>
+                <span className="text-xs font-bold leading-tight flex-1 break-words">{product.authorCountry || 'No especificado'}</span>
+              </div>
+              
+              <div className="flex items-start gap-2 text-vuttik-text-muted">
+                <Phone size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
+                <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Tel.:</span>
+                {product.phone ? (
+                  <a href={`tel:${product.phone}`} className="text-xs font-bold leading-tight hover:text-vuttik-blue transition-colors flex-1 break-words">
+                    {product.phone}
+                  </a>
+                ) : (
+                  <span className="text-xs font-bold leading-tight flex-1">No especificado</span>
+                )}
+              </div>
+              
+              <div className="flex items-start gap-2 text-vuttik-text-muted">
+                <Info size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
+                <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">EAN:</span>
+                <span className="text-xs font-bold leading-tight flex-1 break-words">{product.barcode || 'No especificado'}</span>
               </div>
             </div>
-            {product.isOnSale && (
-              <div className="bg-vuttik-gray p-4 md:p-6 rounded-[24px] md:rounded-[32px] border border-gray-100 opacity-60">
-                <p className="text-[8px] md:text-[10px] text-vuttik-text-muted font-bold uppercase tracking-widest mb-1">Precio Regular</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl md:text-3xl font-display font-black text-vuttik-text-muted line-through">{product.price}</span>
-                  <span className="text-[10px] md:text-sm font-bold text-vuttik-text-muted">{product.currency}</span>
+          </div>
+
+          {/* Primary Action Button (Contactar) */}
+          <div className="flex gap-2 mb-4">
+            <button 
+              onClick={() => {
+                if (product.phone) {
+                  window.open(`https://wa.me/${product.phone.replace(/\D/g, '')}`, '_blank');
+                } else {
+                  onClose();
+                  navigate('/mensajes', { state: { targetUser: { uid: product.authorId, name: product.authorName, photo: product.authorAvatar } } });
+                }
+              }}
+              className="flex-1 bg-vuttik-blue text-white py-3 px-4 text-base font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-vuttik-blue/20 hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              {product.typeId === 'buy' ? 'Tomar Pedido' : 'Contactar Ahora'}
+            </button>
+            <button 
+              onClick={handleFollowToggle}
+              disabled={isSubmittingFollow}
+              className={`p-3 rounded-2xl active:scale-95 transition-all flex items-center justify-center ${isFollowing ? 'bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20' : 'bg-vuttik-gray text-vuttik-navy hover:bg-vuttik-blue hover:text-white'}`}
+            >
+              <Bookmark size={20} fill={isFollowing ? "currentColor" : "none"} />
+            </button>
+          </div>
+
+          {/* Author Details */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex items-center justify-between mt-auto">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-vuttik-navy text-white flex items-center justify-center text-lg font-black overflow-hidden shrink-0">
+                <img src={product.authorAvatar || '/user unkwon.jpeg'} alt={product.authorName || 'Usuario'} className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <p className="text-lg font-black text-vuttik-navy">{product.authorName || 'Usuario'}</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center text-yellow-400">
+                    <Star size={14} fill="currentColor" />
+                    <span className="text-xs font-bold ml-1">4.5</span>
+                  </div>
+                  <span className="text-xs text-vuttik-text-muted font-bold">• Alta Confianza</span>
                 </div>
               </div>
-            )}
-          </div>
-
-          {product.description && (
-            <div className="mb-6 md:mb-10">
-              <p className="text-[8px] md:text-[10px] text-vuttik-text-muted font-bold uppercase tracking-widest mb-2">Descripción</p>
-              <p className="text-xs md:text-sm text-vuttik-navy leading-relaxed">
-                {product.description}
-              </p>
             </div>
-          )}
+            <ShieldCheck className="text-vuttik-blue" size={24} />
+          </div>
 
           {/* Custom Fields */}
           {product.customFields && Object.keys(product.customFields).length > 0 && (
-            <div className="mb-6 md:mb-10">
-              <p className="text-[8px] md:text-[10px] text-vuttik-text-muted font-bold uppercase tracking-widest mb-4">Especificaciones</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {Object.entries(product.customFields).map(([key, value]) => {
-                  // Try to find the field name if we have categories, but for now we'll just show the value
-                  // In a real app, we might want to pass the category object to get the field labels
-                  return (
-                    <div key={key} className="bg-vuttik-gray/50 px-4 py-3 rounded-2xl flex flex-col">
-                      <span className="text-[9px] font-black text-vuttik-text-muted uppercase tracking-wider">{key}</span>
-                      <span className="text-xs md:text-sm font-bold text-vuttik-navy">{String(value)}</span>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(product.customFields).map(([key, value]) => (
+                <div key={key} className="bg-vuttik-gray/50 p-4 rounded-2xl">
+                  <div className="flex items-center gap-2 text-vuttik-text-muted mb-1">
+                    <Tag size={16} className="text-vuttik-blue" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{key}</span>
+                  </div>
+                  <p className="text-sm font-bold text-vuttik-navy">{String(value)}</p>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Author Info */}
-          <div className="bg-white border border-gray-100 rounded-[24px] md:rounded-[32px] p-4 md:p-6 mb-6 md:mb-10 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-vuttik-navy text-white flex items-center justify-center text-base md:text-xl font-black">
-                  {product.authorName?.charAt(0) || 'U'}
-                </div>
-                <div>
-                  <p className="text-sm md:text-lg font-black text-vuttik-navy">{product.authorName || 'Usuario'}</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center text-yellow-400">
-                      <Star size={10} className="md:size-[14px]" fill="currentColor" />
-                      <span className="text-[10px] md:text-xs font-bold ml-1">4.5</span>
-                    </div>
-                    <span className="text-[10px] md:text-xs text-vuttik-text-muted font-bold">• Alta Confianza</span>
-                  </div>
-                </div>
-              </div>
-              <ShieldCheck className="text-vuttik-blue" size={24} />
-            </div>
-            <p className="text-[10px] md:text-xs text-vuttik-text-muted font-medium leading-relaxed">
-              Publicado el {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'Recientemente'}
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="mt-auto flex flex-col gap-3 md:gap-4">
-            <div className="flex gap-3 md:gap-4">
-              <button 
-                onClick={() => {
-                  trackMetric({
-                    userId: currentUserId || 'anonymous',
-                    action: 'contact',
-                    targetId: product.id,
-                    targetType: 'product',
-                    metadata: { type: product.typeId, price: product.price }
-                  });
-                  if (product.phone) {
-                    window.open(`https://wa.me/${product.phone.replace(/\D/g, '')}`, '_blank');
-                  } else {
-                    alert('Contactando al vendedor...');
-                  }
-                }}
-                className="flex-1 vuttik-button !py-3 md:!py-5 !text-sm md:!text-lg !rounded-2xl md:!rounded-3xl shadow-xl shadow-vuttik-blue/20"
-              >
-                {product.typeId === 'buy' ? 'Tomar Pedido' : 'Contactar Ahora'}
-              </button>
-              <button className="p-3 md:p-5 bg-vuttik-gray rounded-xl md:rounded-[24px] text-vuttik-navy hover:bg-vuttik-blue hover:text-white transition-all">
-                <Share2 size={20} className="md:size-6" />
-              </button>
-            </div>
-
+          {/* Author / Edit Actions at the bottom */}
+          <div className="mt-auto">
             {isAuthor && (
-              <div className="flex gap-3 md:gap-4">
+              <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
                 <button 
                   onClick={() => onEdit?.(product.id)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 md:py-4 bg-white border-2 border-vuttik-navy text-vuttik-navy rounded-2xl md:rounded-3xl font-black text-xs md:text-sm hover:bg-vuttik-navy hover:text-white transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-white border-2 border-vuttik-navy text-vuttik-navy rounded-3xl font-black text-sm hover:bg-vuttik-navy hover:text-white transition-all"
                 >
-                  <Edit2 size={14} className="md:size-[18px]" />
+                  <Edit2 size={18} />
                   Editar
                 </button>
                 <button 
-                  onClick={() => onDelete?.(product.id)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 md:py-4 bg-red-50 text-red-500 rounded-2xl md:rounded-3xl font-black text-xs md:text-sm hover:bg-red-500 hover:text-white transition-all"
+                  onClick={() => {
+                    if (window.confirm('¿Estás seguro que deseas eliminar esta publicación? Esta acción no se puede deshacer.')) {
+                      onDelete?.(product.id);
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-red-50 text-red-500 rounded-3xl font-black text-sm hover:bg-red-500 hover:text-white transition-all"
                 >
-                  <Trash2 size={14} className="md:size-[18px]" />
+                  <Trash2 size={18} />
                   Eliminar
                 </button>
               </div>

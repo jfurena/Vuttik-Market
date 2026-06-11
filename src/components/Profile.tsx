@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity } from 'lucide-react';
+import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { api } from '../lib/api';
 import ProductCard from './ProductCard';
+import UserAvatar from './UserAvatar';
 import PromotionModal from './PromotionModal';
 
+import { useParams } from 'react-router-dom';
 import { trackMetric } from '../utils/metrics';
 
 const safeDate = (dateStr: any) => {
@@ -19,7 +21,8 @@ const safeDate = (dateStr: any) => {
   }
 };
 
-export default function Profile({ userId, currentUserId, onViewProduct }: { userId?: string, currentUserId?: string, onViewProduct?: (id: string) => void }) {
+export default function Profile({ currentUserId, onViewProduct }: { currentUserId?: string, onViewProduct?: (id: string) => void }) {
+  const { userId, username } = useParams<{ userId?: string, username?: string }>();
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
   const [profileUser, setProfileUser] = useState<any>(null);
   const [userProducts, setUserProducts] = useState<any[]>([]);
@@ -31,8 +34,10 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [newBio, setNewBio] = useState('');
 
-  const targetUserId = userId || currentUserId;
+  const targetUserId = userId || (!username ? currentUserId : undefined);
 
   const handlePromote = (id: string, type: 'product' | 'post') => {
     setPromoTarget({ id, type });
@@ -40,12 +45,17 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
   };
 
   useEffect(() => {
-    if (!targetUserId) return;
-
     const fetchUser = async () => {
       try {
-        const user = await api.getUser(targetUserId);
-        setProfileUser(user);
+        let user;
+        if (username) {
+          user = await api.getUserByUsername(username);
+        } else if (targetUserId) {
+          user = await api.getUser(targetUserId);
+        }
+        if (user) {
+          setProfileUser(user);
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
       }
@@ -158,6 +168,23 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
     }
   };
 
+  const handleUpdateBio = async () => {
+    if (!targetUserId) return;
+    setIsSubmitting(true);
+    try {
+      await api.saveUser({
+        ...profileUser,
+        bio: newBio
+      });
+      setProfileUser((prev: any) => ({ ...prev, bio: newBio }));
+      setIsEditingBio(false);
+    } catch (error) {
+      console.error('Error updating bio:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!profileUser) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -182,16 +209,8 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
           {/* Overlapping Avatar */}
           <div className="relative group mb-4 md:mb-6">
             <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-white p-1.5 md:p-2 shadow-2xl">
-              <div className="w-full h-full rounded-full bg-vuttik-navy overflow-hidden flex items-center justify-center text-white border-4 border-vuttik-gray/10 shadow-inner">
-                {profileUser.photoURL || profileUser.photo_url ? (
-                  <img 
-                    src={profileUser.photoURL || profileUser.photo_url} 
-                    alt={profileUser.displayName || profileUser.display_name} 
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <User size={64} className="md:size-24 opacity-80" />
-                )}
+              <div className="w-full h-full rounded-full bg-vuttik-gray/50 overflow-hidden flex items-center justify-center text-vuttik-navy border-4 border-vuttik-gray/10 shadow-inner">
+                <UserAvatar src={profileUser.photoURL || profileUser.photo_url} alt={profileUser.displayName || profileUser.display_name} />
               </div>
             </div>
             {currentUserId === targetUserId && (
@@ -216,7 +235,12 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
               <h2 className="text-3xl md:text-5xl font-display font-black text-vuttik-navy tracking-tight leading-none">
                 {profileUser.displayName || profileUser.display_name}
               </h2>
-              <div className="flex items-center gap-2">
+              {(profileUser.username) && (
+                <div className="bg-vuttik-blue/5 border border-vuttik-blue/20 px-4 py-1.5 rounded-full inline-flex items-center gap-2 shadow-sm">
+                  <span className="text-vuttik-blue font-bold tracking-wide">@{profileUser.username}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2 mt-2">
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-vuttik-blue/10 text-vuttik-blue rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm">
                   <Award size={14} />
                   {profileUser.role || 'Usuario'}
@@ -228,11 +252,56 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
               </div>
             </div>
             
-            <p className="text-vuttik-text-muted text-sm md:text-lg mb-8 leading-relaxed font-medium">
-              {profileUser.bio || 'Especialista en la comunidad Vuttik. Comprometido con la transparencia y el comercio seguro en República Dominicana.'}
-            </p>
+            <div className="relative mb-8 max-w-2xl mx-auto group">
+              {isEditingBio ? (
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    value={newBio}
+                    onChange={(e) => setNewBio(e.target.value)}
+                    className="w-full bg-vuttik-gray border-2 border-vuttik-blue/20 rounded-2xl p-4 text-sm md:text-lg leading-relaxed font-medium text-vuttik-navy focus:outline-none focus:border-vuttik-blue resize-none shadow-sm"
+                    rows={4}
+                    placeholder="Escribe algo sobre ti..."
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      onClick={() => setIsEditingBio(false)}
+                      className="px-4 py-2 bg-gray-100 text-vuttik-text-muted rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors"
+                      disabled={isSubmitting}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={handleUpdateBio}
+                      className="px-4 py-2 bg-vuttik-blue text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
+                      disabled={isSubmitting}
+                    >
+                      <Save size={14} />
+                      {isSubmitting ? 'Guardando...' : 'Guardar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative flex flex-col items-center">
+                  <p className="text-vuttik-text-muted text-sm md:text-lg leading-relaxed font-medium">
+                    {profileUser.bio || 'Especialista en la comunidad Vuttik. Comprometido con la transparencia y el comercio seguro en República Dominicana.'}
+                  </p>
+                  {currentUserId === targetUserId && (
+                    <button 
+                      onClick={() => {
+                        setNewBio(profileUser.bio || '');
+                        setIsEditingBio(true);
+                      }}
+                      className="absolute -right-12 top-0 p-2 bg-white text-vuttik-text-muted hover:text-vuttik-blue rounded-full shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                      title="Editar descripción"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
-            <div className="flex flex-wrap justify-center gap-4 md:gap-10 mb-10">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-10 mb-6">
               <div className="flex items-center gap-2 text-vuttik-text-muted text-xs md:text-base font-bold bg-vuttik-gray/50 px-4 py-2 rounded-2xl">
                 <MapPin size={18} className="text-vuttik-blue" />
                 {profileUser.location || 'República Dominicana'}
@@ -242,6 +311,18 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
                 Miembro desde {profileUser.createdAt || profileUser.created_at ? safeDate(profileUser.createdAt || profileUser.created_at) : 'Abril 2024'}
               </div>
             </div>
+
+            {currentUserId === targetUserId && (profileUser.role === 'negocio' || profileUser.role === 'business' || profileUser.role === 'guardian' || profileUser.role === 'mega_guardian' || profileUser.role === 'admin' || profileUser.planId === 'negocio') && (
+               <div className="flex justify-center w-full mb-10">
+                 <button 
+                   onClick={() => window.location.href = '/panel/negocio'}
+                   className="flex items-center gap-2 bg-vuttik-navy text-white px-6 py-3 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-vuttik-navy/20"
+                 >
+                   <Store size={18} />
+                   Ir a Mi Panel de Negocio
+                 </button>
+               </div>
+            )}
 
             {/* Stats Cards (Floating Style) */}
             <div className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto">
@@ -262,7 +343,7 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-center md:justify-start border-b border-gray-100 px-2">
           <div className="flex gap-6 md:gap-10 overflow-x-auto no-scrollbar scroll-smooth">
-            {['posts', 'reviews', 'achievements', 'analytics'].map((tab) => (
+            {['posts', 'analytics'].map((tab) => (
               <button 
                 key={tab}
                 onClick={() => setActiveProfileTab(tab)}
@@ -272,7 +353,7 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
                     : 'text-vuttik-text-muted border-transparent hover:text-vuttik-navy opacity-60 hover:opacity-100'
                 }`}
               >
-                {tab === 'posts' ? 'Publicaciones' : tab === 'reviews' ? 'Reseñas' : tab === 'achievements' ? 'Logros' : 'Analytics'}
+                {tab === 'posts' ? 'Publicaciones' : 'Analytics'}
               </button>
             ))}
           </div>
@@ -329,23 +410,6 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
                     <p className="text-xs text-vuttik-text-muted">Los registros de precios aparecerán aquí.</p>
                   </div>
                 )}
-              </div>
-            )}
-            {activeProfileTab === 'reviews' && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-vuttik-text-muted font-bold">No hay reseñas aún.</p>
-              </div>
-            )}
-            {activeProfileTab === 'achievements' && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white border border-gray-100 p-6 rounded-3xl flex flex-col items-center text-center gap-3">
-                    <div className="w-12 h-12 bg-vuttik-blue/10 text-vuttik-blue rounded-full flex items-center justify-center">
-                      <Award size={24} />
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-vuttik-navy">Logro {i}</p>
-                  </div>
-                ))}
               </div>
             )}
             {activeProfileTab === 'analytics' && (
@@ -490,13 +554,7 @@ export default function Profile({ userId, currentUserId, onViewProduct }: { user
               <div className="space-y-6">
                 <div className="flex justify-center mb-4">
                   <div className="w-32 h-32 rounded-[40px] bg-vuttik-gray overflow-hidden">
-                    {newPhotoURL ? (
-                      <img src={newPhotoURL} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <User size={48} />
-                      </div>
-                    )}
+                    <UserAvatar src={newPhotoURL} alt="Edit" />
                   </div>
                 </div>
 

@@ -48,24 +48,92 @@ export async function initDB() {
       created_at TEXT,
       password_hash TEXT,
       oauth_provider TEXT,
-      oauth_id TEXT
+      oauth_id TEXT,
+      onboarding_completed BOOLEAN DEFAULT 0,
+      active_profile_mode TEXT DEFAULT 'personal',
+      age INTEGER,
+      gender TEXT,
+      country TEXT,
+      username TEXT,
+      username_changes TEXT DEFAULT '[]',
+      email_verified BOOLEAN DEFAULT 0,
+      verification_token TEXT
     )
   `);
 
-  // Add columns to existing DB if they don't exist
   try { await run("ALTER TABLE vuttik_users ADD COLUMN password_hash TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN oauth_provider TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN oauth_id TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN onboarding_completed BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN age INTEGER"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN gender TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN country TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN language TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN username TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN username_changes TEXT DEFAULT '[]'"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN email_verified BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN verification_token TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN next_billing_date TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN active_profile_mode TEXT DEFAULT 'personal'"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN is_banned BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN strikes INTEGER DEFAULT 0"); } catch (e) {}
+
+  // Notifications Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_notifications (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      type TEXT,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      is_read BOOLEAN DEFAULT 0,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid)
+    )
+  `);
+  await run('CREATE INDEX IF NOT EXISTS idx_notifications_user ON vuttik_notifications(user_id)');
 
   // Categories Table
   await run(`
     CREATE TABLE IF NOT EXISTS vuttik_categories (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      icon TEXT DEFAULT 'Tag',
       order_index INTEGER DEFAULT 0,
       allowed_types TEXT, -- JSON array
       fields TEXT, -- JSON array
       system_fields TEXT -- JSON object
+    )
+  `);
+
+  // Add icon column to existing categories if missing
+  try { await run("ALTER TABLE vuttik_categories ADD COLUMN icon TEXT DEFAULT 'Tag'"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_categories ADD COLUMN created_by TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_categories ADD COLUMN is_service BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_categories ADD COLUMN requires_ean BOOLEAN DEFAULT 0"); } catch (e) {}
+
+  // Category Proposals Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_category_proposals (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      suggested_by_id TEXT,
+      suggested_by_name TEXT,
+      status TEXT DEFAULT 'pending', -- pending, approved, rejected
+      created_at TEXT
+    )
+  `);
+
+  // Category Votes Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_category_votes (
+      proposal_id TEXT,
+      guardian_id TEXT,
+      vote_type TEXT, -- 'up' or 'down'
+      created_at TEXT,
+      PRIMARY KEY (proposal_id, guardian_id),
+      FOREIGN KEY(proposal_id) REFERENCES vuttik_category_proposals(id),
+      FOREIGN KEY(guardian_id) REFERENCES vuttik_users(uid)
     )
   `);
 
@@ -74,10 +142,14 @@ export async function initDB() {
     CREATE TABLE IF NOT EXISTS vuttik_transaction_types (
       id TEXT PRIMARY KEY,
       label TEXT NOT NULL,
-      icon TEXT,
+      icon TEXT DEFAULT 'Tag',
       active BOOLEAN DEFAULT 1
     )
   `);
+
+  // Add missing columns to existing transaction_types table
+  try { await run("ALTER TABLE vuttik_transaction_types ADD COLUMN icon TEXT DEFAULT 'Tag'"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_transaction_types ADD COLUMN active BOOLEAN DEFAULT 1"); } catch (e) {}
 
   // Subscription Plans Table
   await run(`
@@ -85,9 +157,17 @@ export async function initDB() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       price REAL DEFAULT 0,
-      features TEXT -- JSON array
+      features TEXT, -- JSON array
+      is_hidden BOOLEAN DEFAULT 0,
+      is_coming_soon BOOLEAN DEFAULT 0,
+      is_recommended BOOLEAN DEFAULT 0,
+      order_index INTEGER DEFAULT 0
     )
   `);
+  try { await run("ALTER TABLE vuttik_subscription_plans ADD COLUMN is_hidden BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_subscription_plans ADD COLUMN is_coming_soon BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_subscription_plans ADD COLUMN is_recommended BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_subscription_plans ADD COLUMN order_index INTEGER DEFAULT 0"); } catch (e) {}
 
   // Products Table
   await run(`
@@ -123,22 +203,81 @@ export async function initDB() {
   try { await run("ALTER TABLE vuttik_products ADD COLUMN lng REAL"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_products ADD COLUMN is_on_sale BOOLEAN DEFAULT 0"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_products ADD COLUMN sale_price REAL"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN chain TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN store_name TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN is_independent BOOLEAN DEFAULT 0"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN country TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN province TEXT"); } catch (e) {}
+
+  // Chains Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_chains (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_by TEXT,
+      created_at TEXT
+    )
+  `);
+
+  // Insert default chains if they don't exist
+  const defaultChains = [
+    { id: 'nacional', name: 'Supermercados Nacional' },
+    { id: 'sirena', name: 'La Sirena' },
+    { id: 'jumbo', name: 'Jumbo' },
+    { id: 'bravo', name: 'Supermercados Bravo' },
+    { id: 'plaza-lama', name: 'Plaza Lama' },
+    { id: 'carrefour', name: 'Carrefour' },
+    { id: 'sirena-market', name: 'Sirena Market' },
+    { id: 'aprezio', name: 'Aprezio' },
+    { id: 'iberia', name: 'Hipermercados Iberia' },
+    { id: 'ole', name: 'Hipermercados Olé' }
+  ];
+
+  for (const chain of defaultChains) {
+    try {
+      await run(
+        'INSERT INTO vuttik_chains (id, name, created_at) VALUES (?, ?, ?)',
+        [chain.id, chain.name, new Date().toISOString()]
+      );
+    } catch (e) {
+      // Ignore if already exists (primary key constraint)
+    }
+  }
+
+  // Product Votes Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_product_votes (
+      product_id TEXT,
+      user_id TEXT,
+      vote_type TEXT, -- 'up' or 'down'
+      created_at TEXT,
+      PRIMARY KEY (product_id, user_id),
+      FOREIGN KEY(product_id) REFERENCES vuttik_products(id),
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid)
+    )
+  `);
+
+  // Add posted_as to separate personal from business
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN posted_as TEXT DEFAULT 'personal'"); } catch (e) {}
 
   // Social Posts Table
   await run(`
     CREATE TABLE IF NOT EXISTS vuttik_posts (
       id TEXT PRIMARY KEY,
-      author_id TEXT,
+      author_id TEXT NOT NULL,
       author_name TEXT,
       author_avatar TEXT,
       content TEXT NOT NULL,
       image_url TEXT,
       location TEXT,
       is_verified BOOLEAN DEFAULT 0,
-      created_at TEXT,
+      created_at TEXT NOT NULL,
+      posted_as TEXT DEFAULT 'personal',
       FOREIGN KEY(author_id) REFERENCES vuttik_users(uid)
     )
   `);
+  
+  try { await run("ALTER TABLE vuttik_posts ADD COLUMN posted_as TEXT DEFAULT 'personal'"); } catch (e) {}
 
   // Post Likes Table (Relation)
   await run(`
@@ -195,6 +334,24 @@ export async function initDB() {
     )
   `);
 
+  // Product Follows Table (Who follows which product)
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_product_follows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      entity_type TEXT DEFAULT 'product_id',
+      entity_value TEXT,
+      created_at TEXT,
+      UNIQUE(user_id, product_id),
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid),
+      FOREIGN KEY(product_id) REFERENCES vuttik_products(id)
+    )
+  `);
+
+  try { await run("ALTER TABLE vuttik_product_follows ADD COLUMN entity_type TEXT DEFAULT 'product_id'"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_product_follows ADD COLUMN entity_value TEXT"); } catch (e) {}
+
   // Conversations Table (like WhatsApp chats)
   await run(`
     CREATE TABLE IF NOT EXISTS vuttik_conversations (
@@ -209,7 +366,18 @@ export async function initDB() {
     )
   `);
 
+  // Seed the Guardian Global Chat if it doesn't exist
+  await run(`
+    INSERT OR IGNORE INTO vuttik_conversations (id, participant_1, participant_2, p1_name, p2_name, last_message, created_at)
+    VALUES ('guardian_global_chat', 'system', 'system', 'Chat de Guardianes', 'Chat de Guardianes', 'Bienvenido al chat de guardianes', ?)
+  `, [new Date().toISOString()]);
+
   // Messages Table (persistent messages per conversation)
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p1_name TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p1_photo TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p2_name TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_conversations ADD COLUMN p2_photo TEXT"); } catch (e) {}
+
   await run(`
     CREATE TABLE IF NOT EXISTS vuttik_messages (
       id TEXT PRIMARY KEY,
@@ -252,6 +420,69 @@ export async function initDB() {
     )
   `);
 
+  // Business Profiles Table (persistent negocio/business profile data)
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_business_profiles (
+      uid TEXT PRIMARY KEY,
+      name TEXT,
+      description TEXT,
+      location TEXT,
+      phone TEXT,
+      working_hours TEXT,
+      logo TEXT,
+      social_links TEXT, -- JSON object {instagram, facebook, twitter, website}
+      created_at TEXT,
+      updated_at TEXT,
+      FOREIGN KEY(uid) REFERENCES vuttik_users(uid)
+    )
+  `);
+
+  // Business Members Table (team management)
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_business_members (
+      id TEXT PRIMARY KEY,
+      business_uid TEXT NOT NULL,
+      member_uid TEXT NOT NULL,
+      role TEXT DEFAULT 'admin',
+      status TEXT DEFAULT 'pending',
+      created_at TEXT,
+      FOREIGN KEY(business_uid) REFERENCES vuttik_business_profiles(uid),
+      FOREIGN KEY(member_uid) REFERENCES vuttik_users(uid)
+    )
+  `);
+
+  // Reports Table (Universal for posts, products, and users)
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_reports (
+      id TEXT PRIMARY KEY,
+      reporter_id TEXT NOT NULL,
+      target_id TEXT NOT NULL,
+      target_type TEXT NOT NULL, -- 'user', 'post', 'product'
+      target_title TEXT, -- Name of user or title of post/product for easy viewing
+      author_id TEXT, -- Original author of the reported content (if applicable)
+      author_name TEXT,
+      reason TEXT NOT NULL,
+      status TEXT DEFAULT 'pending', -- pending, resolved, dismissed
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  try { await run("ALTER TABLE vuttik_notifications ADD COLUMN type TEXT"); } catch (e) {}
+
+  // EAN Database Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_ean_database (
+      ean TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      brand TEXT,
+      category TEXT,
+      image_url TEXT,
+      created_by TEXT,
+      created_at TEXT
+    )
+  `);
+
   // Indices for performance
   await run('CREATE INDEX IF NOT EXISTS idx_comments_post ON vuttik_comments(post_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_verifications_post ON vuttik_post_verifications(post_id)');
@@ -266,144 +497,35 @@ export async function initDB() {
   
   // Seed initial categories if empty
   try {
-    const result: any = await get('SELECT COUNT(*) as count FROM vuttik_categories');
-    const categoryCount = result?.count ?? 0;
-    console.log('Current category count:', categoryCount);
+    const result: any = await get("SELECT COUNT(*) as count FROM vuttik_categories WHERE id = 'TECNOLOGIA'");
+    const hasNewCategories = (result?.count ?? 0) > 0;
     
-    if (categoryCount === 0) {
-      console.log('Seeding initial categories...');
-      const initialCategories = [
-        { 
-          id: 'COMIDA', 
-          name: 'Comida', 
-          order: 1, 
-          types: ['sell', 'buy'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Nombre del producto', required: true }, 
-            price: { label: 'Precio', required: true }, 
-            location: { label: 'Ubicación', required: true }, 
-            description: { label: 'Descripción', required: false }, 
-            barcode: { label: 'Código de barras', required: false, active: true } 
-          } 
-        },
-        { 
-          id: 'TERRENOS', 
-          name: 'Terrenos', 
-          order: 2, 
-          types: ['sell', 'buy'], 
-          fields: [
-            { id: 'size', name: 'Tamaño (m²)', type: 'number', required: true }
-          ], 
-          sys: { 
-            title: { label: 'Título del terreno', required: true }, 
-            price: { label: 'Precio', required: true }, 
-            location: { label: 'Ubicación', required: true }, 
-            description: { label: 'Descripción', required: true } 
-          } 
-        },
-        { 
-          id: 'DIVISAS', 
-          name: 'Divisas', 
-          order: 3, 
-          types: ['sell', 'buy'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Moneda / Activo', required: true }, 
-            price: { label: 'Tasa/Precio', required: true }, 
-            location: { label: 'Punto de intercambio', required: true }, 
-            description: { label: 'Detalles finales', required: false } 
-          } 
-        },
-        { 
-          id: 'VEHICULOS', 
-          name: 'Vehículos', 
-          order: 4, 
-          types: ['sell', 'buy'], 
-          fields: [
-            { id: 'brand', name: 'Marca', type: 'text', required: true },
-            { id: 'model', name: 'Modelo', type: 'text', required: true },
-            { id: 'year', name: 'Año', type: 'number', required: true },
-            { id: 'km', name: 'Kilometraje', type: 'number', required: false }
-          ], 
-          sys: { 
-            title: { label: 'Título del anuncio', required: true }, 
-            price: { label: 'Precio', required: true }, 
-            location: { label: 'Ubicación', required: true }, 
-            description: { label: 'Descripción del vehículo', required: true } 
-          } 
-        },
-        { 
-          id: 'ELECTRONICA', 
-          name: 'Electrónica', 
-          order: 5, 
-          types: ['sell', 'buy'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Producto', required: true }, 
-            price: { label: 'Precio', required: true }, 
-            location: { label: 'Ubicación', required: true }, 
-            description: { label: 'Estado y detalles', required: true } 
-          } 
-        },
-        { 
-          id: 'HOGAR', 
-          name: 'Hogar', 
-          order: 6, 
-          types: ['sell', 'buy'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Título', required: true }, 
-            price: { label: 'Precio', required: true }, 
-            location: { label: 'Ubicación', required: true }, 
-            description: { label: 'Descripción', required: true } 
-          } 
-        },
-        { 
-          id: 'EMPLEO', 
-          name: 'Empleo', 
-          order: 7, 
-          types: ['sell', 'buy'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Puesto / Vacante', required: true }, 
-            price: { label: 'Sueldo (opcional)', required: false }, 
-            location: { label: 'Ubicación del trabajo', required: true }, 
-            description: { label: 'Requisitos y funciones', required: true } 
-          } 
-        },
-        { 
-          id: 'ALQUILER', 
-          name: 'Alquiler', 
-          order: 8, 
-          types: ['rent'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Inmueble / Objeto', required: true }, 
-            price: { label: 'Precio por período', required: true }, 
-            location: { label: 'Ubicación', required: true }, 
-            description: { label: 'Términos del alquiler', required: true } 
-          } 
-        },
-        { 
-          id: 'PRESTAMO', 
-          name: 'Préstamo', 
-          order: 9, 
-          types: ['sell', 'buy'], 
-          fields: [], 
-          sys: { 
-            title: { label: 'Tipo de préstamo', required: true }, 
-            price: { label: 'Monto / Tasa', required: true }, 
-            location: { label: 'Zona de servicio', required: true }, 
-            description: { label: 'Requisitos', required: true } 
-          } 
-        }
+    if (!hasNewCategories) {
+      console.log('Seeding new initial categories...');
+      await run('DELETE FROM vuttik_categories'); // Clear old categories
+
+      const newCategoryNames = [
+        "Tecnología", "Videojuegos", "Audio", "Cámaras", "Electrodomésticos", "Seguridad", "Vehículos", "Repuestos", "Motocicletas", "Maquinaria", "Muebles", "Ferretería", "Jardinería", "Mascotas", "Inmuebles", "Ropa", "Calzado", "Joyería", "Bolsos", "Cosmética", "Fitness", "Ciclismo", "Deportes", "Camping", "Libros", "Instrumentos", "Arte", "Coleccionables", "Juguetes", "Alimentos", "Bebidas", "Suplementos", "Repostería", "Plomería", "Electricidad", "Carpintería", "Limpieza", "Tutorías", "Mudanzas", "Préstamos", "Seguros", "Asesoría", "Empleos", "Químicos", "Papelería", "Embalajes", "Herramientas", "Software", "Entradas", "Catering", "Telefonía", "Relojería", "Computación", "Iluminación", "Climatización", "Llantas", "Neumáticos", "Bicicletas", "Perfumería", "Lencería", "Bisutería", "Óptica", "Cristalería", "Vajilla", "Tapicería", "Colchones", "Antigüedades", "Artesanías", "Pinturas", "Esculturas", "Cómics", "Música", "Películas", "Coleccionismo", "Caza", "Pesca", "Senderismo", "Gimnasios", "Nutrición", "Licorería", "Charcutería", "Panadería", "Heladería", "Lavandería", "Sastrería", "Peluquería", "Barbería", "Veterinaria", "Guarderías", "Fotografía", "Imprenta", "Contabilidad", "Notaría", "Logística", "Almacenaje", "Envases", "Maternidad", "Cotillón", "Hospedaje", "Turismo"
       ];
+      
+      const initialCategories = newCategoryNames.map((name, index) => ({
+        id: name.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_'),
+        name: name,
+        order: index + 1,
+        types: ['sell', 'buy'],
+        fields: [],
+        sys: {
+          title: { label: 'Título del anuncio', required: true }, 
+          price: { label: 'Precio', required: true }, 
+          location: { label: 'Ubicación', required: true }, 
+          description: { label: 'Descripción', required: true }
+        }
+      }));
       
       for (const cat of initialCategories) {
         await run(
-          'INSERT OR REPLACE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields) VALUES (?, ?, ?, ?, ?, ?)',
-          [cat.id, cat.name, cat.order, JSON.stringify(cat.types), JSON.stringify(cat.fields), JSON.stringify(cat.sys)]
+          'INSERT OR REPLACE INTO vuttik_categories (id, name, icon, order_index, allowed_types, fields, system_fields) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [cat.id, cat.name, 'Tag', cat.order, JSON.stringify(cat.types), JSON.stringify(cat.fields), JSON.stringify(cat.sys)]
         );
       }
       

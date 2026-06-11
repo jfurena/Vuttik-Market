@@ -5,23 +5,28 @@ import { X, Tag, ShoppingBag, MapPin, Star, ChevronRight, Info, Loader2, Search,
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../lib/api';
 
-// Fix for Leaflet default icon
-const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
+// Normal Price Icon (Green)
+const NormalIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div class="w-10 h-10 bg-green-500 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-green-500 rotate-45"></div>
+         </div>`,
+  iconSize: [40, 44],
+  iconAnchor: [20, 44],
+  popupAnchor: [0, -40],
 });
 
-// Special Offer Icon
+// Special Offer Icon (Yellow)
 const OfferIcon = L.divIcon({
   className: 'custom-div-icon',
-  html: `<div class="w-10 h-10 bg-red-500 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white animate-pulse">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+  html: `<div class="w-10 h-10 bg-yellow-400 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white animate-pulse relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-yellow-400 rotate-45"></div>
          </div>`,
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
+  iconSize: [40, 44],
+  iconAnchor: [20, 44],
+  popupAnchor: [0, -40],
 });
 
 interface OfferMapProps {
@@ -48,13 +53,14 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
+  const [countryFilter, setCountryFilter] = useState('');
+  const [provinceFilter, setProvinceFilter] = useState('');
   const [currencyFilter, setCurrencyFilter] = useState('DOP');
   const [chainFilter, setChainFilter] = useState('');
   const [activeCategories, setActiveCategories] = useState<string[]>(['GLOBAL']);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [catSearchQuery, setCatSearchQuery] = useState('');
-  const [onlyOffers, setOnlyOffers] = useState(true);
+  const [onlyOffers, setOnlyOffers] = useState(false);
 
   useEffect(() => {
     api.getCategories().then(cats => {
@@ -72,7 +78,10 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
     // Multi-category match
     const matchesCategory = activeCategories.includes('GLOBAL') || activeCategories.includes(p.categoryId);
     
-    const matchesLocation = !locationFilter || p.location?.toLowerCase().includes(locationFilter.toLowerCase());
+    const locStr = (p.location || '').toLowerCase();
+    const matchesCountry = !countryFilter || locStr.includes(countryFilter.toLowerCase()) || (p.country || '').toLowerCase().includes(countryFilter.toLowerCase());
+    const matchesProvince = !provinceFilter || locStr.includes(provinceFilter.toLowerCase());
+    
     const matchesChain = !chainFilter || p.business?.toLowerCase().includes(chainFilter.toLowerCase()) || p.authorName?.toLowerCase().includes(chainFilter.toLowerCase());
     
     const price = p.price;
@@ -82,7 +91,7 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
     const matchesOffer = !onlyOffers || p.isOnSale === true;
     const hasCoords = p.lat && p.lng;
 
-    return matchesSearch && matchesCategory && matchesLocation && matchesChain && matchesMinPrice && matchesMaxPrice && matchesCurrency && matchesOffer && hasCoords;
+    return matchesSearch && matchesCategory && matchesCountry && matchesProvince && matchesChain && matchesMinPrice && matchesMaxPrice && matchesCurrency && matchesOffer && hasCoords;
   });
 
   const toggleCategory = (id: string) => {
@@ -259,18 +268,29 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-vuttik-navy uppercase tracking-widest ml-1">Ubicación / Ciudad</label>
+                    <label className="text-[10px] font-black text-vuttik-navy uppercase tracking-widest ml-1">País</label>
                     <div className="relative">
-                      <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-vuttik-blue" />
+                      <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-vuttik-blue" />
                       <input 
-                        type="text" placeholder="Ej: Santo Domingo, Santiago..." value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}
+                        type="text" placeholder="Ej: República Dominicana" value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}
                         className="w-full bg-vuttik-gray border-none rounded-xl pl-10 pr-4 py-3 text-xs font-bold outline-none" 
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-vuttik-navy uppercase tracking-widest ml-1">Tienda / Cadena</label>
+                    <label className="text-[10px] font-black text-vuttik-navy uppercase tracking-widest ml-1">Provincia / Estado</label>
+                    <div className="relative">
+                      <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-vuttik-blue" />
+                      <input 
+                        type="text" placeholder="Ej: Santiago, Distrito Nacional..." value={provinceFilter} onChange={(e) => setProvinceFilter(e.target.value)}
+                        className="w-full bg-vuttik-gray border-none rounded-xl pl-10 pr-4 py-3 text-xs font-bold outline-none" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-vuttik-navy uppercase tracking-widest ml-1">Local / Tienda</label>
                     <div className="relative">
                       <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-vuttik-blue" />
                       <input 
@@ -393,7 +413,8 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
                           setOnlyOffers(false);
                           setMinPrice('');
                           setMaxPrice('');
-                          setLocationFilter('');
+                          setCountryFilter('');
+                          setProvinceFilter('');
                           setChainFilter('');
                         }}
                         className="mt-6 text-xs font-black text-vuttik-blue uppercase tracking-widest hover:underline"
@@ -509,7 +530,7 @@ export default function OfferMap({ products, onClose, onViewProduct }: OfferMapP
               <Marker 
                 key={idx} 
                 position={[loc.lat, loc.lng]} 
-                icon={hasOffers ? OfferIcon : DefaultIcon}
+                icon={hasOffers ? OfferIcon : NormalIcon}
                 eventHandlers={{
                   click: () => setSelectedLocation(loc),
                 }}

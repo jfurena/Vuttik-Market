@@ -7,10 +7,10 @@ import {
 import { 
   Package, TrendingUp, Search, Eye, MessageCircle, 
   Plus, Edit2, Trash2, Filter, ChevronRight, BarChart2, Megaphone, Target, Users, CreditCard, CheckCircle2,
-  DollarSign, Globe, X, Save
+  DollarSign, Globe, X, Save, MapPin
 } from 'lucide-react';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import PromotionModal from './PromotionModal';
 
 const SEARCH_DATA = [
@@ -28,7 +28,15 @@ const MOCK_STORAGE = [
 ];
 
 export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (id: string) => void }) {
-  const [activeTab, setActiveTab] = useState<'storage' | 'analytics' | 'promotions'>('storage');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'storage' | 'analytics' | 'promotions' | 'comparison'>('storage');
+  
+  // Comparison state
+  const [compareLocA, setCompareLocA] = useState('');
+  const [compareLocB, setCompareLocB] = useState('');
+  const [compareStats, setCompareStats] = useState<{a: any, b: any} | null>(null);
+  const [isComparing, setIsComparing] = useState(false);
+  const [notification, setNotification] = useState<{message: string, type: string} | null>(null);
   const [showPromoteModal, setShowPromoteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,9 +48,11 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
   // Form State for Add/Edit
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     price: '',
     stock: '',
-    status: 'Active'
+    status: 'Active',
+    categoryId: ''
   });
 
   // Promotion Form State
@@ -51,38 +61,81 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
   const [promoAudience, setPromoAudience] = useState<'global' | 'segmented'>('global');
   const [promoBudget, setPromoBudget] = useState('50');
 
-  useEffect(() => {
-    if (!auth.currentUser) return;
-    
-    // Promotions listener
-    const qPromo = query(collection(db, 'promotions'), where('businessId', '==', auth.currentUser.uid));
-    const unsubscribePromo = onSnapshot(qPromo, (snapshot) => {
-      setPromotions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'promotions');
-    });
+  // Business stats
+  const [businessStats, setBusinessStats] = useState<any>(null);
 
-    // Inventory listener (Products)
-    const qInv = query(collection(db, 'products'), where('authorId', '==', auth.currentUser.uid));
-    const unsubscribeInv = onSnapshot(qInv, (snapshot) => {
-      setInventory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'products');
-    });
+  const loadData = async () => {
+    if (!user) return;
+    try {
+      const [promoData, invData, statsData] = await Promise.all([
+        api.getPromotions(),
+        api.getProducts(undefined, user.uid),
+        api.getBusinessStats(user.uid).catch(() => null)
+      ]);
+      setPromotions(promoData.filter((p: any) => p.businessId === user.uid || p.author_id === user.uid));
+      setInventory(invData);
+      if (statsData) setBusinessStats(statsData);
+    } catch (error) {
+      console.error('Error loading business data:', error);
+    }
+  };
 
-    return () => {
-      unsubscribePromo();
-      unsubscribeInv();
-    };
-  }, []);
+  const handleCompare = async () => {
+    if (!compareLocA.trim() || !compareLocB.trim()) {
+      setNotification({ message: 'Ingresa ambas ubicaciones', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsComparing(true);
+    try {
+      const allProds = await api.getProducts();
+      
+      const prodsA = allProds.filter((p: any) => (p.location || '').toLowerCase().includes(compareLocA.toLowerCase()));
+      const prodsB = allProds.filter((p: any) => (p.location || '').toLowerCase().includes(compareLocB.toLowerCase()));
+      
+      const calcStats = (prods: any[]) => {
+        if (!prods.length) return { avgPrice: 0, count: 0, maxPrice: 0, minPrice: 0 };
+        const prices = prods.map(p => Number(p.price)).filter(p => !isNaN(p));
+        if (!prices.length) return { avgPrice: 0, count: prods.length, maxPrice: 0, minPrice: 0 };
+        return {
+          avgPrice: prices.reduce((a, b) => a + b, 0) / prices.length,
+          count: prods.length,
+          maxPrice: Math.max(...prices),
+          minPrice: Math.min(...prices)
+        };
+      };
+      
+      setCompareStats({ a: calcStats(prodsA), b: calcStats(prodsB) });
+    } catch (err) {
+      console.error('Error comparing:', err);
+      setNotification({ message: 'Error al comparar', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  const handleDeletePromo = async (promoId: string) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar o pausar esta promoción?')) return;
+    try {
+      await api.deletePromotion(promoId);
+      setPromotions(prev => prev.filter(p => p.id !== promoId));
+      alert('Promoción eliminada exitosamente');
+    } catch (err) {
+      console.error('Error deleting promotion:', err);
+      alert('Error al eliminar la promoción');
+    }
+  };
 
   const handleOpenEdit = (item: any) => {
     setEditingItem(item);
     setFormData({
-      name: item.name,
+      name: item.name || item.title || '',
+      description: item.description || '',
       price: item.price.toString(),
       stock: item.stock?.toString() || '0',
-      status: item.status || 'Active'
+      status: item.status || 'Active',
+      categoryId: item.categoryId || ''
     });
     setShowEditModal(true);
   };
@@ -91,40 +144,43 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
     setEditingItem(null);
     setFormData({
       name: '',
+      description: '',
       price: '',
       stock: '',
-      status: 'Active'
+      status: 'Active',
+      categoryId: ''
     });
     setShowEditModal(true);
   };
 
   const handleSaveItem = async () => {
-    if (!auth.currentUser) return;
+    if (!user) return;
     setIsSubmitting(true);
     try {
       const data = {
-        name: formData.name,
+        title: formData.name,
+        description: formData.description || '',
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         status: formData.status,
-        updatedAt: serverTimestamp(),
+        authorId: user.uid,
+        authorName: user.displayName || 'Vuttik Business',
+        categoryId: formData.categoryId || 'GLOBAL',
+        typeId: 'sell',
+        location: '',
+        currency: 'DOP'
       };
 
       if (editingItem) {
-        await updateDoc(doc(db, 'products', editingItem.id), data);
+        await api.updateProduct(editingItem.id, data, user.uid);
       } else {
-        await addDoc(collection(db, 'products'), {
-          ...data,
-          authorId: auth.currentUser.uid,
-          createdAt: serverTimestamp(),
-          views: 0,
-          upVotes: [],
-          downVotes: []
-        });
+        await api.publishProduct(data);
       }
+      await loadData();
       setShowEditModal(false);
     } catch (error) {
-      handleFirestoreError(error, editingItem ? OperationType.UPDATE : OperationType.CREATE, 'products');
+      console.error('Error saving product:', error);
+      alert('Error al guardar el producto. Intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -133,9 +189,11 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
   const handleDeleteItem = async (id: string) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
     try {
-      await deleteDoc(doc(db, 'products', id));
+      if (!user) return;
+      await api.deleteProduct(id, user.uid);
+      await loadData();
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, 'products');
+      console.error('Error deleting product:', error);
     }
   };
 

@@ -14,6 +14,9 @@
   --color-vuttik-text-muted: #94A3B8;
 
   --radius-vuttik: 22px;
+  
+  --shadow-pro: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
+  --shadow-pro-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.06), 0 0 4px rgba(0,0,0,0.03);
 }
 
 @layer base {
@@ -42,11 +45,11 @@
   }
 
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-2xl text-vuttik-text-muted hover:bg-vuttik-blue/5 hover:text-vuttik-blue transition-all duration-200 font-semibold;
+    @apply flex items-center gap-4 px-5 py-3.5 rounded-[20px] text-vuttik-text-muted hover:bg-vuttik-blue/5 hover:text-vuttik-blue transition-all duration-300 font-bold hover:translate-x-1;
   }
 
   .sidebar-link.active {
-    @apply bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20;
+    @apply bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/30 translate-x-1;
   }
 
   .nav-item {
@@ -120,6 +123,15 @@
 
   .logo-box {
     @apply bg-white rounded-[2.5rem] flex items-center justify-center border border-gray-100 shadow-xl overflow-hidden p-2;
+  }
+
+  /* Premium UI Extensions */
+  .glass-card-pro {
+    @apply bg-white/90 backdrop-blur-2xl border border-gray-100/60 shadow-pro transition-all duration-300;
+  }
+
+  .glass-nav-pro {
+    @apply bg-white/80 backdrop-blur-2xl border-b border-gray-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-300;
   }
 }
 

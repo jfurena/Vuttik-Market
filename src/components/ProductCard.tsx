@@ -1,4 +1,5 @@
-import { CheckCircle2, ArrowUp, ArrowDown, MapPin, Star, Edit2, Trash2, Clock, Info, Phone } from 'lucide-react';
+import { ArrowUp, ArrowDown, MapPin, Star, Edit2, Trash2, Info, ArrowUpRight, Megaphone, ShieldAlert, Store, Eye } from 'lucide-react';
+import UserAvatar from './UserAvatar';
 import { motion } from 'motion/react';
 
 export interface ProductCardProps {
@@ -23,13 +24,19 @@ export interface ProductCardProps {
   upvotes: number;
   downvotes: number;
   authorName: string;
+  authorId?: string;
+  authorAvatar?: string;
   authorRating: number;
   phone?: string;
   isOfficialSource?: boolean;
   canEdit?: boolean;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onViewDetails?: (id: string) => void;
+  onAuthorClick?: (authorId: string) => void;
   onVote?: (id: string, type: 'up' | 'down') => void;
   userVote?: 'up' | 'down' | null;
+  viewMode?: 'grid' | 'list';
 }
 
 const ProductCard = (props: ProductCardProps) => {
@@ -53,13 +60,15 @@ const ProductCard = (props: ProductCardProps) => {
     upvotes,
     downvotes,
     authorName,
+    authorAvatar,
     authorRating,
     phone,
     isOfficialSource,
     canEdit,
     onViewDetails,
     onVote,
-    userVote
+    userVote,
+    viewMode = 'grid'
   } = props;
   
   const typeLabels = {
@@ -77,7 +86,8 @@ const ProductCard = (props: ProductCardProps) => {
     rent: 'bg-purple-500',
     loan: 'bg-orange-500',
     hiring: 'bg-vuttik-navy',
-    service: 'bg-cyan-500'
+    service: 'bg-cyan-500',
+    inform: 'bg-gray-700'
   };
   
   return (
@@ -85,59 +95,76 @@ const ProductCard = (props: ProductCardProps) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`bg-white border border-gray-100 rounded-[24px] overflow-hidden flex flex-row md:flex-col group hover:shadow-2xl hover:shadow-vuttik-navy/5 transition-all duration-300 relative h-auto md:h-full`}
+      onClick={() => onViewDetails?.(id)}
+      className={`bg-white border border-gray-100/60 rounded-[24px] overflow-hidden group hover:shadow-pro-hover hover:-translate-y-1 transition-all duration-300 relative cursor-pointer shadow-pro ${viewMode === 'list' ? 'flex flex-row w-full h-[135px] sm:h-[150px] md:h-[220px]' : 'flex flex-col h-full'}`}
     >
       {/* Management Actions (Guardians/Authors) */}
       {canEdit && (
-        <div className="absolute top-3 right-3 z-20 flex gap-2">
-          <button className="p-2 bg-white/90 backdrop-blur-sm rounded-xl text-vuttik-navy shadow-sm hover:bg-vuttik-blue hover:text-white transition-all">
-            <Edit2 size={14} />
+        <div className={`z-20 flex gap-2 ${viewMode === 'list' ? 'absolute bottom-4 right-4' : 'absolute top-4 right-4'}`}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); props.onEdit?.(id); }}
+            className="p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-vuttik-navy shadow-sm hover:bg-vuttik-blue hover:text-white transition-all border border-gray-100/50"
+          >
+            <Edit2 size={16} />
           </button>
-          <button className="p-2 bg-white/90 backdrop-blur-sm rounded-xl text-red-500 shadow-sm hover:bg-red-500 hover:text-white transition-all">
-            <Trash2 size={14} />
+          <button 
+            onClick={(e) => { e.stopPropagation(); props.onDelete?.(id); }}
+            className="p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-red-500 shadow-sm hover:bg-red-500 hover:text-white transition-all border border-gray-100/50"
+          >
+            <Trash2 size={16} />
           </button>
         </div>
       )}
 
       {/* Image Section */}
-      <div className="relative w-[35%] md:w-full aspect-square md:aspect-[4/5] overflow-hidden bg-gray-50 shrink-0">
-        {image ? (
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <Info size={32} className="md:size-12" />
-          </div>
-        )}
-        
-        <div className="absolute top-2 left-2 md:top-3 md:left-3 flex flex-wrap gap-1 md:gap-2 pr-8 md:pr-12">
-          <div className={`${typeColors[type as keyof typeof typeColors] || 'bg-vuttik-navy'} text-white text-[8px] md:text-[10px] font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full backdrop-blur-md uppercase`}>
-            {typeLabel || typeLabels[type as keyof typeof typeLabels] || type}
-          </div>
-          {isOffer && (
-            <div className="bg-red-500 text-white text-[8px] md:text-[10px] font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full backdrop-blur-md">
-              OFERTA
+      <div className={`relative aspect-square overflow-hidden bg-gray-50/50 shrink-0 ${viewMode === 'list' ? 'w-[135px] sm:w-[150px] md:w-[220px]' : 'w-full'} p-1.5 sm:p-2`}>
+        <div className="w-full h-full rounded-[20px] overflow-hidden relative">
+          {image ? (
+            <img
+              src={image}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100/50">
+              <Info size={40} className="md:size-16 opacity-50" />
             </div>
           )}
-        </div>
-
-        <div className="hidden md:block absolute bottom-3 left-3 right-3 bg-black/40 backdrop-blur-md rounded-xl p-2 text-white">
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-full bg-vuttik-blue flex items-center justify-center text-[10px] font-bold">
-              {(authorName || 'U').charAt(0)}
+          
+          <div className="absolute top-3 left-3 flex flex-wrap gap-2 pr-12">
+            <div className={`${type === 'inform' ? 'bg-orange-500' : (typeColors[type as keyof typeof typeColors] || 'bg-vuttik-navy')} text-white text-[10px] font-black px-3 py-1.5 rounded-xl backdrop-blur-md uppercase tracking-wider shadow-sm`}>
+              {type === 'inform' ? 'VENTA' : (typeLabel || typeLabels[type as keyof typeof typeLabels] || type)}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold truncate">{authorName || 'Usuario'}</p>
-              <div className="flex items-center gap-1">
-                <div className="flex items-center text-yellow-400">
-                  <Star size={8} fill="currentColor" />
-                  <span className="text-[8px] font-bold ml-0.5">{authorRating}</span>
+            {isOffer && (
+              <div className="bg-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl backdrop-blur-md tracking-wider shadow-sm">
+                OFERTA
+              </div>
+            )}
+          </div>
+
+          <div 
+            className="hidden md:block absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur-xl rounded-xl p-3 text-vuttik-navy cursor-pointer hover:bg-white transition-colors z-30 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (props.onAuthorClick && props.authorId) {
+                props.onAuthorClick(props.authorId);
+              }
+            }}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-full bg-gray-100 text-vuttik-navy shadow-inner flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden border border-gray-50">
+                <UserAvatar src={authorAvatar} alt={authorName} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black truncate group-hover:text-vuttik-blue transition-colors">{authorName || 'Usuario'}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="flex items-center text-yellow-500">
+                    <Star size={10} fill="currentColor" />
+                    <span className="text-[10px] font-black ml-1">{authorRating}</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-medium">• {trustLevel}</span>
                 </div>
-                <span className="text-[8px] opacity-80">• {trustLevel}</span>
               </div>
             </div>
           </div>
@@ -145,80 +172,59 @@ const ProductCard = (props: ProductCardProps) => {
       </div>
 
       {/* Content Section */}
-      <div className="p-2.5 md:p-4 flex flex-col flex-1 min-w-0 justify-between">
-        <div className="flex flex-col gap-0.5 md:gap-1">
-          <div className="flex justify-between items-start">
-            <div className="flex flex-col min-w-0">
-              <span className="text-[7px] md:text-[10px] font-bold text-vuttik-blue uppercase tracking-wider truncate">
-                {category} • {business || 'Particular'}
-              </span>
-              <button 
-                onClick={() => onViewDetails?.(id)}
-                className="text-[11px] md:text-sm font-bold line-clamp-1 md:line-clamp-2 leading-tight text-left hover:text-vuttik-blue transition-colors"
-              >
-                {title}
-              </button>
+      <div className="p-3 sm:p-4 md:p-6 flex flex-col flex-1 min-w-0 justify-between">
+        <div className="flex flex-col gap-1.5 md:gap-2">
+          <div className="flex items-center gap-1.5">
+            <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${type === 'inform' ? 'bg-orange-500' : 'bg-green-500'}`} />
+            <span className="text-[9px] md:text-[11px] font-black text-vuttik-blue/80 uppercase tracking-[0.15em] truncate">
+              {category}
+            </span>
+          </div>
+          <h3 className="text-sm sm:text-base md:text-xl font-black text-gray-900 line-clamp-2 leading-snug group-hover:text-vuttik-blue transition-colors">
+            {title}
+          </h3>
+          <div className="flex flex-col gap-1 md:gap-1.5 mt-0.5 md:mt-1">
+            {business && (
+              <div className="flex items-center gap-1.5 text-vuttik-navy text-[10px] md:text-xs font-bold">
+                <Store size={12} className="text-vuttik-blue md:size-3.5" />
+                <span className="truncate">{business}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 text-gray-400 text-[10px] md:text-xs font-medium">
+              <MapPin size={12} className="text-gray-300 shrink-0 md:size-3.5" />
+              <span className="truncate">{location}</span>
             </div>
           </div>
-          
-          <div className="flex items-center gap-1 text-vuttik-text-muted text-[7px] md:text-[10px]">
-            <MapPin size={7} className="md:size-[10px]" />
-            <span className="truncate">{location}</span>
-          </div>
-          {phone && (
-            <div className="flex items-center gap-1 text-vuttik-blue text-[7px] md:text-[10px] font-bold">
-              <Phone size={7} className="md:size-[10px]" />
-              <span>{phone}</span>
-            </div>
-          )}
         </div>
 
-        <div className="flex flex-col gap-1.5 md:gap-2 mt-1 md:mt-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <div className="flex items-baseline gap-1 md:gap-2">
-                <span className="text-vuttik-navy font-display text-base md:text-2xl font-black">{price}</span>
-                <span className="text-vuttik-text-muted text-[8px] md:text-xs font-bold">{currency}</span>
-              </div>
-              {isOffer && regularPrice && (
-                <span className="text-[7px] md:text-xs text-vuttik-text-muted line-through font-medium leading-none">
-                  {regularPrice} {currency}
-                </span>
-              )}
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 gap-2">
+          <div className="flex flex-col min-w-0 shrink">
+            <div className="flex items-baseline gap-1 md:gap-1.5 truncate">
+              <span className="text-vuttik-blue font-display text-lg sm:text-xl md:text-3xl font-black tracking-tight truncate">{price}</span>
+              <span className="text-gray-400 text-[9px] md:text-sm font-bold uppercase">{currency}</span>
             </div>
-            
-            <div className="flex items-center gap-1 md:hidden">
-              <div className="w-4 h-4 rounded-full bg-vuttik-blue flex items-center justify-center text-[7px] font-bold text-white">
-                {(authorName || 'U').charAt(0)}
-              </div>
-              <div className="flex items-center text-yellow-400">
-                <Star size={7} fill="currentColor" />
-                <span className="text-[7px] font-bold ml-0.5">{authorRating}</span>
-              </div>
-            </div>
+            {isOffer && regularPrice && (
+              <span className="text-[9px] md:text-xs text-gray-400 line-through font-medium mt-0.5 truncate">
+                {regularPrice} {currency}
+              </span>
+            )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <button 
-              onClick={() => onViewDetails?.(id)}
-              className={`flex-1 vuttik-button !py-1.5 md:!py-3 !text-[9px] md:!text-xs !rounded-lg md:!rounded-xl ${type === 'buy' ? '!bg-vuttik-navy' : ''}`}
-            >
-              {type === 'buy' ? 'Tomar Pedido' : 'Ver más'}
-            </button>
-            <div className="flex items-center bg-gray-50 rounded-lg md:rounded-xl p-0.5 md:p-1 border border-gray-100">
+          <div className="flex items-center shrink-0">
+            <div className="flex items-center bg-gray-50/80 rounded-[10px] md:rounded-xl p-1 md:p-1.5 border border-gray-100/80">
               <button 
                 onClick={(e) => { e.stopPropagation(); onVote?.(id, 'up'); }}
-                className={`p-1 md:p-1.5 rounded-lg transition-colors ${userVote === 'up' ? 'bg-green-500 text-white' : 'text-green-600 hover:bg-green-100'}`}
+                className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition-all flex items-center gap-1 md:gap-1.5 ${userVote === 'up' ? 'bg-green-500 text-white shadow-md shadow-green-500/20' : 'text-green-600 hover:bg-white hover:shadow-sm'}`}
               >
-                <ArrowUp size={10} className="md:size-4" />
+                <ArrowUp size={14} className="md:size-4" />
+                <span className="text-xs md:text-sm font-black">{upvotes}</span>
               </button>
-              <span className="text-[7px] md:text-[10px] font-bold px-0.5 md:px-1">{upvotes - downvotes}</span>
               <button 
                 onClick={(e) => { e.stopPropagation(); onVote?.(id, 'down'); }}
-                className={`p-1 md:p-1.5 rounded-lg transition-colors ${userVote === 'down' ? 'bg-red-500 text-white' : 'text-red-600 hover:bg-red-100'}`}
+                className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition-all flex items-center gap-1 md:gap-1.5 ${userVote === 'down' ? 'bg-red-500 text-white shadow-md shadow-red-500/20' : 'text-red-600 hover:bg-white hover:shadow-sm'}`}
               >
-                <ArrowDown size={10} className="md:size-4" />
+                <ArrowDown size={14} className="md:size-4" />
+                <span className="text-xs md:text-sm font-black">{downvotes}</span>
               </button>
             </div>
           </div>

@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, User, CheckCheck, ChevronLeft, MessageSquare, Search, Plus } from 'lucide-react';
+import { Send, User, CheckCheck, ChevronLeft, MessageSquare, Search, Plus, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
+import UserAvatar from './UserAvatar';
 
 interface Message {
   id: string;
@@ -23,12 +25,25 @@ interface Conversation {
   p2_photo?: string;
   last_message?: string;
   last_message_at?: string;
+  user1_id?: string;
+  user2_id?: string;
+  user1_avatar?: string;
+  user2_avatar?: string;
+  status?: string;
 }
 
-export default function Chat() {
-  const currentUser = auth.currentUser;
+interface ChatProps {
+  currentUserId?: string;
+  conversationId?: string;
+  onBack?: () => void;
+}
+
+export default function Chat({ currentUserId: propUserId, conversationId: propConvId, onBack }: ChatProps = {}) {
+  const { user: authUser } = useAuth();
+  const currentUser = useMemo(() => propUserId ? { uid: propUserId, displayName: authUser?.displayName, role: authUser?.role } as any : authUser, [propUserId, authUser]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
+  const location = useLocation();
+  const [selectedConvId, setSelectedConvId] = useState<string | null>(propConvId || location.state?.targetConversationId || null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loadingConvs, setLoadingConvs] = useState(true);
@@ -37,6 +52,8 @@ export default function Chat() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showNewChat, setShowNewChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null);
 
   const selectedConv = conversations.find(c => c.id === selectedConvId);
 
@@ -48,8 +65,16 @@ export default function Chat() {
       : (conv.p1_name || 'Usuario');
   };
 
-  const getOtherInitial = (conv: Conversation) => {
-    return getOtherName(conv).charAt(0).toUpperCase();
+  const getOtherAvatar = (conv: Conversation) => {
+    const isMe1 = conv.user1_id === (currentUser?.originalUid || currentUser?.uid);
+    return isMe1 ? conv.user2_avatar : conv.user1_avatar;
+  };
+
+  const getOtherPhoto = (conv: Conversation) => {
+    if (!currentUser) return undefined;
+    return conv.participant_1 === currentUser.uid
+      ? conv.p2_photo
+      : conv.p1_photo;
   };
 
   const getOtherId = (conv: Conversation) => {
@@ -62,13 +87,46 @@ export default function Chat() {
     if (!currentUser) return;
     try {
       const convs = await api.getConversations(currentUser.uid);
+      
+      // If propConvId or location state is passed, make sure it's in the list
+      const targetConvId = propConvId || location.state?.targetConversationId;
+      if (targetConvId) {
+        const exists = convs.find(c => c.id === targetConvId);
+        if (!exists) {
+          // It might be a group chat or special chat, mock a conversation object
+          convs.unshift({
+            id: targetConvId,
+            participant_1: 'system',
+            participant_2: 'system',
+            p1_name: targetConvId.includes('guardian') ? 'Chat de Guardianes' : 'Chat Especial',
+            last_message: 'Bienvenido',
+            last_message_at: new Date().toISOString()
+          });
+        }
+      }
+
+      // Automatically inject Guardian chat if user is a guardian, mega_guardian or admin
+      if (currentUser.role && ['guardian', 'mega_guardian', 'admin'].includes(currentUser.role)) {
+        const guardianChatExists = convs.find(c => c.id === 'guardian_global_chat');
+        if (!guardianChatExists) {
+          convs.unshift({
+            id: 'guardian_global_chat',
+            participant_1: 'system',
+            participant_2: 'system',
+            p1_name: 'Chat de Guardianes',
+            last_message: 'Bienvenido',
+            last_message_at: new Date().toISOString()
+          });
+        }
+      }
+      
       setConversations(convs);
     } catch (err) {
       console.error('Error loading conversations:', err);
     } finally {
       setLoadingConvs(false);
     }
-  }, [currentUser]);
+  }, [currentUser, propConvId, location.state]);
 
   // Load messages for selected conversation
   const loadMessages = useCallback(async () => {
@@ -143,8 +201,8 @@ export default function Chat() {
       // Enrich with names if needed
       const enriched: Conversation = {
         ...conv,
-        p1_name: conv.participant_1 === currentUser.uid ? (currentUser.displayName || 'Tú') : otherUser.display_name,
-        p2_name: conv.participant_2 === currentUser.uid ? (currentUser.displayName || 'Tú') : otherUser.display_name,
+        p1_name: conv.participant_1 === currentUser.uid ? (currentUser.displayName || 'Tú') : (otherUser.display_name || otherUser.displayName),
+        p2_name: conv.participant_2 === currentUser.uid ? (currentUser.displayName || 'Tú') : (otherUser.display_name || otherUser.displayName),
       };
       setConversations(prev => {
         const exists = prev.find(c => c.id === conv.id);
@@ -159,6 +217,28 @@ export default function Chat() {
       console.error('Error starting conversation:', err);
     }
   };
+
+  // Handle incoming targetUserId from profile navigation
+  useEffect(() => {
+    if (location.state?.targetUserId && currentUser && conversations.length >= 0 && !loadingConvs) {
+      const targetUserId = location.state.targetUserId;
+      // Clear state to avoid re-triggering on subsequent re-renders if user navigates around
+      window.history.replaceState({}, document.title);
+      
+      const startChatWithTarget = async () => {
+        try {
+          // Fetch target user details to get their name
+          const targetUser = await api.getUser(targetUserId);
+          if (targetUser) {
+             await handleStartChat(targetUser);
+          }
+        } catch (err) {
+          console.error("Could not start chat with target user", err);
+        }
+      };
+      startChatWithTarget();
+    }
+  }, [location.state, currentUser, loadingConvs]);
 
   const formatTime = (dateStr: string) => {
     if (!dateStr) return '';
@@ -213,8 +293,8 @@ export default function Chat() {
                       onClick={() => handleStartChat(u)}
                       className="w-full flex items-center gap-3 p-2.5 hover:bg-vuttik-gray rounded-xl transition-colors text-left mt-1"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-vuttik-navy text-white flex items-center justify-center font-bold text-sm shrink-0">
-                        {u.display_name?.charAt(0)}
+                      <div className="w-8 h-8 rounded-xl bg-vuttik-gray/50 text-vuttik-navy overflow-hidden shrink-0">
+                        <UserAvatar src={u.photo_url} alt={u.display_name} />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-vuttik-navy">{u.display_name}</p>
@@ -247,8 +327,11 @@ export default function Chat() {
                 onClick={() => setSelectedConvId(conv.id)}
                 className={`w-full p-4 flex items-center gap-3 hover:bg-vuttik-gray transition-colors border-b border-gray-50 text-left ${selectedConvId === conv.id ? 'bg-vuttik-gray' : ''}`}
               >
-                <div className="w-12 h-12 rounded-2xl bg-vuttik-blue/10 flex items-center justify-center text-vuttik-blue font-bold text-lg shrink-0">
-                  {getOtherInitial(conv)}
+                <div className="w-12 h-12 rounded-[20px] bg-vuttik-gray/50 text-vuttik-navy overflow-hidden shrink-0 relative shadow-sm group-hover:shadow-md transition-shadow">
+                  <UserAvatar src={getOtherAvatar(conv)} alt={getOtherName(conv)} />
+                  {conv.status === 'active' && (
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center mb-0.5">
@@ -268,16 +351,37 @@ export default function Chat() {
             <>
               {/* Chat header */}
               <div className="p-4 bg-white border-b border-gray-100 flex items-center gap-3">
-                <button onClick={() => setSelectedConvId(null)} className="md:hidden p-2 -ml-2 text-vuttik-navy">
+                <button 
+                  onClick={() => {
+                    if (onBack) onBack();
+                    else setSelectedConvId(null);
+                  }} 
+                  className="md:hidden p-2 -ml-2 text-vuttik-navy"
+                >
                   <ChevronLeft size={24} />
                 </button>
-                <div className="w-10 h-10 rounded-xl bg-vuttik-navy text-white flex items-center justify-center font-bold">
-                  {getOtherInitial(selectedConv)}
-                </div>
-                <div>
+                <button 
+                  onClick={() => {
+                    const photo = getOtherPhoto(selectedConv);
+                    if (photo) setEnlargedPhoto(photo);
+                  }}
+                  className={`w-10 h-10 rounded-xl bg-vuttik-navy text-white flex items-center justify-center font-bold overflow-hidden shadow-sm ${getOtherPhoto(selectedConv) ? 'cursor-zoom-in hover:opacity-90 transition-opacity' : 'cursor-default'}`}
+                >
+                  <UserAvatar src={getOtherAvatar(selectedConv)} alt={getOtherName(selectedConv)} />
+                </button>
+                <button 
+                  onClick={() => {
+                    if (selectedConv.id === 'guardian_global_chat') {
+                      navigate('/panel/guardian');
+                    } else {
+                      navigate(`/perfil/${getOtherId(selectedConv)}`);
+                    }
+                  }}
+                  className="text-left hover:underline decoration-vuttik-blue underline-offset-2"
+                >
                   <h4 className="text-sm font-bold text-vuttik-navy">{getOtherName(selectedConv)}</h4>
                   <p className="text-[10px] text-vuttik-text-muted">Conversación privada</p>
-                </div>
+                </button>
               </div>
 
               {/* Messages */}
@@ -350,6 +454,37 @@ export default function Chat() {
           )}
         </div>
       </div>
+      
+      {/* Fullscreen Photo Modal */}
+      <AnimatePresence>
+        {enlargedPhoto && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setEnlargedPhoto(null)}
+          >
+            <button 
+              onClick={() => setEnlargedPhoto(null)}
+              className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 p-2 rounded-full transition-colors"
+            >
+              <X size={24} />
+            </button>
+            <motion.img 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              src={enlargedPhoto} 
+              alt="Enlarged profile" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              referrerPolicy="no-referrer"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

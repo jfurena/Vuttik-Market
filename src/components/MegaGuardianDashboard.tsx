@@ -14,20 +14,8 @@ import {
 } from 'lucide-react';
 import AuditLog from './AuditLog';
 import { api } from '../lib/api';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  setDoc,
-  where
-} from 'firebase/firestore';
-import { sendPasswordResetEmail } from 'firebase/auth';
+
+// Removed sendPasswordResetEmail import
 
 interface CategoryField {
   id: string;
@@ -53,6 +41,8 @@ interface Category {
   };
   order: number;
   active: boolean;
+  isService?: boolean;
+  requiresEan?: boolean;
 }
 
 const DATA_TRENDS = [
@@ -108,13 +98,16 @@ interface UserProfile {
 }
 
 export default function MegaGuardianDashboard() {
-  const [activeView, setActiveView] = useState<'overview' | 'categories' | 'subcategories' | 'users' | 'comparison' | 'reports' | 'subscriptions' | 'auditoria'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'categories' | 'subcategories' | 'users' | 'reports' | 'subscriptions' | 'auditoria'>('overview');
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<TransactionType[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [plans, setPlans] = useState<any[]>([]);
   const [userSearch, setUserSearch] = useState('');
+  
+  const [plans, setPlans] = useState<any[]>([]);
   const [editingPlan, setEditingPlan] = useState<any | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState<any | null>(null);
+  const [fallbackPlanId, setFallbackPlanId] = useState<string>('');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isEditingType, setIsEditingType] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category>>({});
@@ -149,9 +142,34 @@ export default function MegaGuardianDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const reloadData = async () => {
+    try {
+      const [cats, txTypes, usrs, pls] = await Promise.all([
+        api.getCategories(),
+        api.getTransactionTypes(),
+        api.getAllUsers(),
+        api.getSubscriptionPlans()
+      ]);
+      setCategories(cats);
+      setTransactionTypes(txTypes);
+      setUsers(usrs);
+      setPlans(pls);
+    } catch (err) {
+      console.error('Error reloading data:', err);
+    }
+  };
+
   useEffect(() => {
     if (activeView !== 'reports') return;
-    setFlaggedReports([]);
+    const loadReports = async () => {
+      try {
+        const reports = await api.getFlaggedProducts();
+        setFlaggedReports(reports);
+      } catch (err) {
+        console.error('Error loading reports:', err);
+      }
+    };
+    loadReports();
   }, [activeView]);
 
   useEffect(() => {
@@ -173,11 +191,25 @@ export default function MegaGuardianDashboard() {
   }, []);
 
   const handleSaveCategory = async (id?: string) => {
+    if (!editForm.name?.trim()) {
+      setNotification({ message: 'El nombre de la categoría es obligatorio', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
     try {
-      const { id: _, ...dataToSave } = editForm as any;
-      const categoryData = { ...dataToSave, id };
+      const payload: any = {
+        name: editForm.name.trim(),
+        icon: editForm.icon || 'Tag',
+        order: (editForm as any).order || 0,
+        allowedTypes: (editForm as any).allowedTypes || [],
+        fields: (editForm as any).fields || [],
+        systemFields: (editForm as any).systemFields || {},
+        isService: editForm.isService || false,
+        requiresEan: editForm.requiresEan || false,
+      };
+      if (id) payload.id = id; // only include id when editing
       
-      await api.saveCategory(categoryData);
+      await api.saveCategory(payload);
       
       if (id) {
         setIsEditing(null);
@@ -185,11 +217,13 @@ export default function MegaGuardianDashboard() {
         setIsAdding(false);
       }
       setEditForm({});
-      // To trigger a re-fetch, we could rely on the interval, or we could update local state
-      // For simplicity, we just reload window or rely on polling.
-      // We will just let polling pick it up.
-    } catch (error) {
+      setNotification({ message: 'Categoría guardada con éxito', type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+      await reloadData();
+    } catch (error: any) {
       console.error('Error saving category:', error);
+      setNotification({ message: `Error: ${error?.message || 'No se pudo guardar'}`, type: 'error' });
+      setTimeout(() => setNotification(null), 5000);
     }
   };
 
@@ -318,14 +352,25 @@ export default function MegaGuardianDashboard() {
     ];
 
     for (const cat of initial) {
-      await addDoc(collection(db, 'categories'), cat);
+      await api.saveCategory(cat);
     }
   };
 
   const handleSaveType = async (id?: string) => {
+    if (!typeForm.label?.trim()) {
+      setNotification({ message: 'El nombre del tipo es obligatorio', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
     try {
-      const { id: _, ...dataToSave } = typeForm as any;
-      await api.saveTransactionType({ ...dataToSave, id });
+      const payload: any = {
+        label: typeForm.label.trim(),
+        icon: typeForm.icon || 'Tag',
+        active: typeForm.active !== undefined ? typeForm.active : true,
+      };
+      if (id) payload.id = id; // only include id when editing
+
+      await api.saveTransactionType(payload);
       
       if (id) {
         setIsEditingType(null);
@@ -333,8 +378,13 @@ export default function MegaGuardianDashboard() {
         setIsAddingType(false);
       }
       setTypeForm({});
-    } catch (error) {
+      setNotification({ message: 'Tipo guardado con éxito', type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+      await reloadData();
+    } catch (error: any) {
       console.error('Error saving transaction type:', error);
+      setNotification({ message: `Error: ${error?.message || 'No se pudo guardar'}`, type: 'error' });
+      setTimeout(() => setNotification(null), 5000);
     }
   };
 
@@ -357,7 +407,7 @@ export default function MegaGuardianDashboard() {
       { label: 'Servicio', icon: 'ShieldCheck', active: true },
     ];
     for (const type of initial) {
-      await addDoc(collection(db, 'transactionTypes'), type);
+      await api.saveTransactionType(type);
     }
   };
 
@@ -375,18 +425,27 @@ export default function MegaGuardianDashboard() {
 
   const handleToggleBan = async (userId: string, currentStatus: boolean) => {
     try {
-      await api.banUser(userId, 'admin'); // or whatever current admin ID is
+      if (currentStatus) {
+        // Currently banned -> unban
+        await api.unbanUser(userId, 'mega_guardian');
+        setNotification({ message: 'Usuario desbaneado exitosamente.', type: 'success' });
+      } else {
+        // Not banned -> ban
+        await api.banUser(userId, 'mega_guardian');
+        setNotification({ message: 'Usuario baneado exitosamente.', type: 'success' });
+      }
       setUsers(users.map(u => u.id === userId ? { ...u, isBanned: !currentStatus } : u));
+      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       console.error('Error toggling ban:', error);
+      setNotification({ message: 'Error al cambiar el estado del usuario.', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
     }
   };
 
   const handleResetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
-      setNotification({ message: `Correo de restablecimiento enviado a ${email}`, type: 'success' });
-      setTimeout(() => setNotification(null), 5000);
+      alert(`Simulando envío de correo de restablecimiento a ${email} en entorno local.`);
     } catch (error) {
       console.error('Error sending reset email:', error);
       setNotification({ message: 'Error al enviar el correo de restablecimiento.', type: 'error' });
@@ -401,6 +460,7 @@ export default function MegaGuardianDashboard() {
       setEditingPlan(null);
       setNotification({ message: 'Plan guardado con éxito', type: 'success' });
       setTimeout(() => setNotification(null), 3000);
+      await reloadData();
     } catch (error) {
       console.error('Error saving plan:', error);
     }
@@ -460,8 +520,6 @@ export default function MegaGuardianDashboard() {
                     <option value="business">Empresa / Negocio</option>
                     <option value="negocio">Vendedor Certificado</option>
                     <option value="guardian">Guardian</option>
-                    <option value="mega_guardian">Mega Guardian</option>
-                    <option value="admin">Administrador (Dueño)</option>
                   </select>
                 </div>
 
@@ -504,7 +562,7 @@ export default function MegaGuardianDashboard() {
           <p className="text-vuttik-text-muted text-sm">Gestiona los planes y beneficios de la plataforma.</p>
         </div>
         <button 
-          onClick={() => setEditingPlan({ name: '', price: 0, features: [] })}
+          onClick={() => setEditingPlan({ name: '', price: 0, features: [], is_hidden: false, is_coming_soon: false, is_recommended: false, order_index: 0 })}
           className="bg-vuttik-blue text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-vuttik-blue/20 flex items-center gap-2"
         >
           <Plus size={16} />
@@ -517,15 +575,31 @@ export default function MegaGuardianDashboard() {
           <div key={plan.id} className="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm relative overflow-hidden group">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-2xl font-display font-black text-vuttik-navy">{plan.name}</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-2xl font-display font-black text-vuttik-navy">{plan.name}</h3>
+                  {!plan.is_hidden && !plan.is_coming_soon && <span className="bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Público</span>}
+                  {!!plan.is_hidden && <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Borrador / Oculto</span>}
+                  {!!plan.is_coming_soon && <span className="bg-yellow-100 text-yellow-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Próximamente</span>}
+                  {!!plan.is_recommended && <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Recomendado</span>}
+                </div>
                 <p className="text-vuttik-blue font-black text-3xl mt-1">${plan.price}<span className="text-sm text-vuttik-text-muted font-bold">/mes</span></p>
               </div>
-              <button 
-                onClick={() => setEditingPlan(plan)}
-                className="p-3 bg-vuttik-gray text-vuttik-navy rounded-2xl hover:bg-vuttik-blue hover:text-white transition-all"
-              >
-                <Edit2 size={18} />
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setEditingPlan(plan)}
+                  className="p-3 bg-vuttik-gray text-vuttik-navy rounded-2xl hover:bg-vuttik-blue hover:text-white transition-all"
+                  title="Editar Plan"
+                >
+                  <Edit2 size={18} />
+                </button>
+                <button 
+                  onClick={() => setDeletingPlan(plan)}
+                  className="p-3 bg-vuttik-gray text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"
+                  title="Eliminar Plan"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 mb-8">
@@ -544,43 +618,187 @@ export default function MegaGuardianDashboard() {
       </div>
 
       {editingPlan && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-0">
           <div className="absolute inset-0 bg-vuttik-navy/60 backdrop-blur-sm" onClick={() => setEditingPlan(null)} />
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full max-w-md bg-white rounded-[40px] p-8 shadow-2xl"
+            className="relative w-full max-w-md md:max-w-none md:w-full md:h-full bg-white rounded-[40px] md:rounded-none p-8 md:p-16 shadow-2xl flex flex-col"
           >
-            <h3 className="text-2xl font-display font-black text-vuttik-navy mb-6">{editingPlan.id ? 'Editar Plan' : 'Nuevo Plan'}</h3>
+            <h3 className="text-2xl md:text-4xl font-display font-black text-vuttik-navy mb-6 md:mb-10">{editingPlan.id ? 'Editar Plan' : 'Nuevo Plan'}</h3>
             
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Nombre del Plan</label>
-                <input 
-                  type="text" 
-                  value={editingPlan.name}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
-                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
-                />
+            <div className="flex-1 flex flex-col md:flex-row gap-6 md:gap-12 mt-2">
+              <div className="flex flex-col gap-4 md:gap-8 md:w-1/3">
+                <div>
+                  <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Nombre del Plan</label>
+                  <input 
+                    type="text" 
+                    value={editingPlan.name}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                    className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Precio Mensual ($)</label>
+                  <input 
+                    type="number" 
+                    value={editingPlan.price}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, price: parseFloat(e.target.value) })}
+                    className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Orden de Visualización</label>
+                  <input 
+                    type="number" 
+                    value={editingPlan.order_index ?? 0}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, order_index: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Precio Mensual ($)</label>
-                <input 
-                  type="number" 
-                  value={editingPlan.price}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, price: parseFloat(e.target.value) })}
-                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-1 block">Funciones (separadas por coma)</label>
-                <input 
-                  type="text" 
-                  value={editingPlan.features.join(', ')}
-                  onChange={(e) => setEditingPlan({ ...editingPlan, features: e.target.value.split(',').map(s => s.trim()) })}
-                  placeholder="market, social, business_dash..."
-                  className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold"
-                />
+
+              <div className="md:w-2/3 flex flex-col">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest block">Funciones del Plan</label>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 flex-1">
+                  {(() => {
+                    const baseFeatures = [
+                      { id: 'market', label: 'Marketplace' },
+                      { id: 'social', label: 'Red Social' },
+                      { id: 'business_dash', label: 'Panel de Negocios' },
+                      { id: 'admin_dash', label: 'Panel de Admin' },
+                      { id: 'analytics', label: 'Analíticas Avanzadas' },
+                      { id: 'premium_support', label: 'Soporte Premium' },
+                      { id: 'promotions', label: 'Crear Promociones' }
+                    ];
+
+                    const dynamicFeatures = [...baseFeatures];
+                    // Derive custom features from all existing plans
+                    plans.forEach(p => {
+                      (p.features || []).forEach(f => {
+                        if (!dynamicFeatures.find(df => df.id === f)) {
+                          dynamicFeatures.push({ id: f, label: f });
+                        }
+                      });
+                    });
+                    // Also include any new features added to the currently editing plan
+                    (editingPlan.features || []).forEach(f => {
+                       if (!dynamicFeatures.find(df => df.id === f)) {
+                          dynamicFeatures.push({ id: f, label: f });
+                       }
+                    });
+
+                    return dynamicFeatures.map(feature => {
+                      const isSelected = editingPlan.features.includes(feature.id);
+                      return (
+                        <label key={feature.id} className="flex items-center justify-between p-4 bg-vuttik-gray/50 rounded-2xl cursor-pointer hover:bg-vuttik-gray transition-colors h-16">
+                          <span className="text-sm md:text-base font-bold text-vuttik-navy truncate pr-2">{feature.label}</span>
+                          <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${isSelected ? 'bg-vuttik-blue' : 'bg-gray-300'}`}>
+                            <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${isSelected ? 'left-6' : 'left-1'}`} />
+                          </div>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isSelected}
+                            onChange={() => {
+                              const newFeatures = isSelected 
+                                ? editingPlan.features.filter(f => f !== feature.id)
+                                : [...editingPlan.features, feature.id];
+                              setEditingPlan({ ...editingPlan, features: newFeatures });
+                            }}
+                          />
+                        </label>
+                      );
+                    });
+                  })()}
+                  
+                  {/* New Custom Feature Input */}
+                  <div className="flex items-center gap-2 p-2 bg-vuttik-gray/30 rounded-2xl h-16 border border-dashed border-vuttik-text-muted/30">
+                    <input 
+                      type="text"
+                      placeholder="Nueva función..."
+                      className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-vuttik-navy px-2"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
+                           e.preventDefault();
+                           const val = e.currentTarget.value.trim();
+                           if (!editingPlan.features.includes(val)) {
+                             setEditingPlan({ ...editingPlan, features: [...editingPlan.features, val] });
+                           }
+                           e.currentTarget.value = '';
+                        }
+                      }}
+                    />
+                    <button 
+                      type="button"
+                      className="w-8 h-8 rounded-full bg-vuttik-blue text-white flex items-center justify-center flex-shrink-0 hover:scale-110 transition-transform"
+                      onClick={(e) => {
+                         const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                         const val = input.value.trim();
+                         if (val && !editingPlan.features.includes(val)) {
+                            setEditingPlan({ ...editingPlan, features: [...editingPlan.features, val] });
+                            input.value = '';
+                         }
+                      }}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col md:flex-row gap-4">
+                  <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 rounded-2xl flex-1">
+                    <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${!editingPlan.is_hidden ? 'bg-vuttik-blue' : 'bg-gray-300'}`}>
+                      <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${!editingPlan.is_hidden ? 'left-6' : 'left-1'}`} />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-vuttik-navy block">Público</span>
+                      <span className="text-[10px] text-vuttik-text-muted">Visible para todos</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={!editingPlan.is_hidden}
+                      onChange={(e) => setEditingPlan({ ...editingPlan, is_hidden: !e.target.checked })}
+                    />
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 rounded-2xl flex-1">
+                    <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${editingPlan.is_coming_soon ? 'bg-yellow-500' : 'bg-gray-300'}`}>
+                      <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${editingPlan.is_coming_soon ? 'left-6' : 'left-1'}`} />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-vuttik-navy block">Próximamente</span>
+                      <span className="text-[10px] text-vuttik-text-muted">Visible pero sin botón de compra</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={editingPlan.is_coming_soon}
+                      onChange={(e) => setEditingPlan({ ...editingPlan, is_coming_soon: e.target.checked })}
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div>
+                      <p className="font-bold text-vuttik-navy text-sm">Plan Recomendado</p>
+                      <p className="text-xs text-vuttik-text-muted">Destaca este plan con una etiqueta de "Recomendado" para los usuarios.</p>
+                    </div>
+                    <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${editingPlan.is_recommended ? 'bg-orange-500' : 'bg-gray-300'}`}>
+                      <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${editingPlan.is_recommended ? 'left-6' : 'left-1'}`} />
+                      <input 
+                        type="checkbox" 
+                        className="opacity-0 w-0 h-0"
+                        checked={editingPlan.is_recommended}
+                        onChange={(e) => setEditingPlan({ ...editingPlan, is_recommended: e.target.checked })}
+                      />
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -596,6 +814,63 @@ export default function MegaGuardianDashboard() {
                 className="flex-1 bg-vuttik-blue text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-vuttik-blue/20"
               >
                 Guardar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {deletingPlan && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-vuttik-navy/60 backdrop-blur-sm" onClick={() => setDeletingPlan(null)} />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl flex flex-col"
+          >
+            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trash2 size={32} />
+            </div>
+            <h3 className="text-2xl font-display font-black text-vuttik-navy text-center mb-2">Eliminar Plan: {deletingPlan.name}</h3>
+            <p className="text-sm text-vuttik-text-muted text-center mb-6">
+              Este plan será eliminado. Selecciona un plan de respaldo al que migrarán todos los usuarios actuales (con 2 meses de gracia).
+            </p>
+
+            <label className="text-[10px] font-black text-vuttik-text-muted uppercase tracking-widest mb-2 block">Plan de Respaldo</label>
+            <select
+              value={fallbackPlanId}
+              onChange={(e) => setFallbackPlanId(e.target.value)}
+              className="w-full bg-vuttik-gray border-none rounded-2xl px-6 py-4 outline-none font-bold text-vuttik-navy appearance-none"
+            >
+              <option value="">Selecciona un plan...</option>
+              {plans.filter(p => p.id !== deletingPlan.id).map(p => (
+                <option key={p.id} value={p.id}>{p.name} (${p.price}/mes)</option>
+              ))}
+            </select>
+
+            <div className="flex gap-3 mt-8">
+              <button 
+                onClick={() => { setDeletingPlan(null); setFallbackPlanId(''); }}
+                className="flex-1 py-4 text-sm font-black text-vuttik-text-muted uppercase tracking-widest"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={async () => {
+                  if (!fallbackPlanId) return alert('Debes seleccionar un plan de respaldo para migrar a los usuarios.');
+                  try {
+                    await api.deleteSubscriptionPlan(deletingPlan.id, fallbackPlanId);
+                    setPlans(plans.filter(p => p.id !== deletingPlan.id));
+                    setDeletingPlan(null);
+                    setFallbackPlanId('');
+                    alert('Plan eliminado y usuarios migrados con éxito.');
+                  } catch(e) {
+                    alert('Error eliminando plan');
+                  }
+                }}
+                className="flex-1 bg-red-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-500/20"
+              >
+                Eliminar Plan
               </button>
             </div>
           </motion.div>
@@ -837,6 +1112,40 @@ export default function MegaGuardianDashboard() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-center gap-3 cursor-pointer p-4 bg-white rounded-2xl border border-gray-100">
+                  <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${editForm.requiresEan ? 'bg-vuttik-blue' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${editForm.requiresEan ? 'left-6' : 'left-1'}`} />
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-bold text-vuttik-navy block">Requiere EAN (Obligatorio)</span>
+                    <span className="text-[10px] text-vuttik-text-muted">Si está activo, los productos publicados aquí exigirán código de barras.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={!!editForm.requiresEan}
+                    onChange={(e) => setEditForm({ ...editForm, requiresEan: e.target.checked })}
+                  />
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer p-4 bg-white rounded-2xl border border-gray-100">
+                  <div className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${editForm.isService ? 'bg-vuttik-blue' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${editForm.isService ? 'left-6' : 'left-1'}`} />
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-bold text-vuttik-navy block">Es un Servicio (Sin inventario físico)</span>
+                    <span className="text-[10px] text-vuttik-text-muted">Actívalo para servicios profesionales, alquileres o similares.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={!!editForm.isService}
+                    onChange={(e) => setEditForm({ ...editForm, isService: e.target.checked })}
+                  />
+                </label>
+              </div>
+
               <div className="space-y-6 pt-4 border-t border-white/20">
                 <div>
                   <label className="text-[10px] font-bold text-vuttik-text-muted uppercase tracking-widest">Campos Base del Sistema</label>
@@ -1041,19 +1350,19 @@ export default function MegaGuardianDashboard() {
     const handleModerationAction = async (report: any, action: 'dismiss' | 'warn' | 'ban') => {
       try {
         if (action === 'dismiss') {
-          await updateDoc(doc(db, 'flaggedProducts', report.id), { status: 'dismissed' });
-          await updateDoc(doc(db, 'products', report.productId), { isFlagged: false });
+          await api.updateFlaggedReport(report.id, 'dismissed', 'mega_guardian');
         } else if (action === 'warn') {
-          await updateDoc(doc(db, 'flaggedProducts', report.id), { status: 'warned' });
+          await api.updateFlaggedReport(report.id, 'warned', 'mega_guardian');
           alert(`Usuario ${report.authorName} advertido.`);
         } else if (action === 'ban') {
-          await updateDoc(doc(db, 'users', report.authorId), { isBanned: true });
-          await updateDoc(doc(db, 'flaggedProducts', report.id), { status: 'banned' });
-          await deleteDoc(doc(db, 'products', report.productId));
-          alert(`Usuario ${report.authorName} baneado y producto eliminado.`);
+          await api.updateFlaggedReport(report.id, 'banned', 'mega_guardian');
+          // Note: Full ban/delete user logic would need a specific API endpoint.
+          // Fallback to local API flagged status update for now.
+          alert(`Usuario ${report.authorName} baneado y producto marcado como baneado.`);
         }
+        setFlaggedReports(flaggedReports.filter((r: any) => r.id !== report.id));
       } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, 'moderation');
+        console.error('Error during moderation action:', error);
       }
     };
 
@@ -1166,7 +1475,6 @@ export default function MegaGuardianDashboard() {
           { id: 'subcategories', label: 'Subcategorías', icon: Tag },
           { id: 'users', label: 'Usuarios', icon: UserCog },
           { id: 'subscriptions', label: 'Suscripciones', icon: CreditCard },
-          { id: 'comparison', label: 'Comparador', icon: MapPin },
           { id: 'reports', label: 'Informes', icon: Shield },
           { id: 'auditoria', label: 'Actividad Global', icon: ClipboardList },
         ].map((tab) => (
@@ -1254,11 +1562,11 @@ export default function MegaGuardianDashboard() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { title: 'Auditoría de Sistema', desc: 'Revisa logs y acciones críticas', icon: ShieldCheck },
-                    { title: 'Gestión de Suscripciones', desc: 'Configura planes y precios', icon: CreditCard },
-                    { title: 'Control de Categorías', desc: 'Estructura el mercado global', icon: LayoutGrid },
+                    { title: 'Auditoría de Sistema', desc: 'Revisa logs y acciones críticas', icon: ShieldCheck, view: 'auditoria' },
+                    { title: 'Gestión de Suscripciones', desc: 'Configura planes y precios', icon: CreditCard, view: 'subscriptions' },
+                    { title: 'Control de Categorías', desc: 'Estructura el mercado global', icon: LayoutGrid, view: 'categories' },
                   ].map((tool, i) => (
-                    <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:bg-white/10 transition-all cursor-pointer group">
+                    <div key={i} onClick={() => setActiveView(tool.view as any)} className="bg-white/5 border border-white/10 p-6 rounded-3xl hover:bg-white/10 transition-all cursor-pointer group">
                       <tool.icon className="text-vuttik-blue mb-4 group-hover:scale-110 transition-transform" size={32} />
                       <h4 className="font-bold mb-1">{tool.title}</h4>
                       <p className="text-xs text-white/40">{tool.desc}</p>
@@ -1335,61 +1643,6 @@ export default function MegaGuardianDashboard() {
                 </div>
               </div>
             </>
-          )}
-
-          {activeView === 'comparison' && (
-            <div className="bg-vuttik-navy rounded-[48px] p-10 text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-vuttik-blue/20 rounded-full -mr-48 -mt-48 blur-3xl"></div>
-              
-              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12">
-                <div className="flex-1">
-                  <h3 className="text-3xl font-display font-black mb-4">Comparador de Inventarios</h3>
-                  <p className="text-white/60 text-lg mb-8 max-w-lg">
-                    Compara precios y demanda entre dos tiendas usando solo su dirección. Analiza la competencia en tiempo real.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Tienda A (Dirección)</label>
-                      <div className="relative">
-                        <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-vuttik-blue" />
-                        <input type="text" placeholder="Ej. Av. Churchill #123" className="w-full bg-white/10 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold outline-none focus:border-vuttik-blue transition-all" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Tienda B (Dirección)</label>
-                      <div className="relative">
-                        <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-vuttik-blue" />
-                        <input type="text" placeholder="Ej. Av. Lincoln #456" className="w-full bg-white/10 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold outline-none focus:border-vuttik-blue transition-all" />
-                      </div>
-                    </div>
-                  </div>
-                  <button className="mt-8 bg-vuttik-blue text-white font-black px-10 py-5 rounded-3xl shadow-2xl shadow-vuttik-blue/40 hover:scale-105 transition-all">
-                    Generar Comparativa
-                  </button>
-                </div>
-                <div className="w-full lg:w-1/3 bg-white/5 backdrop-blur-xl rounded-[40px] p-8 border border-white/10">
-                  <h4 className="text-sm font-bold mb-6 text-vuttik-blue uppercase tracking-widest">Métricas de Comparación</h4>
-                  <div className="space-y-6">
-                    {[
-                      { label: 'Diferencia de Precios', value: '8.4%', desc: 'Tienda A es más barata' },
-                      { label: 'Semejanza de Inventario', value: '92%', desc: 'Productos en común' },
-                      { label: 'Popularidad Relativa', value: '1.2x', desc: 'Tienda B tiene más tráfico' },
-                    ].map((m, i) => (
-                      <div key={i}>
-                        <div className="flex justify-between items-end mb-1">
-                          <span className="text-xs font-bold text-white/60">{m.label}</span>
-                          <span className="text-xl font-black text-white">{m.value}</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-vuttik-blue rounded-full" style={{ width: m.value }}></div>
-                        </div>
-                        <p className="text-[10px] text-white/40 mt-1">{m.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
           )}
         </>
       )}

@@ -1,14 +1,9 @@
-import { useState } from 'react';
-import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const NOTIFICATIONS = [
-  { id: '1', title: 'Nueva oferta', body: 'El arroz premium bajó a 40 DOP en Negocio Bravo.', time: '5 min' },
-  { id: '2', title: 'Mensaje nuevo', body: 'Ana Martínez te envió un mensaje.', time: '12 min' },
-  { id: '3', title: 'Validación exitosa', body: 'Tu publicación de "Leche" ha sido validada.', time: '1 hora' },
-];
+import { api } from '../lib/api';
 
 interface TopNavProps {
   userRole?: string;
@@ -26,20 +21,38 @@ const ROLE_LABELS: Record<string, string> = {
   user: 'Comprador',
 };
 
-export default function TopNav({ userRole = 'user', userPlan, userProfile, }: TopNavProps) {
-  const { logout } = useAuth();
+export default function TopNav({ userRole = 'user', userPlan, userProfile }: TopNavProps) {
+  const { user, logout, switchProfileMode, unreadMessagesCount, setGlobalInviteData, setShowGlobalBusinessSelector, isBusinessModeActive } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      api.getNotifications(user.uid)
+        .then(data => setNotifications(data))
+        .catch(err => console.error(err));
+    }
+  }, [user]);
+
+  const markAsRead = async (id: string) => {
+    try {
+      await api.markNotificationRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch(e) {}
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length + unreadMessagesCount;
 
   const navigate = useNavigate();
 
   const menuItems = [
     { id: 'profile', path: '/perfil', label: 'Mi Perfil', icon: User, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
-    { id: 'negocio', path: '/panel/negocio', label: 'Modo Negocio', icon: Store, role: ['negocio', 'mega_guardian', 'admin'], feature: 'negocio_dash' },
-    { id: 'business', path: '/panel/empresa', label: 'Modo Empresa', icon: Briefcase, role: ['business', 'mega_guardian', 'admin'], feature: 'business_dash' },
+    { id: 'negocio', path: '/panel/negocio', label: 'Modo Negocio', icon: Store, role: ['negocio', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'negocio_dash' },
     { id: 'guardian', path: '/panel/guardian', label: 'Modo Guardian', icon: Shield, role: ['guardian', 'mega_guardian', 'admin'], feature: 'guardian_dash' },
     { id: 'mega-guardian', path: '/panel/mega-guardian', label: 'Modo Mega Guardian', icon: ShieldAlert, role: ['mega_guardian', 'admin'], feature: 'mega_guardian_dash' },
-    { id: 'settings', path: '/perfil', label: 'Ajustes', icon: Settings, role: ['user', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'settings' },
+    { id: 'herramientas', path: '/herramientas', label: 'Otras herramientas', icon: LayoutGrid, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
+    { id: 'settings', path: '/ajustes', label: 'Ajustes', icon: Settings, role: ['user', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'settings' },
   ];
 
   const filteredMenu = menuItems.filter(item => {
@@ -48,42 +61,52 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, }: To
       return true;
     }
     
-    // Check role first
+    if (item.feature === 'profile' || item.feature === 'settings') return true;
+
     const roleMatch = item.role.includes(userRole);
-    if (!roleMatch) return false;
+    const featureMatch = userPlan?.features?.includes(item.feature);
 
-    // Check plan features
-    if (userPlan && userPlan.features) {
-      if (item.feature === 'profile' || item.feature === 'settings') return true;
-      return userPlan.features.includes(item.feature);
-    }
-
-    // Default to false if no plan found (except for basic profile/settings)
-    return item.feature === 'profile' || item.feature === 'settings';
+    return roleMatch || featureMatch;
   });
 
   return (
-    <header className="glass-nav sticky top-0 left-0 right-0 z-40 px-4 md:px-6 py-3 md:py-4 flex justify-between items-center md:bg-transparent md:backdrop-blur-none md:border-none">
-      <div className="flex items-center gap-1.5 md:gap-2 md:hidden shrink-0">
-        <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
-          <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+    <header className="glass-nav-pro sticky top-0 left-0 right-0 z-40 px-6 md:px-10 py-4 md:py-5 flex justify-between items-center md:bg-white/80 md:backdrop-blur-2xl md:border-b border-gray-100/50">
+      <div 
+        className="flex items-center gap-2.5 md:gap-3 md:hidden shrink-0 cursor-pointer"
+        onClick={() => navigate('/')}
+      >
+        <div className="w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl shadow-sm bg-white border border-gray-50">
+          <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain p-1" referrerPolicy="no-referrer" />
         </div>
-        <h1 className="text-xl md:text-2xl tracking-tight font-display font-bold text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
+        <h1 className="text-xl tracking-tight font-display font-black text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
       </div>
       
       <div className="hidden md:block">
-        <h2 className="text-2xl font-display font-bold text-vuttik-navy">Panel de Control</h2>
-        <p className="text-vuttik-text-muted text-sm">Bienvenido de nuevo a Vuttik Market</p>
+        <h2 className="text-3xl font-display font-black text-vuttik-navy tracking-tight">Panel de Control</h2>
+        <p className="text-vuttik-text-muted/80 text-sm font-medium mt-1">Bienvenido de nuevo a Vuttik Market</p>
       </div>
       
-      <div className="flex items-center gap-2 md:gap-4 ml-auto relative">
+      <div className="flex items-center gap-3 md:gap-5 ml-auto relative">
+        {isBusinessModeActive && (
+          <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-vuttik-blue/10 border border-vuttik-blue/20 rounded-2xl shadow-sm transition-all" title="Estás interactuando como este negocio">
+            <Store size={16} className="text-vuttik-blue" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-vuttik-navy">{user?.displayName || 'Modo Negocio'}</span>
+          </div>
+        )}
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className={`relative p-2 md:p-2.5 bg-white border border-gray-100 rounded-xl transition-all shadow-sm ${showNotifications ? 'text-vuttik-blue border-vuttik-blue' : 'text-vuttik-navy/70 hover:text-vuttik-blue'}`}
+            className={`relative p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showNotifications ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-vuttik-navy/60 hover:text-vuttik-blue'} ${unreadCount > 0 ? 'border-red-200/50 bg-red-50/30' : 'border-gray-100/50'}`}
           >
-            <Bell size={18} className="md:size-5" />
-            <span className="absolute top-2 md:top-2.5 right-2 md:right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            <Bell size={20} className={`md:size-5 transition-colors ${unreadCount > 0 && !showNotifications ? 'text-red-500' : ''}`} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[10px] font-black text-white items-center justify-center shadow-sm">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              </span>
+            )}
           </button>
 
           <AnimatePresence>
@@ -94,24 +117,70 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, }: To
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-4 w-80 bg-white border border-gray-100 rounded-[32px] shadow-2xl overflow-hidden z-50"
+                  className="absolute right-0 mt-4 w-80 md:w-96 bg-white border border-gray-100 rounded-[32px] shadow-2xl overflow-hidden z-50"
                 >
-                  <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-                    <h3 className="text-sm font-black text-vuttik-navy uppercase tracking-widest">Notificaciones</h3>
-                    <button onClick={() => setShowNotifications(false)}><X size={16} className="text-vuttik-text-muted" /></button>
+                  <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-vuttik-navy text-white">
+                    <div className="flex items-center gap-2">
+                      <Bell size={18} className="text-vuttik-blue" />
+                      <h3 className="text-sm font-black uppercase tracking-widest">Notificaciones</h3>
+                    </div>
+                    <button onClick={() => setShowNotifications(false)} className="hover:text-vuttik-blue transition-colors"><X size={18} /></button>
                   </div>
-                  <div className="max-h-96 overflow-y-auto no-scrollbar">
-                    {NOTIFICATIONS.map((n) => (
-                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-vuttik-gray transition-colors cursor-pointer">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="text-xs font-bold text-vuttik-navy">{n.title}</h4>
-                          <span className="text-[10px] text-vuttik-text-muted">{n.time}</span>
+                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
+                          <Bell size={24} />
                         </div>
-                        <p className="text-[11px] text-vuttik-text-muted leading-relaxed">{n.body}</p>
+                        <span className="text-vuttik-text-muted text-sm font-bold">No tienes notificaciones</span>
+                      </div>
+                    ) : notifications.map((n) => (
+                      <div 
+                        key={n.id} 
+                        onClick={async () => {
+                          markAsRead(n.id);
+                          if (n.type === 'invite' || n.title === 'Invitación a Negocio') {
+                            setShowNotifications(false);
+                            switchProfileMode('personal');
+                            if (user) {
+                              try {
+                                const invites = await api.getBusinessInvites(user.originalUid || user.uid);
+                                if (invites && invites.length > 0) {
+                                  // Asumimos que la primera o encontramos la que coincida con el negocio
+                                  // Ya que la notif no tiene ID de invite, abrimos el modal con la más reciente
+                                  setGlobalInviteData(invites[0]);
+                                } else {
+                                  navigate('/perfil');
+                                }
+                              } catch (e) {
+                                navigate('/perfil');
+                              }
+                            }
+                          }
+                        }}
+                        className={`p-5 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer flex gap-4 relative overflow-hidden ${!n.is_read ? 'bg-blue-50/40' : ''}`}
+                      >
+                        {!n.is_read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-vuttik-blue" />}
+                        <div className={`mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${!n.is_read ? 'bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20' : 'bg-gray-100 text-gray-400'}`}>
+                          <Bell size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1.5">
+                            <h4 className={`text-sm font-black leading-tight pr-2 ${!n.is_read ? 'text-vuttik-blue' : 'text-vuttik-navy'}`}>{n.title}</h4>
+                            <span className="text-[10px] text-vuttik-text-muted whitespace-nowrap font-bold mt-0.5">{new Date(n.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs text-vuttik-text-muted leading-relaxed line-clamp-3">{n.message}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <button className="w-full p-4 text-xs font-bold text-vuttik-blue hover:bg-vuttik-blue/5 transition-colors">
+                  <button 
+                    onClick={() => {
+                      setShowNotifications(false);
+                      navigate('/notificaciones');
+                    }}
+                    className="w-full p-4 text-xs font-black text-vuttik-blue hover:bg-vuttik-blue hover:text-white transition-colors uppercase tracking-widest"
+                  >
                     Ver todas las notificaciones
                   </button>
                 </motion.div>
@@ -124,9 +193,9 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, }: To
         <div className="relative">
           <button 
             onClick={() => setShowMenu(!showMenu)}
-            className={`p-2 md:p-2.5 bg-white border border-gray-100 rounded-xl transition-all shadow-sm ${showMenu ? 'text-vuttik-blue border-vuttik-blue' : 'text-vuttik-navy/70 hover:text-vuttik-blue'}`}
+            className={`p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showMenu ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-vuttik-navy/60 hover:text-vuttik-blue border-gray-100/50'}`}
           >
-            <Menu size={18} className="md:size-5" />
+            <Menu size={20} className="md:size-5" />
           </button>
 
           <AnimatePresence>
@@ -147,7 +216,11 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile, }: To
                       <button 
                         key={item.id}
                         onClick={() => {
-                          navigate(item.path);
+                          if (item.id === 'negocio') {
+                            setShowGlobalBusinessSelector(true);
+                          } else {
+                            navigate(item.path);
+                          }
                           setShowMenu(false);
                         }}
                         className="w-full flex items-center gap-3 p-4 hover:bg-vuttik-gray rounded-2xl transition-colors text-vuttik-navy group"

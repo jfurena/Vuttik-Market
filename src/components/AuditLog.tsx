@@ -19,17 +19,18 @@ interface AuditLogEntry {
 }
 
 import { api } from '../lib/api';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AuditLog() {
+  const { user } = useAuth();
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handleBan = async (targetUid: string) => {
-    if (!auth.currentUser) return;
+    if (!user) return;
     if (!window.confirm('¿Estás seguro de que deseas banear a este usuario?')) return;
     try {
-      await api.banUser(targetUid, auth.currentUser.uid);
+      await api.banUser(targetUid, user.uid);
       alert('Usuario baneado correctamente');
       fetchLogs();
     } catch (err) {

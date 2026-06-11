@@ -1,4 +1,4 @@
-name: 🚀 Deploy to DirectAdmin
+name: Deploy to Server
 
 on:
   push:
@@ -6,48 +6,58 @@ on:
       - main
 
 jobs:
-  web-deploy:
-    name: 🎉 Deploy
+  deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: 🚚 Get latest code
-      uses: actions/checkout@v4
-    
-    - name: 📦 Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        
-    - name: 🔨 Install Dependencies
-      run: npm install --legacy-peer-deps
+      - name: Checkout Code
+        uses: actions/checkout@v4
       
-    - name: 🏗️ Build Application
-      run: npm run build
-    
-    - name: 📂 Sync Frontend Files
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.3
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./dist/
-        server-dir: /domains/vuttik.com/public_html/
-        # Ignoramos el .htaccess para no romper las reglas de CloudLinux Passenger
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/.htaccess
-          
-    - name: ⚙️ Sync Backend Files
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.3
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./server/
-        server-dir: /domains/vuttik.com/server/
-        # Ignorar archivos temporales
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/*.log
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and Build Frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Install and Build Backend
+        run: |
+          cd server
+          npm install
+          npx tsc
+
+      - name: Deploy Frontend via rsync
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-avz --delete"
+          SOURCE: "dist/"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          TARGET: "/home/sinagjwx/domains/vuttik.com/public_html/"
+
+      - name: Deploy Backend via rsync
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-avz --exclude 'vuttik.db' --exclude 'uploads' --exclude 'node_modules'"
+          SOURCE: "server/"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          TARGET: "/home/sinagjwx/domains/vuttik.com/server/"
+
+      - name: Restart Backend
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/sinagjwx/domains/vuttik.com/server
+            export NODE_HOME="/home/sinagjwx/nodejs"
+            export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+            npm install --production
+            chmod +x start.sh
+            ./start.sh

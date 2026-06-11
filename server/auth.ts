@@ -3,12 +3,22 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { get, run } from './db.js';
+import { ethers } from 'ethers';
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 export const authRouter = express.Router();
-const JWT_SECRET = () => process.env.JWT_SECRET || 'vuttik-super-secret-key-change-in-prod';
+
+// Security: throw at startup if JWT_SECRET is not configured
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set. Please configure it in .env.local');
+  // In production this should throw; in dev we use a fallback but log a warning
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be set in production');
+  }
+}
+const JWT_SECRET = () => process.env.JWT_SECRET || 'vuttik-dev-only-secret-CHANGE-IN-PRODUCTION';
 
 const GOOGLE_CLIENT_ID = () => process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = () => process.env.GOOGLE_CLIENT_SECRET || '';
@@ -42,14 +52,26 @@ authRouter.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
     const uid = uuidv4();
+    const verificationToken = uuidv4();
+
+    const isProd = process.env.NODE_ENV === 'production';
+    const emailVerifiedStatus = isProd ? 0 : 1;
+    const emailVerifiedFrontend = !isProd;
 
     await run(
-      'INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [uid, email, name, 'user', 'free', new Date().toISOString(), hash, 'local']
+      'INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider, email_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [uid, email, name, 'user', 'free', new Date().toISOString(), hash, 'local', emailVerifiedStatus, verificationToken]
     );
 
+    if (isProd) {
+      // TODO: Implement real email sending here
+      console.log(`\n\n=== EN PRODUCCIÓN SE ENVIARÍA UN CORREO REAL ===\nPara: ${email}\nEnlace de Verificación: https://vuttik.com/verificar?token=${verificationToken}\n==================================================\n\n`);
+    } else {
+      console.log(`\n\n=== MODO LOCAL: CORREO AUTO-VERIFICADO ===\nPara: ${email}\nEl sistema saltó la verificación porque estás en entorno local.\n==========================================\n\n`);
+    }
+
     const token = jwt.sign({ uid, email, role: 'user' }, JWT_SECRET(), { expiresIn: '30d' });
-    res.json({ token, user: { uid, email, displayName: name, role: 'user', planId: 'free', isBanned: false } });
+    res.json({ token, user: { uid, email, displayName: name, role: 'user', planId: 'free', isBanned: false, onboardingCompleted: false, emailVerified: emailVerifiedFrontend } });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -82,7 +104,9 @@ authRouter.post('/login', async (req, res) => {
             displayName: user.display_name, 
             photoURL: user.photo_url, 
             planId: user.plan_id, 
-            isBanned: !!user.is_banned 
+            isBanned: !!user.is_banned,
+            onboardingCompleted: !!user.onboarding_completed,
+            emailVerified: !!user.email_verified
         } 
     });
   } catch (err: any) {
@@ -95,15 +119,79 @@ authRouter.get('/me', authenticateToken, async (req: any, res) => {
     const user: any = await get('SELECT * FROM vuttik_users WHERE uid = ?', [req.user.uid]);
     if (!user) return res.status(404).json({ error: 'No user found' });
     delete user.password_hash;
+
+    let displayName = user.display_name;
+    let photoURL = user.photo_url;
+    let effectiveUid = user.uid;
+
+    if (user.active_profile_mode && user.active_profile_mode !== 'personal') {
+      let bUid = user.active_profile_mode;
+      
+      // Legacy support: if it's literally 'business', find their first business
+      if (bUid === 'business') {
+        bUid = user.uid; // default
+        const ownBusiness = await get('SELECT uid FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
+        if (!ownBusiness) {
+          const memberOf = await get('SELECT business_uid FROM vuttik_business_members WHERE member_uid = ? AND status = "accepted" LIMIT 1', [user.uid]);
+          if (memberOf) bUid = memberOf.business_uid;
+        }
+      }
+
+      const business = await get('SELECT name, logo FROM vuttik_business_profiles WHERE uid = ?', [bUid]);
+      if (business) {
+        effectiveUid = bUid;
+        displayName = business.name || displayName;
+        photoURL = business.logo || photoURL;
+      }
+    }
+
     res.json({
         ...user,
-        displayName: user.display_name,
-        photoURL: user.photo_url,
+        uid: effectiveUid,
+        originalUid: user.uid,
+        displayName, 
+        photoURL, 
         planId: user.plan_id,
-        isBanned: !!user.is_banned
+        isBanned: !!user.is_banned,
+        onboardingCompleted: !!user.onboarding_completed,
+        emailVerified: !!user.email_verified,
+        activeProfileMode: user.active_profile_mode || 'personal'
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Email Verification Routes ---
+authRouter.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ error: 'Falta el token de verificación' });
+
+  try {
+    const user = await get('SELECT uid FROM vuttik_users WHERE verification_token = ?', [token]);
+    if (!user) return res.status(400).json({ error: 'Token inválido o expirado' });
+
+    await run('UPDATE vuttik_users SET email_verified = 1, verification_token = NULL WHERE uid = ?', [user.uid]);
+    res.json({ success: true, message: 'Correo verificado con éxito' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+authRouter.post('/resend-verification', authenticateToken, async (req: any, res) => {
+  try {
+    const user = await get('SELECT email, email_verified FROM vuttik_users WHERE uid = ?', [req.user.uid]);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (user.email_verified) return res.status(400).json({ error: 'El correo ya está verificado' });
+
+    const newToken = uuidv4();
+    await run('UPDATE vuttik_users SET verification_token = ? WHERE uid = ?', [newToken, req.user.uid]);
+
+    console.log(`\n\n=== REENVÍO DE SIMULACIÓN DE CORREO ===\nPara: ${user.email}\nEnlace de Verificación: http://localhost:3000/verificar?token=${newToken}\n=====================================\n\n`);
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -147,7 +235,7 @@ authRouter.post('/google/callback', async (req, res) => {
     } else {
         const uid = uuidv4();
         await run(
-          'INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
           [uid, profile.email, profile.name, profile.picture, 'user', 'free', new Date().toISOString(), 'google', profile.id]
         );
         user = await get('SELECT * FROM vuttik_users WHERE email = ?', [profile.email]);
@@ -161,7 +249,9 @@ authRouter.post('/google/callback', async (req, res) => {
             displayName: user.display_name, 
             photoURL: user.photo_url, 
             planId: user.plan_id, 
-            isBanned: !!user.is_banned 
+            isBanned: !!user.is_banned,
+            onboardingCompleted: !!user.onboarding_completed,
+            emailVerified: !!user.email_verified
         } 
     });
   } catch (error: any) {
@@ -193,10 +283,10 @@ authRouter.post('/facebook/callback', async (req, res) => {
     } else {
         const uid = uuidv4();
         await run(
-          'INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [uid, email, profile.name, profile.picture?.data?.url || null, 'user', 'free', new Date().toISOString(), 'facebook', profile.id]
+          'INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, oauth_provider, oauth_id, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
+          [uid, email, profile.name, profile.picture?.data?.url, 'user', 'free', new Date().toISOString(), 'facebook', profile.id]
         );
-        user = await get('SELECT * FROM vuttik_users WHERE email = ?', [email]);
+        user = await get('SELECT * FROM vuttik_users WHERE email = ?', [profile.email]);
     }
 
     const token = generateOAuthJWT(user.uid, user.email, user.role);
@@ -207,7 +297,87 @@ authRouter.post('/facebook/callback', async (req, res) => {
             displayName: user.display_name, 
             photoURL: user.photo_url, 
             planId: user.plan_id, 
-            isBanned: !!user.is_banned 
+            isBanned: !!user.is_banned,
+            onboardingCompleted: !!user.onboarding_completed
+        } 
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Web3 Wallet Auth ---
+
+// Store nonces temporarily in memory
+const nonceStore: Record<string, string> = {};
+
+authRouter.get('/wallet/nonce/:address', (req, res) => {
+  const { address } = req.params;
+  if (!address) return res.status(400).json({ error: 'Missing address' });
+  
+  // Generate a random 6-digit nonce to sign
+  const nonce = Math.floor(100000 + Math.random() * 900000).toString();
+  nonceStore[address.toLowerCase()] = nonce;
+  
+  res.json({ nonce });
+});
+
+authRouter.post('/wallet/verify', async (req, res) => {
+  const { address, signature } = req.body;
+  if (!address || !signature) return res.status(400).json({ error: 'Missing address or signature' });
+  
+  const normalizedAddress = address.toLowerCase();
+  const nonce = nonceStore[normalizedAddress];
+  
+  if (!nonce) return res.status(400).json({ error: 'Nonce not found or expired' });
+  
+  try {
+    const expectedMessage = `Iniciando sesión en Vuttik Market. Nonce: ${nonce}`;
+    const recoveredAddress = ethers.verifyMessage(expectedMessage, signature);
+    
+    if (recoveredAddress.toLowerCase() !== normalizedAddress) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
+    // Signature valid. Clear nonce.
+    delete nonceStore[normalizedAddress];
+    
+    const TARGET_MEGA_GUARDIAN_ADDRESS = '0x46801571a40b11a1387D0a92C636F7a1D6FE8711'.toLowerCase();
+    const isMegaGuardian = normalizedAddress === TARGET_MEGA_GUARDIAN_ADDRESS;
+    
+    const email = `${normalizedAddress}@wallet.local`;
+    
+    let user: any = await get('SELECT * FROM vuttik_users WHERE oauth_provider = ? AND oauth_id = ?', ['wallet', normalizedAddress]);
+    
+    if (!user) {
+      const uid = uuidv4();
+      const role = isMegaGuardian ? 'mega_guardian' : 'user';
+      const planId = isMegaGuardian ? 'mega_guardian' : 'free';
+      const displayName = isMegaGuardian ? 'Mega Guardian' : `Wallet ${normalizedAddress.substring(0, 6)}`;
+      
+      await run(
+        'INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, oauth_provider, oauth_id, onboarding_completed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [uid, email, displayName, role, planId, new Date().toISOString(), 'wallet', normalizedAddress, isMegaGuardian ? 1 : 0]
+      );
+      user = await get('SELECT * FROM vuttik_users WHERE uid = ?', [uid]);
+    } else if (isMegaGuardian && (user.role !== 'mega_guardian' || user.plan_id !== 'mega_guardian')) {
+      // Force update to mega guardian if address matches
+      await run('UPDATE vuttik_users SET role = ?, plan_id = ?, onboarding_completed = 1 WHERE uid = ?', ['mega_guardian', 'mega_guardian', user.uid]);
+      user.role = 'mega_guardian';
+      user.plan_id = 'mega_guardian';
+      user.onboarding_completed = 1;
+    }
+    
+    const token = generateOAuthJWT(user.uid, user.email, user.role);
+    res.json({ 
+        token, 
+        user: { 
+            ...user, 
+            displayName: user.display_name, 
+            photoURL: user.photo_url, 
+            planId: user.plan_id, 
+            isBanned: !!user.is_banned,
+            onboardingCompleted: !!user.onboarding_completed
         } 
     });
   } catch (error: any) {
