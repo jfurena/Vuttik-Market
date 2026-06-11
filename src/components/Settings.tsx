@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Bell, Lock, Shield, Eye, Palette, CreditCard } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Lock, Shield, Eye, Palette, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
@@ -200,8 +200,18 @@ export default function Settings() {
                       <input type="text" value={displayNameInput} onChange={e => setDisplayNameInput(e.target.value)} className="bg-vuttik-gray border-none rounded-xl px-4 py-3 text-sm font-bold text-vuttik-navy outline-none" placeholder="Tu nombre" />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Correo Electrónico</label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Correo Electrónico</label>
+                        {user?.emailVerified ? (
+                          <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full"><CheckCircle2 size={12} /> Verificado</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full"><AlertCircle size={12} /> No Verificado</span>
+                        )}
+                      </div>
                       <input type="email" value={emailInput} onChange={e => setEmailInput(e.target.value)} className="bg-vuttik-gray border-none rounded-xl px-4 py-3 text-sm font-bold text-vuttik-navy outline-none" placeholder="correo@ejemplo.com" />
+                      {!user?.emailVerified && (
+                        <p className="text-[10px] text-amber-600 mt-1">Por favor verifica tu correo para mantener tu cuenta segura.</p>
+                      )}
                     </div>
                     
                     <div className="flex flex-col md:flex-row gap-4 mt-2">
