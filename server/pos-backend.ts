@@ -4,6 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
 import bcrypt from 'bcryptjs';
+import { get, run } from './db.js';
+import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import rateLimit from 'express-rate-limit';
@@ -145,25 +147,23 @@ async function startServer() {
     if (!nombre || !correo || !password) return res.status(400).json({ error: 'Completa todos los campos.' });
     if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
 
-    const db = getDB();
-    const exists = db.owners.find((o: any) => o.correo === correo.toLowerCase().trim());
-    if (exists) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo.' });
+    try {
+      const exists = await get('SELECT uid FROM vuttik_users WHERE email = ?', [correo.toLowerCase().trim()]);
+      if (exists) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo en Vuttik.' });
 
-    const password_hash = await bcrypt.hash(password, 10);
-    const newOwner = {
-      id: 'owner-' + Date.now(),
-      nombre: nombre.trim(),
-      correo: correo.toLowerCase().trim(),
-      password_hash,
-      fecha_creacion: new Date()
-    };
-    db.owners.push(newOwner);
-    saveDB(db);
+      const password_hash = await bcrypt.hash(password, 10);
+      const uid = uuidv4();
+      await run(
+        'INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [uid, correo.toLowerCase().trim(), nombre.trim(), 'user', 'free', new Date().toISOString(), password_hash, 'local', 1]
+      );
 
-    const { password_hash: _, ...safeOwner } = newOwner;
-    (req.session as any).owner_id = newOwner.id;
-    (req.session as any).owner_nombre = newOwner.nombre;
-    res.json({ owner: safeOwner });
+      (req.session as any).owner_id = uid;
+      (req.session as any).owner_nombre = nombre.trim();
+      res.json({ owner: { id: uid, nombre: nombre.trim(), correo: correo.toLowerCase().trim() } });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Owner login
@@ -171,20 +171,23 @@ async function startServer() {
     const { correo, password } = req.body;
     if (!correo || !password) return res.status(400).json({ error: 'Correo y contraseña son requeridos.' });
 
-    const db = getDB();
-    const owner = db.owners.find((o: any) => o.correo === correo.toLowerCase().trim());
-    if (!owner) return res.status(404).json({ error: 'No existe una cuenta con ese correo.' });
+    try {
+      const user: any = await get('SELECT * FROM vuttik_users WHERE email = ?', [correo.toLowerCase().trim()]);
+      if (!user) return res.status(404).json({ error: 'No existe una cuenta con ese correo.' });
+      if (!user.password_hash) return res.status(401).json({ error: 'Contraseña incorrecta o cuenta de Google.' });
 
-    const valid = await bcrypt.compare(password, owner.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Contraseña incorrecta.' });
+      const valid = await bcrypt.compare(password, user.password_hash);
+      if (!valid) return res.status(401).json({ error: 'Contraseña incorrecta.' });
 
-    (req.session as any).owner_id = owner.id;
-    (req.session as any).owner_nombre = owner.nombre;
-    (req.session as any).business_id = null;
-    (req.session as any).employee_id = null;
+      (req.session as any).owner_id = user.uid;
+      (req.session as any).owner_nombre = user.display_name;
+      (req.session as any).business_id = null;
+      (req.session as any).employee_id = null;
 
-    const { password_hash: _, ...safeOwner } = owner;
-    res.json({ owner: safeOwner });
+      res.json({ owner: { id: user.uid, nombre: user.display_name, correo: user.email } });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Employee login
@@ -571,13 +574,39 @@ async function startServer() {
     res.json(getBiz(db, s.business_id).products || []);
   });
 
-  app.post('/api/products', requireBizAccess, (req, res) => {
+  app.post('/api/products', requireBizAccess, async (req, res) => {
     const s = req.session as any;
     const { usuario_id, ...productData } = req.body;
     const db = getDB();
     const biz = getBiz(db, s.business_id);
     const newProduct = { ...productData, id: Date.now().toString(), fecha_creacion: new Date(), fecha_actualizacion: new Date() };
     biz.products.push(newProduct);
+
+    // Sync to Vuttik Market
+    try {
+      const sqliteProductId = 'pos-' + newProduct.id;
+      const ownerName = biz.nombre || 'Negocio POS';
+      const location = biz.settings?.allowed_location || 'Ubicación no especificada';
+      await run(`
+        INSERT INTO vuttik_products 
+        (id, title, price, author_id, author_name, location, store_name, is_independent, created_at, barcode) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        sqliteProductId,
+        newProduct.nombre,
+        Number(newProduct.precio_venta) || 0,
+        biz.owner_id,
+        ownerName,
+        location,
+        ownerName,
+        1, // is_independent
+        new Date().toISOString(),
+        newProduct.codigo_barras || ''
+      ]);
+    } catch (err) {
+      console.error('Error syncing POS product to Vuttik SQLite:', err);
+    }
+
     
     if (Number(newProduct.cantidad_disponible) > 0 && Number(newProduct.costo_compra) > 0) {
       const montoTotal = Number(newProduct.cantidad_disponible) * Number(newProduct.costo_compra);
@@ -635,7 +664,7 @@ async function startServer() {
     res.json(newProduct);
   });
 
-  app.put('/api/products/:id', requireBizAccess, (req, res) => {
+  app.put('/api/products/:id', requireBizAccess, async (req, res) => {
     const { id } = req.params;
     const { usuario_id, ...updateData } = req.body;
     const s = req.session as any;
@@ -691,10 +720,30 @@ async function startServer() {
 
     logActivity(biz, { usuario_id: usuario_id || s.owner_id || s.employee_id, usuario_nombre: req.body.usuario_nombre || 'Sistema', accion: 'Edición de Producto', detalles: details, modulo: 'Inventario' });
     saveDB(db);
+
+    // Sync update to Vuttik SQLite
+    try {
+      const sqliteProductId = 'pos-' + id;
+      const product = biz.products[index];
+      await run(`
+        UPDATE vuttik_products 
+        SET title = ?, price = ?, barcode = ?
+        WHERE id = ? AND author_id = ?
+      `, [
+        product.nombre,
+        Number(product.precio_venta) || 0,
+        product.codigo_barras || '',
+        sqliteProductId,
+        biz.owner_id
+      ]);
+    } catch (err) {
+      console.error('Error updating POS product in Vuttik SQLite:', err);
+    }
+
     res.json(biz.products[index]);
   });
 
-  app.delete('/api/products/:id', requireOwnerBizAccess, (req, res) => {
+  app.delete('/api/products/:id', requireOwnerBizAccess, async (req, res) => {
     const { id } = req.params;
     const { usuario_id, usuario_nombre } = req.body;
     const s = req.session as any;
@@ -706,6 +755,15 @@ async function startServer() {
     logActivity(biz, { usuario_id: usuario_id || s.owner_id, usuario_nombre: usuario_nombre || 'Dueño', accion: 'Eliminación de Producto', detalles: `Eliminado: ${product.nombre}`, modulo: 'Inventario' });
     biz.products.splice(index, 1);
     saveDB(db);
+
+    // Sync delete to Vuttik SQLite
+    try {
+      const sqliteProductId = 'pos-' + id;
+      await run('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, biz.owner_id]);
+    } catch (err) {
+      console.error('Error deleting POS product in Vuttik SQLite:', err);
+    }
+
     res.json({ success: true });
   });
 
