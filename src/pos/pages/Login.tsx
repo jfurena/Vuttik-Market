@@ -5,6 +5,10 @@ import { Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, Store, Hash, Arrow
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { ApiService } from '../services/api';
+import { api } from '../../lib/api';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
 
 type Tab = 'login' | 'register' | 'employee';
 
@@ -41,6 +45,96 @@ export default function Login() {
     return navigator.language.startsWith('en') ? 'en' : 'es';
   });
   const [legalDocToShow, setLegalDocToShow] = useState<'terms' | 'privacy' | null>(null);
+
+  React.useEffect(() => {
+    const processOAuth = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const state = params.get('state');
+
+      if (code && state) {
+        setLoading(true);
+        try {
+          let response;
+          const googleRedirectUri = window.location.origin;
+          const facebookRedirectUri = window.location.origin + '/';
+
+          if (state === 'google') {
+            response = await api.googleCallback({ code, redirect_uri: googleRedirectUri });
+          } else if (state === 'facebook') {
+            response = await api.facebookCallback({ code, redirect_uri: facebookRedirectUri });
+          }
+
+          if (response?.token && response?.user) {
+            // Full page reload to ensure session cookie is properly picked up by checkAuth
+            window.location.href = '/businesses';
+          }
+        } catch (err: any) {
+          console.error('OAuth error:', err);
+          setError(err.message || 'Error en la autenticación social.');
+        } finally {
+          setLoading(false);
+          // Remove query params
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    };
+    processOAuth();
+  }, []);
+
+  const handleGoogleLogin = () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google login is not configured on this environment.');
+      return;
+    }
+    setLoading(true);
+    const redirectUri = window.location.origin;
+    const scope = 'openid email profile';
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=google`;
+  };
+
+  const handleFacebookLogin = () => {
+    if (!FACEBOOK_APP_ID) {
+      setError('Facebook login is not configured.');
+      return;
+    }
+    setLoading(true);
+    const redirectUri = window.location.origin + '/';
+    const scope = 'email,public_profile';
+    window.location.href = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=facebook`;
+  };
+
+  const handleWalletLogin = async () => {
+    try {
+      if (!window.ethereum) {
+        setError('No se detectó ninguna billetera (MetaMask). Instálala para continuar.');
+        return;
+      }
+      setLoading(true);
+      setError('');
+      
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) throw new Error('No se seleccionó ninguna cuenta.');
+      const address = accounts[0];
+      
+      const { nonce } = await api.getWalletNonce(address);
+      if (!nonce) throw new Error('No se pudo obtener el nonce del servidor.');
+      
+      const message = `Iniciando sesión en Vuttik Market. Nonce: ${nonce}`;
+      const signature = await window.ethereum.request({ method: 'personal_sign', params: [message, address] });
+      if (!signature) throw new Error('Firma cancelada.');
+      
+      const response = await api.verifyWalletSignature(address, signature);
+      if (response?.token && response?.user) {
+        window.location.href = '/businesses';
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Error al conectar la billetera.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const clearState = (newTab: Tab) => {
     setTab(newTab);
@@ -444,6 +538,39 @@ export default function Login() {
               </motion.form>
             )}
           </AnimatePresence>
+
+          {tab !== 'employee' && (
+            <>
+              <div className="relative flex items-center gap-4 my-6">
+                <div className="flex-1 h-[1px] bg-slate-200"></div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">o</span>
+                <div className="flex-1 h-[1px] bg-slate-200"></div>
+              </div>
+
+              <div className="flex items-center justify-center gap-3">
+                <button type="button" onClick={handleGoogleLogin} disabled={loading} className="w-14 h-14 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 transition-all hover:-translate-y-1 shadow-sm" title="Continuar con Google">
+                  <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
+                </button>
+                <button type="button" onClick={handleFacebookLogin} disabled={loading} className="w-14 h-14 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 transition-all hover:-translate-y-1 shadow-sm" title="Continuar con Facebook">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#1877F2">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </button>
+                <button type="button" onClick={handleWalletLogin} disabled={loading} className="w-14 h-14 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-orange-50 transition-all hover:-translate-y-1 shadow-sm" title="Conectar Billetera">
+                  <svg width="24" height="24" viewBox="0 0 118 118" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M116.326 47.9304L59.0003 4.20508L1.67432 47.9304L23.491 113.795H94.5097L116.326 47.9304Z" fill="#E2761B"/>
+                    <path d="M94.5097 113.795L116.326 47.9304L59.0003 76.5414L94.5097 113.795Z" fill="#E4761B"/>
+                    <path d="M23.491 113.795L1.67432 47.9304L59.0003 76.5414L23.491 113.795Z" fill="#E4761B"/>
+                    <path d="M59.0003 4.20508L40.7163 47.9304L59.0003 76.5414L77.2843 47.9304L59.0003 4.20508Z" fill="#E4761B"/>
+                    <path d="M1.67432 47.9304L40.7163 47.9304L59.0003 4.20508L1.67432 47.9304Z" fill="#D7C1B3"/>
+                    <path d="M116.326 47.9304L77.2843 47.9304L59.0003 4.20508L116.326 47.9304Z" fill="#D7C1B3"/>
+                    <path d="M59.0003 76.5414L77.2843 47.9304H40.7163L59.0003 76.5414Z" fill="#233447"/>
+                    <path d="M59.0003 76.5414L94.5097 113.795H23.491L59.0003 76.5414Z" fill="#CD6116"/>
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
 
           <p className="mt-8 text-center text-slate-450 text-xs font-semibold">
             Al acceder aceptas los{' '}
