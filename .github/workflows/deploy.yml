@@ -72,14 +72,24 @@ jobs:
             npm install --production
             
             # Inject new Google Client ID and Secret securely
-            if [ -f .env.local ]; then
-              sed -i 's/^GOOGLE_CLIENT_ID=.*/GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"/' .env.local
-              sed -i 's/^GOOGLE_CLIENT_SECRET=.*/GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"/' .env.local
-              sed -i 's/^VITE_GOOGLE_CLIENT_ID=.*/VITE_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"/' .env.local
-            else
+            touch .env.local
+            
+            if ! grep -q "^GOOGLE_CLIENT_ID=" .env.local; then
               echo 'GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"' >> .env.local
+            else
+              sed -i 's/^GOOGLE_CLIENT_ID=.*/GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"/' .env.local
+            fi
+
+            if ! grep -q "^GOOGLE_CLIENT_SECRET=" .env.local; then
               echo 'GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"' >> .env.local
+            else
+              sed -i 's/^GOOGLE_CLIENT_SECRET=.*/GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"/' .env.local
+            fi
+
+            if ! grep -q "^VITE_GOOGLE_CLIENT_ID=" .env.local; then
               echo 'VITE_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"' >> .env.local
+            else
+              sed -i 's/^VITE_GOOGLE_CLIENT_ID=.*/VITE_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"/' .env.local
             fi
             
             touch ../tmp/restart.txt
