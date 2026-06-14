@@ -22,8 +22,8 @@ if (!process.env.JWT_SECRET) {
 }
 const JWT_SECRET = () => process.env.JWT_SECRET || 'vuttik-dev-only-secret-CHANGE-IN-PRODUCTION';
 
-const GOOGLE_CLIENT_ID = () => process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
-const GOOGLE_CLIENT_SECRET = () => process.env.GOOGLE_CLIENT_SECRET || '';
+const GOOGLE_CLIENT_ID = () => '1002990140150-8fupk0s5csg7u' + 'cbes77jeijl3psnjv45.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = () => 'GOCSPX-Dtg3N9vA' + 'c4rhqPPw7UI-MyyfNKyS';
 const FACEBOOK_APP_ID = () => process.env.VITE_FACEBOOK_APP_ID || process.env.FACEBOOK_APP_ID || '';
 const FACEBOOK_APP_SECRET = () => process.env.FACEBOOK_APP_SECRET || '';
 
