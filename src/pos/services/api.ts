@@ -1,7 +1,6 @@
 import { Product, Sale, Shift, Expense, CashMovement, UnitType, ShiftStatus } from '../types';
 
-const isPosDomain = window.location.hostname.startsWith('pos.') || window.location.pathname.startsWith('/pos');
-const API_BASE = isPosDomain ? '/pos/api' : '/api';
+const API_BASE = '/api';
 
 async function translateText(text: string, from: string, to: string): Promise<string> {
   if (!text || text.trim() === '') return '';
