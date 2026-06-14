@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  
+  <IfModule mod_passenger.c>
+    PassengerEnabled off
+  </IfModule>
 
   # Proxy /api/ and /pos/api/ requests to Node.js backend on port 3005
   # LiteSpeed supports RewriteRule with [P] when mod_proxy is enabled

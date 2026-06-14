@@ -1,17 +1,56 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import session from 'express-session';
-import bcrypt from 'bcryptjs';
-import { get, run } from './db.js';
-import { v4 as uuidv4 } from 'uuid';
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
-import rateLimit from 'express-rate-limit';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.posApp = void 0;
+const express_1 = __importDefault(require("express"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const url_1 = require("url");
+const express_session_1 = __importDefault(require("express-session"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const db_js_1 = require("./db.js");
+const uuid_1 = require("uuid");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config({ path: '.env.local' });
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const __dirname = path_1.default.dirname((0, url_1.fileURLToPath)(import.meta.url));
 const DB_FILE = process.env.VUTTIK_DB_PATH
-    || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
+    || (process.env.USER_DATA_PATH ? path_1.default.join(process.env.USER_DATA_PATH, 'db.json') : path_1.default.join(__dirname, 'db.json'));
 // === DB STRUCTURE ===
 const emptyBusiness = (id, nombre, codigo, owner_id) => ({
     id,
@@ -40,11 +79,11 @@ const initialDB = {
 };
 // === DB HELPERS ===
 const getDB = () => {
-    if (!fs.existsSync(DB_FILE)) {
-        fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
+    if (!fs_1.default.existsSync(DB_FILE)) {
+        fs_1.default.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
         return JSON.parse(JSON.stringify(initialDB));
     }
-    const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    const db = JSON.parse(fs_1.default.readFileSync(DB_FILE, 'utf8'));
     if (!db.owners)
         db.owners = [];
     if (!db.businesses)
@@ -52,7 +91,7 @@ const getDB = () => {
     return db;
 };
 const saveDB = (data) => {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    fs_1.default.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 };
 // Get the business data object (throws if not found)
 const getBiz = (db, bizId) => {
@@ -109,7 +148,7 @@ const requireOwnerBizAccess = (req, res, next) => {
     next();
 };
 // SEC-007 FIX: Rate limiting to prevent brute-force attacks on authentication endpoints
-const authLimiter = rateLimit({
+const authLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 30, // max 30 attempts per 15 minutes
     message: { error: 'Demasiados intentos. Espera 15 minutos antes de volver a intentarlo.' },
@@ -117,10 +156,10 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 async function startServer() {
-    const app = express();
-    app.use(express.json());
+    const app = (0, express_1.default)();
+    app.use(express_1.default.json());
     const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
-    app.use(session({
+    app.use((0, express_session_1.default)({
         name: 'vuttik_pos_sid',
         secret: sessionSecret,
         resave: true,
@@ -143,12 +182,12 @@ async function startServer() {
         if (password.length < 6)
             return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
         try {
-            const exists = await get('SELECT uid FROM vuttik_users WHERE email = ?', [correo.toLowerCase().trim()]);
+            const exists = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE email = ?', [correo.toLowerCase().trim()]);
             if (exists)
                 return res.status(409).json({ error: 'Ya existe una cuenta con ese correo en Vuttik.' });
-            const password_hash = await bcrypt.hash(password, 10);
-            const uid = uuidv4();
-            await run('INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [uid, correo.toLowerCase().trim(), nombre.trim(), 'user', 'free', new Date().toISOString(), password_hash, 'local', 1]);
+            const password_hash = await bcryptjs_1.default.hash(password, 10);
+            const uid = (0, uuid_1.v4)();
+            await (0, db_js_1.run)('INSERT INTO vuttik_users (uid, email, display_name, role, plan_id, created_at, password_hash, oauth_provider, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [uid, correo.toLowerCase().trim(), nombre.trim(), 'user', 'free', new Date().toISOString(), password_hash, 'local', 1]);
             req.session.owner_id = uid;
             req.session.owner_nombre = nombre.trim();
             res.json({ owner: { id: uid, nombre: nombre.trim(), correo: correo.toLowerCase().trim() } });
@@ -163,12 +202,12 @@ async function startServer() {
         if (!correo || !password)
             return res.status(400).json({ error: 'Correo y contraseña son requeridos.' });
         try {
-            const user = await get('SELECT * FROM vuttik_users WHERE email = ?', [correo.toLowerCase().trim()]);
+            const user = await (0, db_js_1.get)('SELECT * FROM vuttik_users WHERE email = ?', [correo.toLowerCase().trim()]);
             if (!user)
                 return res.status(404).json({ error: 'No existe una cuenta con ese correo.' });
             if (!user.password_hash)
                 return res.status(401).json({ error: 'Contraseña incorrecta o cuenta de Google.' });
-            const valid = await bcrypt.compare(password, user.password_hash);
+            const valid = await bcryptjs_1.default.compare(password, user.password_hash);
             if (!valid)
                 return res.status(401).json({ error: 'Contraseña incorrecta.' });
             req.session.owner_id = user.uid;
@@ -193,7 +232,7 @@ async function startServer() {
         const employee = biz.employees?.find((e) => e.username === username.trim() && e.estado === 'activo');
         if (!employee)
             return res.status(404).json({ error: 'Usuario no encontrado en este negocio.' });
-        const valid = await bcrypt.compare(password, employee.password_hash);
+        const valid = await bcryptjs_1.default.compare(password, employee.password_hash);
         if (!valid)
             return res.status(401).json({ error: 'Contraseña incorrecta.' });
         req.session.employee_id = employee.id;
@@ -402,7 +441,7 @@ async function startServer() {
         const dup = biz.employees.find((e) => e.username === username.trim());
         if (dup)
             return res.status(409).json({ error: 'Ya existe un empleado con ese nombre de usuario.' });
-        const password_hash = await bcrypt.hash(password, 10);
+        const password_hash = await bcryptjs_1.default.hash(password, 10);
         const newEmp = {
             id: 'emp-' + Date.now(),
             nombre: nombre.trim(),
@@ -436,7 +475,7 @@ async function startServer() {
         if (estado)
             biz.employees[idx].estado = estado;
         if (password && password.length >= 6) {
-            biz.employees[idx].password_hash = await bcrypt.hash(password, 10);
+            biz.employees[idx].password_hash = await bcryptjs_1.default.hash(password, 10);
         }
         saveDB(db);
         const { password_hash: _, ...safe } = biz.employees[idx];
@@ -558,7 +597,7 @@ async function startServer() {
             const sqliteProductId = 'pos-' + newProduct.id;
             const ownerName = biz.nombre || 'Negocio POS';
             const location = biz.settings?.allowed_location || 'Ubicación no especificada';
-            await run(`
+            await (0, db_js_1.run)(`
         INSERT INTO vuttik_products 
         (id, title, price, author_id, author_name, location, store_name, is_independent, created_at, barcode) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -693,7 +732,7 @@ async function startServer() {
         try {
             const sqliteProductId = 'pos-' + id;
             const product = biz.products[index];
-            await run(`
+            await (0, db_js_1.run)(`
         UPDATE vuttik_products 
         SET title = ?, price = ?, barcode = ?
         WHERE id = ? AND author_id = ?
@@ -726,7 +765,7 @@ async function startServer() {
         // Sync delete to Vuttik SQLite
         try {
             const sqliteProductId = 'pos-' + id;
-            await run('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, biz.owner_id]);
+            await (0, db_js_1.run)('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, biz.owner_id]);
         }
         catch (err) {
             console.error('Error deleting POS product in Vuttik SQLite:', err);
@@ -1004,7 +1043,7 @@ async function startServer() {
         const biz = getBiz(db, s.business_id);
         // Validate using owner password
         const owner = db.owners.find((o) => o.id === biz.owner_id);
-        const valid = owner ? await bcrypt.compare(password, owner.password_hash) : false;
+        const valid = owner ? await bcryptjs_1.default.compare(password, owner.password_hash) : false;
         if (!valid)
             return res.status(401).json({ error: 'La clave de seguridad ingresada es incorrecta.' });
         if (!motivo || motivo.trim().length === 0)
@@ -1742,16 +1781,16 @@ async function startServer() {
     });
     if (process.env.NODE_ENV === 'production') {
         // En producción (Electron), servir la carpeta dist compilada
-        const distPath = path.join(__dirname, '../dist');
-        app.use(express.static(distPath));
+        const distPath = path_1.default.join(__dirname, '../dist');
+        app.use(express_1.default.static(distPath));
         app.get('*', (req, res) => {
-            res.sendFile(path.join(distPath, 'index.html'));
+            res.sendFile(path_1.default.join(distPath, 'index.html'));
         });
     }
     else {
         // En desarrollo, intentar usar Vite si está instalado
         try {
-            const { createServer: createViteServer } = await import('vite');
+            const { createServer: createViteServer } = await Promise.resolve().then(() => __importStar(require('vite')));
             const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
             app.use(vite.middlewares);
         }
@@ -1782,4 +1821,4 @@ async function startServer() {
     }, 10000);
     return app;
 }
-export const posApp = await startServer();
+exports.posApp = await startServer();

@@ -1,15 +1,26 @@
-import sqlite3 from 'sqlite3';
-import { promisify } from 'util';
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.resolve(__dirname, '../vuttik.db');
-const db = new sqlite3.Database(dbPath);
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.get = exports.all = exports.run = exports.db = void 0;
+exports.initDB = initDB;
+const sqlite3_1 = __importDefault(require("sqlite3"));
+const util_1 = require("util");
+const path_1 = __importDefault(require("path"));
+const url_1 = require("url");
+const __dirname = path_1.default.dirname((0, url_1.fileURLToPath)(import.meta.url));
+const dbPath = path_1.default.resolve(__dirname, '../vuttik.db');
+const db = new sqlite3_1.default.Database(dbPath);
+exports.db = db;
 // Promisify database methods
-const run = promisify(db.run.bind(db));
-const all = promisify(db.all.bind(db));
-const get = promisify(db.get.bind(db));
-export async function initDB() {
+const run = (0, util_1.promisify)(db.run.bind(db));
+exports.run = run;
+const all = (0, util_1.promisify)(db.all.bind(db));
+exports.all = all;
+const get = (0, util_1.promisify)(db.get.bind(db));
+exports.get = get;
+async function initDB() {
     console.log('Initializing SQL database at:', dbPath);
     // Auto-migration to new table prefixes
     const tables_to_migrate = [
@@ -644,4 +655,3 @@ export async function initDB() {
         console.error('Error during seeding check:', err);
     }
 }
-export { db, run, all, get };

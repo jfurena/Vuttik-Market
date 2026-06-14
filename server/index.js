@@ -1,12 +1,17 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import { initDB, run, all, get } from './db.js';
-import { v4 as uuidv4 } from 'uuid';
-import { authRouter, authenticateToken } from './auth.js';
-const app = express();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config({ path: '.env.local' });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
+const db_js_1 = require("./db.js");
+const uuid_1 = require("uuid");
+const auth_js_1 = require("./auth.js");
+const app = (0, express_1.default)();
 const port = process.env.PORT || 3005;
 const allowedOrigins = [
     'http://localhost:5173',
@@ -15,7 +20,7 @@ const allowedOrigins = [
     'https://www.vuttik.com',
     'https://pos.vuttik.com'
 ];
-app.use(cors({
+app.use((0, cors_1.default)({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin))
             return callback(null, true);
@@ -23,10 +28,10 @@ app.use(cors({
     },
     credentials: true
 }));
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ limit: '5mb', extended: true }));
+app.use(express_1.default.json({ limit: '5mb' }));
+app.use(express_1.default.urlencoded({ limit: '5mb', extended: true }));
 // Security headers
-app.use(helmet({
+app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: { policy: 'cross-origin' } // allow images to be served cross-origin
 }));
 // Global request logger
@@ -34,14 +39,14 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
-import { posApp } from './pos-backend.js';
-app.use('/api/auth', authRouter);
-app.use('/pos', posApp);
+const pos_backend_js_1 = require("./pos-backend.js");
+app.use('/api/auth', auth_js_1.authRouter);
+app.use('/pos', pos_backend_js_1.posApp);
 // --- Helpers ---
 async function logAction(userId, action, targetId, targetType, metadata = {}) {
     try {
         const timestamp = new Date().toISOString();
-        await run('INSERT INTO vuttik_metrics (user_id, action, target_id, target_type, metadata, timestamp) VALUES (?, ?, ?, ?, ?, ?)', [userId, action, targetId, targetType, JSON.stringify(metadata), timestamp]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_metrics (user_id, action, target_id, target_type, metadata, timestamp) VALUES (?, ?, ?, ?, ?, ?)', [userId, action, targetId, targetType, JSON.stringify(metadata), timestamp]);
         console.log(`[AuditLog] User ${userId} performed ${action} on ${targetType}:${targetId}`);
     }
     catch (err) {
@@ -53,7 +58,7 @@ async function startServer() {
     try {
         console.log('--- Starting Vuttik Backend ---');
         // 1. Initialize Database
-        await initDB();
+        await (0, db_js_1.initDB)();
         console.log('Database initialized successfully.');
         // 2. Start Express
         app.listen(port, () => {
@@ -94,19 +99,19 @@ app.get('/api/users/:uid/analytics', async (req, res) => {
     const { uid } = req.params;
     try {
         // Total profile views (actions where this user was the target)
-        const viewsRow = await get(`
+        const viewsRow = await (0, db_js_1.get)(`
       SELECT COUNT(*) as count FROM vuttik_metrics 
       WHERE target_id = ? AND action = 'VIEW_PROFILE'
     `, [uid]);
         // Engagement: actions performed BY this user
-        const engagement = await all(`
+        const engagement = await (0, db_js_1.all)(`
       SELECT action, COUNT(*) as count 
       FROM vuttik_metrics 
       WHERE user_id = ? 
       GROUP BY action
     `, [uid]);
         // Trend: views on this profile in the last 7 days
-        const trend = await all(`
+        const trend = await (0, db_js_1.all)(`
       SELECT date(timestamp) as date, COUNT(*) as count 
       FROM vuttik_metrics 
       WHERE target_id = ? AND action = 'VIEW_PROFILE' AND timestamp > date('now', '-7 days')
@@ -123,14 +128,14 @@ app.get('/api/users/:uid/analytics', async (req, res) => {
     }
 });
 // Admin Global Audit Log
-app.get('/api/admin/audit-log', authenticateToken, async (req, res) => {
+app.get('/api/admin/audit-log', auth_js_1.authenticateToken, async (req, res) => {
     const NOISE_EVENTS = [
         'click', 'view', 'search', 'VIEW_PROFILE', 'contact',
         'page_view', 'navigation', 'scroll', 'hover', 'SEND_MESSAGE'
     ];
     const placeholders = NOISE_EVENTS.map(() => '?').join(', ');
     try {
-        const logs = await all(`
+        const logs = await (0, db_js_1.all)(`
       SELECT m.*, u.display_name as user_name, u.photo_url as user_avatar
       FROM vuttik_metrics m
       LEFT JOIN vuttik_users u ON m.user_id = u.uid
@@ -157,11 +162,11 @@ app.get('/api/users/search', async (req, res) => {
         let rows;
         if (q.startsWith('@')) {
             const username = q.substring(1);
-            rows = await all(`SELECT uid, email, display_name, username, photo_url, role FROM vuttik_users 
+            rows = await (0, db_js_1.all)(`SELECT uid, email, display_name, username, photo_url, role FROM vuttik_users 
          WHERE username = ? COLLATE NOCASE OR username LIKE ? LIMIT 20`, [username, `%${username}%`]);
         }
         else {
-            rows = await all(`SELECT uid, email, display_name, username, photo_url, role FROM vuttik_users 
+            rows = await (0, db_js_1.all)(`SELECT uid, email, display_name, username, photo_url, role FROM vuttik_users 
          WHERE display_name LIKE ? OR email LIKE ? OR username LIKE ? LIMIT 20`, [`%${q}%`, `%${q}%`, `%${q}%`]);
         }
         res.json(rows);
@@ -175,7 +180,7 @@ app.get('/api/users/check-username', async (req, res) => {
     if (!username)
         return res.status(400).json({ error: 'Username missing' });
     try {
-        const user = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE', [username]);
+        const user = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE', [username]);
         res.json({ available: !user });
     }
     catch (error) {
@@ -197,7 +202,7 @@ app.get('/api/users/suggest-username', async (req, res) => {
         let isAvailable = false;
         let attempts = 0;
         while (!isAvailable && attempts < 20) {
-            const user = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE', [suggestion]);
+            const user = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE', [suggestion]);
             if (!user) {
                 isAvailable = true;
             }
@@ -221,11 +226,11 @@ app.put('/api/users/:uid/username', async (req, res) => {
         return res.status(400).json({ error: 'Nombre de usuario inválido.' });
     }
     try {
-        const user = await get('SELECT username_changes FROM vuttik_users WHERE uid = ?', [req.params.uid]);
+        const user = await (0, db_js_1.get)('SELECT username_changes FROM vuttik_users WHERE uid = ?', [req.params.uid]);
         if (!user)
             return res.status(404).json({ error: 'User not found' });
         // Check availability
-        const existing = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, req.params.uid]);
+        const existing = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, req.params.uid]);
         if (existing) {
             return res.status(400).json({ error: 'El nombre de usuario ya está en uso.' });
         }
@@ -248,7 +253,7 @@ app.put('/api/users/:uid/username', async (req, res) => {
             });
         }
         changes.push(now);
-        await run('UPDATE vuttik_users SET username = ?, username_changes = ? WHERE uid = ?', [username, JSON.stringify(changes), req.params.uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET username = ?, username_changes = ? WHERE uid = ?', [username, JSON.stringify(changes), req.params.uid]);
         res.json({ success: true, username });
     }
     catch (error) {
@@ -257,7 +262,7 @@ app.put('/api/users/:uid/username', async (req, res) => {
 });
 app.get('/api/users/:uid', async (req, res) => {
     try {
-        const user = await get('SELECT * FROM vuttik_users WHERE uid = ?', [req.params.uid]);
+        const user = await (0, db_js_1.get)('SELECT * FROM vuttik_users WHERE uid = ?', [req.params.uid]);
         if (user) {
             if (user.is_banned) {
                 return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
@@ -267,7 +272,7 @@ app.get('/api/users/:uid', async (req, res) => {
             let bio = user.bio;
             let location = user.location;
             if (user.active_profile_mode === 'business') {
-                const business = await get('SELECT name, description, location as biz_location, logo FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
+                const business = await (0, db_js_1.get)('SELECT name, description, location as biz_location, logo FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
                 if (business) {
                     displayName = business.name || displayName;
                     photoURL = business.logo || photoURL;
@@ -275,8 +280,8 @@ app.get('/api/users/:uid', async (req, res) => {
                     location = business.biz_location || location;
                 }
             }
-            const followerCountRow = await get('SELECT COUNT(*) as count FROM vuttik_follows WHERE following_id = ?', [user.uid]);
-            const followingCountRow = await get('SELECT COUNT(*) as count FROM vuttik_follows WHERE follower_id = ?', [user.uid]);
+            const followerCountRow = await (0, db_js_1.get)('SELECT COUNT(*) as count FROM vuttik_follows WHERE following_id = ?', [user.uid]);
+            const followingCountRow = await (0, db_js_1.get)('SELECT COUNT(*) as count FROM vuttik_follows WHERE follower_id = ?', [user.uid]);
             const followerCount = followerCountRow?.count || 0;
             const followingCount = followingCountRow?.count || 0;
             const mappedUser = {
@@ -309,7 +314,7 @@ app.get('/api/users/:uid', async (req, res) => {
 });
 app.get('/api/users/by-username/:username', async (req, res) => {
     try {
-        const user = await get('SELECT * FROM vuttik_users WHERE username = ? COLLATE NOCASE', [req.params.username]);
+        const user = await (0, db_js_1.get)('SELECT * FROM vuttik_users WHERE username = ? COLLATE NOCASE', [req.params.username]);
         if (user) {
             if (user.is_banned) {
                 return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
@@ -319,7 +324,7 @@ app.get('/api/users/by-username/:username', async (req, res) => {
             let bio = user.bio;
             let location = user.location;
             if (user.active_profile_mode === 'business') {
-                const business = await get('SELECT name, description, location as biz_location, logo FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
+                const business = await (0, db_js_1.get)('SELECT name, description, location as biz_location, logo FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
                 if (business) {
                     displayName = business.name || displayName;
                     photoURL = business.logo || photoURL;
@@ -355,7 +360,7 @@ app.get('/api/users/by-username/:username', async (req, res) => {
 });
 app.get('/api/users', async (req, res) => {
     try {
-        const rows = await all('SELECT uid as id, email, display_name as displayName, photo_url as photoURL, role, plan_id as plan_id, is_banned as isBanned, created_at as createdAt FROM vuttik_users ORDER BY created_at DESC');
+        const rows = await (0, db_js_1.all)('SELECT uid as id, email, display_name as displayName, photo_url as photoURL, role, plan_id as plan_id, is_banned as isBanned, created_at as createdAt FROM vuttik_users ORDER BY created_at DESC');
         res.json(rows);
     }
     catch (error) {
@@ -367,7 +372,7 @@ app.put('/api/users/me/mode', async (req, res) => {
     if (!uid || !mode)
         return res.status(400).json({ error: 'Missing uid or mode' });
     try {
-        await run('UPDATE vuttik_users SET active_profile_mode = ? WHERE uid = ?', [mode, uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET active_profile_mode = ? WHERE uid = ?', [mode, uid]);
         await logAction(uid, 'SWITCH_MODE', uid, 'user', { mode });
         res.json({ success: true });
     }
@@ -377,7 +382,7 @@ app.put('/api/users/me/mode', async (req, res) => {
 });
 app.get('/api/business-profiles/:uid', async (req, res) => {
     try {
-        const business = await get('SELECT * FROM vuttik_business_profiles WHERE uid = ?', [req.params.uid]);
+        const business = await (0, db_js_1.get)('SELECT * FROM vuttik_business_profiles WHERE uid = ?', [req.params.uid]);
         if (business) {
             res.json({
                 ...business,
@@ -397,14 +402,14 @@ app.put('/api/business-profiles/:uid', async (req, res) => {
     const { name, description, location, phone, workingHours, socialLinks, logo, requesterUid } = req.body;
     const uid = req.params.uid;
     if (requesterUid !== uid) {
-        const member = await get('SELECT role FROM vuttik_business_members WHERE business_uid = ? AND member_uid = ?', [uid, requesterUid]);
+        const member = await (0, db_js_1.get)('SELECT role FROM vuttik_business_members WHERE business_uid = ? AND member_uid = ?', [uid, requesterUid]);
         if (!member || member.role !== 'owner') {
             return res.status(403).json({ error: 'Solo el dueño puede editar este negocio' });
         }
     }
     try {
         const now = new Date().toISOString();
-        await run(`INSERT OR REPLACE INTO vuttik_business_profiles 
+        await (0, db_js_1.run)(`INSERT OR REPLACE INTO vuttik_business_profiles 
        (uid, name, description, location, phone, working_hours, social_links, logo, updated_at, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT logo FROM vuttik_business_profiles WHERE uid = ?)), ?, COALESCE((SELECT created_at FROM vuttik_business_profiles WHERE uid = ?), ?))`, [
             uid,
@@ -431,7 +436,7 @@ app.put('/api/business-profiles/:uid', async (req, res) => {
 // --- Business Members Routes ---
 app.get('/api/business-members/:businessId', async (req, res) => {
     try {
-        const rows = await all(`SELECT m.*, u.email, u.display_name, u.photo_url 
+        const rows = await (0, db_js_1.all)(`SELECT m.*, u.email, u.display_name, u.photo_url 
        FROM vuttik_business_members m
        JOIN vuttik_users u ON m.member_uid = u.uid
        WHERE m.business_uid = ?`, [req.params.businessId]);
@@ -446,20 +451,20 @@ app.post('/api/business-members/invite', async (req, res) => {
     if (!businessUid || !email)
         return res.status(400).json({ error: 'Missing params' });
     try {
-        const targetUser = await get('SELECT uid FROM vuttik_users WHERE email = ?', [email]);
+        const targetUser = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE email = ?', [email]);
         if (!targetUser)
             return res.status(404).json({ error: 'User not found with that email' });
         // Check if already invited
-        const existing = await get('SELECT id FROM vuttik_business_members WHERE business_uid = ? AND member_uid = ?', [businessUid, targetUser.uid]);
+        const existing = await (0, db_js_1.get)('SELECT id FROM vuttik_business_members WHERE business_uid = ? AND member_uid = ?', [businessUid, targetUser.uid]);
         if (existing)
             return res.status(400).json({ error: 'User already invited or member' });
-        const id = uuidv4();
-        await run('INSERT INTO vuttik_business_members (id, business_uid, member_uid, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?)', [id, businessUid, targetUser.uid, 'user', 'pending', new Date().toISOString()]);
+        const id = (0, uuid_1.v4)();
+        await (0, db_js_1.run)('INSERT INTO vuttik_business_members (id, business_uid, member_uid, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?)', [id, businessUid, targetUser.uid, 'user', 'pending', new Date().toISOString()]);
         // Get business info for notification
-        const businessInfo = await get('SELECT name FROM vuttik_business_profiles WHERE uid = ?', [businessUid]);
+        const businessInfo = await (0, db_js_1.get)('SELECT name FROM vuttik_business_profiles WHERE uid = ?', [businessUid]);
         const bName = businessInfo?.name || 'Un negocio';
-        const notifId = uuidv4();
-        await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [notifId, targetUser.uid, 'Invitación a Negocio', `Has sido invitado a formar parte del equipo de ${bName}.`, 0, new Date().toISOString()]);
+        const notifId = (0, uuid_1.v4)();
+        await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [notifId, targetUser.uid, 'Invitación a Negocio', `Has sido invitado a formar parte del equipo de ${bName}.`, 0, new Date().toISOString()]);
         res.json({ success: true });
         await logAction(businessUid, 'INVITE_MEMBER', targetUser.uid, 'business_member', { email });
     }
@@ -469,8 +474,8 @@ app.post('/api/business-members/invite', async (req, res) => {
 });
 app.put('/api/business-members/:id/accept', async (req, res) => {
     try {
-        const member = await get('SELECT * FROM vuttik_business_members WHERE id = ?', [req.params.id]);
-        await run('UPDATE vuttik_business_members SET status = "accepted" WHERE id = ?', [req.params.id]);
+        const member = await (0, db_js_1.get)('SELECT * FROM vuttik_business_members WHERE id = ?', [req.params.id]);
+        await (0, db_js_1.run)('UPDATE vuttik_business_members SET status = "accepted" WHERE id = ?', [req.params.id]);
         if (member)
             await logAction(member.member_uid, 'ACCEPT_INVITE', member.business_uid, 'business_member', {});
         res.json({ success: true });
@@ -485,8 +490,8 @@ app.put('/api/business-members/:id/role', async (req, res) => {
         if (!['owner', 'admin', 'user'].includes(role)) {
             return res.status(400).json({ error: 'Invalid role' });
         }
-        const member = await get('SELECT * FROM vuttik_business_members WHERE id = ?', [req.params.id]);
-        await run('UPDATE vuttik_business_members SET role = ? WHERE id = ?', [role, req.params.id]);
+        const member = await (0, db_js_1.get)('SELECT * FROM vuttik_business_members WHERE id = ?', [req.params.id]);
+        await (0, db_js_1.run)('UPDATE vuttik_business_members SET role = ? WHERE id = ?', [role, req.params.id]);
         if (member)
             await logAction(changedBy || 'admin', 'CHANGE_MEMBER_ROLE', member.member_uid, 'business_member', { newRole: role, businessUid: member.business_uid });
         res.json({ success: true });
@@ -497,8 +502,8 @@ app.put('/api/business-members/:id/role', async (req, res) => {
 });
 app.delete('/api/business-members/:id', async (req, res) => {
     try {
-        const member = await get('SELECT * FROM vuttik_business_members WHERE id = ?', [req.params.id]);
-        await run('DELETE FROM vuttik_business_members WHERE id = ?', [req.params.id]);
+        const member = await (0, db_js_1.get)('SELECT * FROM vuttik_business_members WHERE id = ?', [req.params.id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_business_members WHERE id = ?', [req.params.id]);
         if (member)
             await logAction(member.member_uid, 'LEAVE_OR_REMOVED_BUSINESS', member.business_uid, 'business_member', {});
         res.json({ success: true });
@@ -509,7 +514,7 @@ app.delete('/api/business-members/:id', async (req, res) => {
 });
 app.get('/api/users/:uid/business-invites', async (req, res) => {
     try {
-        const rows = await all(`SELECT m.*, b.name as business_name, b.logo as business_logo 
+        const rows = await (0, db_js_1.all)(`SELECT m.*, b.name as business_name, b.logo as business_logo 
        FROM vuttik_business_members m
        JOIN vuttik_business_profiles b ON m.business_uid = b.uid
        WHERE m.member_uid = ? AND m.status = "pending"`, [req.params.uid]);
@@ -522,7 +527,7 @@ app.get('/api/users/:uid/business-invites', async (req, res) => {
 app.get('/api/users/:uid/businesses', async (req, res) => {
     try {
         // A user can have businesses they own OR businesses they are members of.
-        const rows = await all(`SELECT DISTINCT b.uid, b.name, b.logo, b.phone, u.email
+        const rows = await (0, db_js_1.all)(`SELECT DISTINCT b.uid, b.name, b.logo, b.phone, u.email
        FROM vuttik_business_profiles b
        LEFT JOIN vuttik_users u ON b.uid = u.uid
        LEFT JOIN vuttik_business_members m ON b.uid = m.business_uid
@@ -537,22 +542,22 @@ app.post('/api/users', async (req, res) => {
     const { uid, email, displayName, photoURL, role, planId, onboardingCompleted, age, gender, country, language, username } = req.body;
     try {
         if (username) {
-            const existingUsername = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, uid]);
+            const existingUsername = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, uid]);
             if (existingUsername)
                 return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
         }
-        const existing = await get('SELECT uid, is_banned FROM vuttik_users WHERE uid = ?', [uid]);
+        const existing = await (0, db_js_1.get)('SELECT uid, is_banned FROM vuttik_users WHERE uid = ?', [uid]);
         if (existing && existing.is_banned) {
             return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
         }
         if (existing) {
             const onboardingVal = onboardingCompleted !== undefined ? (onboardingCompleted ? 1 : 0) : 1;
-            await run('UPDATE vuttik_users SET email = ?, display_name = ?, photo_url = ?, role = ?, plan_id = ?, onboarding_completed = ?, age = COALESCE(?, age), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?', [email, displayName, photoURL, role, planId, onboardingVal, age || null, gender || null, country || null, language || null, username || null, uid]);
+            await (0, db_js_1.run)('UPDATE vuttik_users SET email = ?, display_name = ?, photo_url = ?, role = ?, plan_id = ?, onboarding_completed = ?, age = COALESCE(?, age), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?', [email, displayName, photoURL, role, planId, onboardingVal, age || null, gender || null, country || null, language || null, username || null, uid]);
             await logAction(uid, 'USER_LOGIN', uid, 'user', { role });
         }
         else {
             const onboardingVal = onboardingCompleted !== undefined ? (onboardingCompleted ? 1 : 0) : 1;
-            await run('INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, onboarding_completed, age, gender, country, language, username) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [uid, email, displayName, photoURL, role || 'user', planId || 'free', new Date().toISOString(), onboardingVal, age || null, gender || null, country || null, language || null, username || null]);
+            await (0, db_js_1.run)('INSERT INTO vuttik_users (uid, email, display_name, photo_url, role, plan_id, created_at, onboarding_completed, age, gender, country, language, username) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [uid, email, displayName, photoURL, role || 'user', planId || 'free', new Date().toISOString(), onboardingVal, age || null, gender || null, country || null, language || null, username || null]);
             await logAction(uid, 'USER_REGISTERED', uid, 'user', { email, role });
         }
         res.json({ success: true });
@@ -564,7 +569,7 @@ app.post('/api/users', async (req, res) => {
 // --- Category Routes ---
 app.get('/api/categories', async (req, res) => {
     try {
-        const rows = await all('SELECT * FROM vuttik_categories ORDER BY order_index ASC');
+        const rows = await (0, db_js_1.all)('SELECT * FROM vuttik_categories ORDER BY order_index ASC');
         const categories = rows.map(r => ({
             ...r,
             allowedTypes: JSON.parse(r.allowed_types),
@@ -579,11 +584,11 @@ app.get('/api/categories', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.post('/api/categories', authenticateToken, async (req, res) => {
+app.post('/api/categories', auth_js_1.authenticateToken, async (req, res) => {
     const { id, name, order, allowedTypes, fields, systemFields, createdBy, isService, requiresEan } = req.body;
-    const catId = id || uuidv4();
+    const catId = id || (0, uuid_1.v4)();
     try {
-        await run('INSERT OR REPLACE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [catId, name, order || 0, JSON.stringify(allowedTypes || []), JSON.stringify(fields || []), JSON.stringify(systemFields || {}), isService ? 1 : 0, requiresEan ? 1 : 0]);
+        await (0, db_js_1.run)('INSERT OR REPLACE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [catId, name, order || 0, JSON.stringify(allowedTypes || []), JSON.stringify(fields || []), JSON.stringify(systemFields || {}), isService ? 1 : 0, requiresEan ? 1 : 0]);
         await logAction(createdBy || 'admin', 'CREATE_CATEGORY', catId, 'category', { name });
         res.json({ success: true, id: catId });
     }
@@ -591,12 +596,12 @@ app.post('/api/categories', authenticateToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
+app.delete('/api/categories/:id', auth_js_1.authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { deletedBy } = req.query;
     try {
-        const cat = await get('SELECT name FROM vuttik_categories WHERE id = ?', [id]);
-        await run('DELETE FROM vuttik_categories WHERE id = ?', [id]);
+        const cat = await (0, db_js_1.get)('SELECT name FROM vuttik_categories WHERE id = ?', [id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_categories WHERE id = ?', [id]);
         await logAction(deletedBy || 'admin', 'DELETE_CATEGORY', id, 'category', { name: cat?.name });
         res.json({ success: true });
     }
@@ -607,13 +612,13 @@ app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
 // Evaluate and resolve pending proposals that have expired or reached consensus
 async function checkExpiredProposals() {
     try {
-        const pendingProposals = await all('SELECT * FROM vuttik_category_proposals WHERE status = ?', ['pending']);
+        const pendingProposals = await (0, db_js_1.all)('SELECT * FROM vuttik_category_proposals WHERE status = ?', ['pending']);
         if (!pendingProposals || pendingProposals.length === 0)
             return;
-        const guardianCountRow = await get("SELECT COUNT(*) as count FROM vuttik_users WHERE role IN ('guardian', 'mega_guardian', 'admin')");
+        const guardianCountRow = await (0, db_js_1.get)("SELECT COUNT(*) as count FROM vuttik_users WHERE role IN ('guardian', 'mega_guardian', 'admin')");
         const totalGuardians = guardianCountRow?.count || 1;
         for (const p of pendingProposals) {
-            const votes = await all('SELECT vote_type FROM vuttik_category_votes WHERE proposal_id = ?', [p.id]);
+            const votes = await (0, db_js_1.all)('SELECT vote_type FROM vuttik_category_votes WHERE proposal_id = ?', [p.id]);
             const upVotes = votes.filter((v) => v.vote_type === 'up').length;
             const downVotes = votes.filter((v) => v.vote_type === 'down').length;
             const totalVotes = upVotes + downVotes;
@@ -623,13 +628,13 @@ async function checkExpiredProposals() {
             // Resolve if 48 hours have passed OR if everyone has voted
             if (hoursDiff >= 48 || totalVotes >= totalGuardians) {
                 if (upVotes > downVotes) {
-                    await run('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['approved', p.id]);
-                    await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields) VALUES (?, ?, 0, ?, ?)', [p.id, p.name, JSON.stringify(['sell', 'buy', 'exchange']), JSON.stringify([])]);
+                    await (0, db_js_1.run)('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['approved', p.id]);
+                    await (0, db_js_1.run)('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields) VALUES (?, ?, 0, ?, ?)', [p.id, p.name, JSON.stringify(['sell', 'buy', 'exchange']), JSON.stringify([])]);
                     await logAction('system', 'category_auto_approved', p.id, 'category_proposal', { name: p.name, votes: upVotes, reason: hoursDiff >= 48 ? 'expired' : 'consensus' });
                 }
                 else {
                     // Reject if tie or more down votes
-                    await run('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['rejected', p.id]);
+                    await (0, db_js_1.run)('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['rejected', p.id]);
                     await logAction('system', 'category_auto_rejected', p.id, 'category_proposal', { name: p.name, votes: downVotes, reason: hoursDiff >= 48 ? 'expired' : 'consensus' });
                 }
             }
@@ -644,13 +649,13 @@ app.get('/api/categories/proposals', async (req, res) => {
     const userId = req.query.userId;
     try {
         await checkExpiredProposals(); // Resolve any expired ones before fetching
-        const proposals = await all('SELECT * FROM vuttik_category_proposals ORDER BY created_at DESC');
+        const proposals = await (0, db_js_1.all)('SELECT * FROM vuttik_category_proposals ORDER BY created_at DESC');
         // Count total guardians
-        const guardianCountRow = await get("SELECT COUNT(*) as count FROM vuttik_users WHERE role IN ('guardian', 'mega_guardian', 'admin')");
+        const guardianCountRow = await (0, db_js_1.get)("SELECT COUNT(*) as count FROM vuttik_users WHERE role IN ('guardian', 'mega_guardian', 'admin')");
         const totalGuardians = guardianCountRow?.count || 1; // avoid division by zero
         // Attach vote stats to each proposal
         const enrichedProposals = await Promise.all(proposals.map(async (p) => {
-            const votes = await all('SELECT guardian_id, vote_type FROM vuttik_category_votes WHERE proposal_id = ?', [p.id]);
+            const votes = await (0, db_js_1.all)('SELECT guardian_id, vote_type FROM vuttik_category_votes WHERE proposal_id = ?', [p.id]);
             const upVotes = votes.filter((v) => v.vote_type === 'up').length;
             const downVotes = votes.filter((v) => v.vote_type === 'down').length;
             const myVote = userId ? votes.find((v) => v.guardian_id === userId)?.vote_type : null;
@@ -671,7 +676,7 @@ app.get('/api/categories/proposals', async (req, res) => {
 app.post('/api/categories/proposals', async (req, res) => {
     const { id, name, suggested_by_id, suggested_by_name } = req.body;
     try {
-        await run('INSERT INTO vuttik_category_proposals (id, name, suggested_by_id, suggested_by_name, created_at) VALUES (?, ?, ?, ?, ?)', [id, name, suggested_by_id, suggested_by_name, new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_category_proposals (id, name, suggested_by_id, suggested_by_name, created_at) VALUES (?, ?, ?, ?, ?)', [id, name, suggested_by_id, suggested_by_name, new Date().toISOString()]);
         res.json({ success: true, id });
     }
     catch (error) {
@@ -683,44 +688,44 @@ app.post('/api/categories/proposals/:id/vote', async (req, res) => {
     const { guardian_id, vote_type } = req.body;
     try {
         // Check if the voter is a mega_guardian
-        const voter = await get('SELECT role FROM vuttik_users WHERE uid = ?', [guardian_id]);
+        const voter = await (0, db_js_1.get)('SELECT role FROM vuttik_users WHERE uid = ?', [guardian_id]);
         const isMegaGuardian = voter && (voter.role === 'mega_guardian' || voter.role === 'admin');
         // Upsert vote
-        await run(`
+        await (0, db_js_1.run)(`
       INSERT INTO vuttik_category_votes (proposal_id, guardian_id, vote_type, created_at)
       VALUES (?, ?, ?, ?)
       ON CONFLICT(proposal_id, guardian_id) DO UPDATE SET vote_type = excluded.vote_type
     `, [id, guardian_id, vote_type, new Date().toISOString()]);
-        const proposal = await get('SELECT * FROM vuttik_category_proposals WHERE id = ?', [id]);
+        const proposal = await (0, db_js_1.get)('SELECT * FROM vuttik_category_proposals WHERE id = ?', [id]);
         // Mega Guardian vote ends the vote immediately
         if (isMegaGuardian && proposal && proposal.status === 'pending') {
             if (vote_type === 'up') {
-                await run('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['approved', id]);
-                await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields) VALUES (?, ?, 0, ?, ?)', [proposal.id, proposal.name, JSON.stringify(['sell', 'buy', 'exchange']), JSON.stringify([])]);
+                await (0, db_js_1.run)('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['approved', id]);
+                await (0, db_js_1.run)('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields) VALUES (?, ?, 0, ?, ?)', [proposal.id, proposal.name, JSON.stringify(['sell', 'buy', 'exchange']), JSON.stringify([])]);
                 await logAction(guardian_id, 'category_approved_mega', id, 'category_proposal', { name: proposal.name });
             }
             else {
-                await run('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['rejected', id]);
+                await (0, db_js_1.run)('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['rejected', id]);
                 await logAction(guardian_id, 'category_rejected_mega', id, 'category_proposal', { name: proposal.name });
             }
             return res.json({ success: true, resolved: true, by: 'mega_guardian' });
         }
         // Regular guardian: check consensus
-        const votes = await all('SELECT vote_type FROM vuttik_category_votes WHERE proposal_id = ?', [id]);
+        const votes = await (0, db_js_1.all)('SELECT vote_type FROM vuttik_category_votes WHERE proposal_id = ?', [id]);
         const upVotes = votes.filter((v) => v.vote_type === 'up').length;
         const downVotes = votes.filter((v) => v.vote_type === 'down').length;
         await logAction(guardian_id, 'category_vote', id, 'category_proposal', { vote_type, name: proposal?.name });
-        const guardianCountRow = await get("SELECT COUNT(*) as count FROM vuttik_users WHERE role IN ('guardian', 'mega_guardian', 'admin')");
+        const guardianCountRow = await (0, db_js_1.get)("SELECT COUNT(*) as count FROM vuttik_users WHERE role IN ('guardian', 'mega_guardian', 'admin')");
         const totalGuardians = guardianCountRow?.count || 1;
         // Resolve immediately if everyone has voted
         if ((upVotes + downVotes) >= totalGuardians && proposal && proposal.status === 'pending') {
             if (upVotes > downVotes) {
-                await run('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['approved', id]);
-                await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields) VALUES (?, ?, 0, ?, ?)', [proposal.id, proposal.name, JSON.stringify(['sell', 'buy', 'exchange']), JSON.stringify([])]);
+                await (0, db_js_1.run)('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['approved', id]);
+                await (0, db_js_1.run)('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields) VALUES (?, ?, 0, ?, ?)', [proposal.id, proposal.name, JSON.stringify(['sell', 'buy', 'exchange']), JSON.stringify([])]);
                 await logAction('system', 'category_auto_approved', id, 'category_proposal', { name: proposal.name, votes: upVotes, reason: 'consensus' });
             }
             else {
-                await run('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['rejected', id]);
+                await (0, db_js_1.run)('UPDATE vuttik_category_proposals SET status = ? WHERE id = ?', ['rejected', id]);
                 await logAction('system', 'category_auto_rejected', id, 'category_proposal', { name: proposal.name, votes: downVotes, reason: 'consensus' });
             }
         }
@@ -733,27 +738,27 @@ app.post('/api/categories/proposals/:id/vote', async (req, res) => {
 });
 app.get('/api/transaction-types', async (req, res) => {
     try {
-        const rows = await all('SELECT * FROM vuttik_transaction_types ORDER BY label ASC');
+        const rows = await (0, db_js_1.all)('SELECT * FROM vuttik_transaction_types ORDER BY label ASC');
         res.json(rows);
     }
     catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-app.post('/api/transaction-types', authenticateToken, async (req, res) => {
+app.post('/api/transaction-types', auth_js_1.authenticateToken, async (req, res) => {
     const { id, label, icon, active } = req.body;
-    const typeId = id || uuidv4();
+    const typeId = id || (0, uuid_1.v4)();
     try {
-        await run('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', [typeId, label, icon || 'Tag', active !== undefined ? active : 1]);
+        await (0, db_js_1.run)('INSERT OR REPLACE INTO vuttik_transaction_types (id, label, icon, active) VALUES (?, ?, ?, ?)', [typeId, label, icon || 'Tag', active !== undefined ? active : 1]);
         res.json({ success: true, id: typeId });
     }
     catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-app.delete('/api/transaction-types/:id', authenticateToken, async (req, res) => {
+app.delete('/api/transaction-types/:id', auth_js_1.authenticateToken, async (req, res) => {
     try {
-        await run('DELETE FROM vuttik_transaction_types WHERE id = ?', [req.params.id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_transaction_types WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     }
     catch (error) {
@@ -763,7 +768,7 @@ app.delete('/api/transaction-types/:id', authenticateToken, async (req, res) => 
 // --- Subscription Plans Routes ---
 app.get('/api/subscription-plans', async (req, res) => {
     try {
-        const rows = await all('SELECT * FROM vuttik_subscription_plans ORDER BY order_index ASC');
+        const rows = await (0, db_js_1.all)('SELECT * FROM vuttik_subscription_plans ORDER BY order_index ASC');
         const plans = rows.map(r => ({
             ...r,
             features: JSON.parse(r.features || '[]'),
@@ -778,24 +783,24 @@ app.get('/api/subscription-plans', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.post('/api/subscription-plans', authenticateToken, async (req, res) => {
+app.post('/api/subscription-plans', auth_js_1.authenticateToken, async (req, res) => {
     const { id, name, price, features, is_hidden, is_coming_soon, is_recommended, order_index } = req.body;
-    const planId = id || uuidv4();
+    const planId = id || (0, uuid_1.v4)();
     try {
         let oldPrice = null;
         if (id) {
-            const oldPlan = await get('SELECT price FROM vuttik_subscription_plans WHERE id = ?', [id]);
+            const oldPlan = await (0, db_js_1.get)('SELECT price FROM vuttik_subscription_plans WHERE id = ?', [id]);
             if (oldPlan)
                 oldPrice = oldPlan.price;
         }
-        await run('INSERT OR REPLACE INTO vuttik_subscription_plans (id, name, price, features, is_hidden, is_coming_soon, is_recommended, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [planId, name, price || 0, JSON.stringify(features || []), is_hidden ? 1 : 0, is_coming_soon ? 1 : 0, is_recommended ? 1 : 0, order_index || 0]);
+        await (0, db_js_1.run)('INSERT OR REPLACE INTO vuttik_subscription_plans (id, name, price, features, is_hidden, is_coming_soon, is_recommended, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [planId, name, price || 0, JSON.stringify(features || []), is_hidden ? 1 : 0, is_coming_soon ? 1 : 0, is_recommended ? 1 : 0, order_index || 0]);
         // If price changed and it's an existing plan, notify affected users
         if (id && oldPrice !== null && oldPrice !== price) {
-            const usersOnPlan = await all('SELECT uid FROM vuttik_users WHERE plan_id = ?', [id]);
+            const usersOnPlan = await (0, db_js_1.all)('SELECT uid FROM vuttik_users WHERE plan_id = ?', [id]);
             const now = new Date().toISOString();
             for (const user of usersOnPlan) {
-                await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
-                    uuidv4(),
+                await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
+                    (0, uuid_1.v4)(),
                     user.uid,
                     'Actualización en tu Plan de Suscripción',
                     `Hola. El precio de tu plan "${name}" ha sido actualizado a $${price}/mes. Como ya tienes una suscripción activa, este cambio no se aplicará inmediatamente. Tendrás un periodo de gracia de 2 meses antes de que se refleje el nuevo precio. ¡Gracias por estar con nosotros!`,
@@ -810,25 +815,25 @@ app.post('/api/subscription-plans', authenticateToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.delete('/api/subscription-plans/:id', authenticateToken, async (req, res) => {
+app.delete('/api/subscription-plans/:id', auth_js_1.authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { fallbackPlanId } = req.query;
     try {
         if (fallbackPlanId) {
             // Find all affected users
-            const users = await all('SELECT uid FROM vuttik_users WHERE plan_id = ?', [id]);
+            const users = await (0, db_js_1.all)('SELECT uid FROM vuttik_users WHERE plan_id = ?', [id]);
             // 60 days grace period
             const nextBillingDate = new Date();
             nextBillingDate.setDate(nextBillingDate.getDate() + 60);
             const nextBillingStr = nextBillingDate.toISOString();
             // Update users
-            await run('UPDATE vuttik_users SET plan_id = ?, next_billing_date = ? WHERE plan_id = ?', [fallbackPlanId, nextBillingStr, id]);
+            await (0, db_js_1.run)('UPDATE vuttik_users SET plan_id = ?, next_billing_date = ? WHERE plan_id = ?', [fallbackPlanId, nextBillingStr, id]);
             // Notify users
             for (const u of users) {
-                await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [uuidv4(), u.uid, 'Cambio de Plan', `Tu plan anterior ha sido descontinuado. Te hemos asignado al nuevo plan seleccionado por el administrador. Tienes 2 meses de gracia y beneficios gratis antes del próximo cobro.`, 0, new Date().toISOString()]);
+                await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [(0, uuid_1.v4)(), u.uid, 'Cambio de Plan', `Tu plan anterior ha sido descontinuado. Te hemos asignado al nuevo plan seleccionado por el administrador. Tienes 2 meses de gracia y beneficios gratis antes del próximo cobro.`, 0, new Date().toISOString()]);
             }
         }
-        await run('DELETE FROM vuttik_subscription_plans WHERE id = ?', [id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_subscription_plans WHERE id = ?', [id]);
         res.json({ success: true });
     }
     catch (error) {
@@ -841,7 +846,7 @@ app.get('/api/notifications', async (req, res) => {
     if (!userId)
         return res.status(400).json({ error: 'userId is required' });
     try {
-        const notifications = await all('SELECT * FROM vuttik_notifications WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+        const notifications = await (0, db_js_1.all)('SELECT * FROM vuttik_notifications WHERE user_id = ? ORDER BY created_at DESC', [userId]);
         res.json(notifications);
     }
     catch (error) {
@@ -850,7 +855,7 @@ app.get('/api/notifications', async (req, res) => {
 });
 app.post('/api/notifications/:id/read', async (req, res) => {
     try {
-        await run('UPDATE vuttik_notifications SET is_read = 1 WHERE id = ?', [req.params.id]);
+        await (0, db_js_1.run)('UPDATE vuttik_notifications SET is_read = 1 WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     }
     catch (error) {
@@ -862,7 +867,7 @@ app.post('/api/notifications/mark-all-read', async (req, res) => {
     if (!userId)
         return res.status(400).json({ error: 'User ID required' });
     try {
-        await run('UPDATE vuttik_notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0', [userId]);
+        await (0, db_js_1.run)('UPDATE vuttik_notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0', [userId]);
         res.json({ success: true });
     }
     catch (error) {
@@ -879,7 +884,7 @@ app.get('/api/ean-database', async (req, res) => {
             query = 'SELECT * FROM vuttik_ean_database WHERE ean LIKE ? OR name LIKE ? OR brand LIKE ? ORDER BY created_at DESC LIMIT 100';
             params = [`%${q}%`, `%${q}%`, `%${q}%`];
         }
-        const rows = await all(query, params);
+        const rows = await (0, db_js_1.all)(query, params);
         res.json(rows);
     }
     catch (error) {
@@ -889,11 +894,11 @@ app.get('/api/ean-database', async (req, res) => {
 app.post('/api/ean-database', async (req, res) => {
     const data = req.body;
     try {
-        const existing = await get('SELECT ean FROM vuttik_ean_database WHERE ean = ?', [data.ean]);
+        const existing = await (0, db_js_1.get)('SELECT ean FROM vuttik_ean_database WHERE ean = ?', [data.ean]);
         if (existing) {
             return res.status(400).json({ error: 'Este código EAN ya existe en la base de datos.' });
         }
-        await run('INSERT INTO vuttik_ean_database (ean, name, description, brand, category, image_url, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [data.ean, data.name, data.description, data.brand, data.category, data.image_url, data.created_by || 'system', new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_ean_database (ean, name, description, brand, category, image_url, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [data.ean, data.name, data.description, data.brand, data.category, data.image_url, data.created_by || 'system', new Date().toISOString()]);
         res.json({ success: true });
     }
     catch (error) {
@@ -904,11 +909,11 @@ app.put('/api/ean-database/:ean', async (req, res) => {
     const { ean } = req.params;
     const data = req.body;
     try {
-        const user = await get('SELECT role FROM vuttik_users WHERE uid = ?', [data.userId]);
+        const user = await (0, db_js_1.get)('SELECT role FROM vuttik_users WHERE uid = ?', [data.userId]);
         if (!user || !['admin', 'guardian', 'mega_guardian'].includes(user.role)) {
             return res.status(403).json({ error: 'Solo los guardianes y mega guardianes pueden editar la base de datos.' });
         }
-        await run('UPDATE vuttik_ean_database SET name = ?, description = ?, brand = ?, category = ?, image_url = ? WHERE ean = ?', [data.name, data.description, data.brand, data.category, data.image_url, ean]);
+        await (0, db_js_1.run)('UPDATE vuttik_ean_database SET name = ?, description = ?, brand = ?, category = ?, image_url = ? WHERE ean = ?', [data.name, data.description, data.brand, data.category, data.image_url, ean]);
         res.json({ success: true });
     }
     catch (error) {
@@ -947,7 +952,7 @@ app.get('/api/products', async (req, res) => {
             query += ' WHERE ' + conditions.join(' AND ');
         }
         query += ' ORDER BY p.created_at DESC';
-        const rows = await all(query, params);
+        const rows = await (0, db_js_1.all)(query, params);
         const products = rows.map(r => {
             let parsedUpVotes = [];
             let parsedDownVotes = [];
@@ -990,7 +995,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const product = await get(`
+        const product = await (0, db_js_1.get)(`
       SELECT p.*,
              u.country as author_country,
              u.photo_url as author_avatar,
@@ -1040,15 +1045,15 @@ app.get('/api/products/:id', async (req, res) => {
     }
 });
 app.post('/api/products', async (req, res) => {
-    const id = uuidv4();
+    const id = (0, uuid_1.v4)();
     const data = req.body;
     try {
-        const user = await get('SELECT is_banned, strikes FROM vuttik_users WHERE uid = ?', [data.authorId]);
+        const user = await (0, db_js_1.get)('SELECT is_banned, strikes FROM vuttik_users WHERE uid = ?', [data.authorId]);
         if (user?.is_banned)
             return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
         if (user?.strikes >= 3)
             return res.status(403).json({ error: 'Tu cuenta está en modo sólo lectura debido a múltiples infracciones (strikes).' });
-        await run(`INSERT INTO vuttik_products (
+        await (0, db_js_1.run)(`INSERT INTO vuttik_products (
         id, title, description, price, currency, category_id, type_id, author_id, 
         author_name, location, phone, lat, lng, barcode, is_on_sale, sale_price, 
         images, custom_fields, created_at, posted_as, chain, store_name, is_independent, country, province
@@ -1065,10 +1070,10 @@ app.post('/api/products', async (req, res) => {
         // Auto-feed EAN Database
         if (data.barcode) {
             try {
-                const existingEan = await get('SELECT ean FROM vuttik_ean_database WHERE ean = ?', [data.barcode]);
+                const existingEan = await (0, db_js_1.get)('SELECT ean FROM vuttik_ean_database WHERE ean = ?', [data.barcode]);
                 if (!existingEan) {
                     const firstImage = data.images && data.images.length > 0 ? data.images[0] : '';
-                    await run('INSERT INTO vuttik_ean_database (ean, name, description, brand, category, image_url, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [data.barcode, data.title, data.description || '', '', data.categoryId || '', firstImage, data.authorId || 'system', new Date().toISOString()]);
+                    await (0, db_js_1.run)('INSERT INTO vuttik_ean_database (ean, name, description, brand, category, image_url, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [data.barcode, data.title, data.description || '', '', data.categoryId || '', firstImage, data.authorId || 'system', new Date().toISOString()]);
                 }
             }
             catch (err) {
@@ -1078,13 +1083,13 @@ app.post('/api/products', async (req, res) => {
         // Notify followers of EAN or Title
         const entityType = data.barcode ? 'ean' : 'title';
         const entityValue = data.barcode || data.title.toLowerCase();
-        const followers = await all(`
+        const followers = await (0, db_js_1.all)(`
       SELECT DISTINCT user_id 
       FROM vuttik_product_follows 
       WHERE entity_type = ? AND entity_value = ? AND user_id != ?
     `, [entityType, entityValue, data.authorId]);
         for (const follower of followers) {
-            await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?)', [uuidv4(), follower.user_id, 'Nuevo producto de tu interés', `Se ha publicado "${data.title}" y coincide con tus seguimientos.`, 0, new Date().toISOString(), 'price_drop']);
+            await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?)', [(0, uuid_1.v4)(), follower.user_id, 'Nuevo producto de tu interés', `Se ha publicado "${data.title}" y coincide con tus seguimientos.`, 0, new Date().toISOString(), 'price_drop']);
         }
     }
     catch (error) {
@@ -1096,14 +1101,14 @@ app.delete('/api/products/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
     try {
-        const product = await get('SELECT title, author_id FROM vuttik_products WHERE id = ?', [id]);
+        const product = await (0, db_js_1.get)('SELECT title, author_id FROM vuttik_products WHERE id = ?', [id]);
         if (!product)
             return res.status(404).json({ error: 'Product not found' });
         // Check if the user is the author
         if (product.author_id !== userId) {
             return res.status(403).json({ error: 'Not authorized to delete this product' });
         }
-        await run('DELETE FROM vuttik_products WHERE id = ?', [id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_products WHERE id = ?', [id]);
         res.json({ success: true });
         // Log action
         if (userId)
@@ -1119,14 +1124,14 @@ app.put('/api/products/:id', async (req, res) => {
     const { userId } = req.query;
     const data = req.body;
     try {
-        const existing = await get('SELECT author_id, title FROM vuttik_products WHERE id = ?', [id]);
+        const existing = await (0, db_js_1.get)('SELECT author_id, title FROM vuttik_products WHERE id = ?', [id]);
         if (!existing)
             return res.status(404).json({ error: 'Product not found' });
         if (existing.author_id !== userId) {
             return res.status(403).json({ error: 'Not authorized to update this product' });
         }
-        const oldProduct = await get('SELECT price FROM vuttik_products WHERE id = ?', [id]);
-        await run(`UPDATE vuttik_products SET
+        const oldProduct = await (0, db_js_1.get)('SELECT price FROM vuttik_products WHERE id = ?', [id]);
+        await (0, db_js_1.run)(`UPDATE vuttik_products SET
         title = ?, description = ?, price = ?, currency = ?, category_id = ?, type_id = ?,
         location = ?, phone = ?, lat = ?, lng = ?, barcode = ?, is_on_sale = ?, sale_price = ?,
         images = ?, custom_fields = ?
@@ -1141,7 +1146,7 @@ app.put('/api/products/:id', async (req, res) => {
         if (oldProduct && ((data.isOnSale && data.salePrice < oldProduct.price) || (data.price < oldProduct.price))) {
             const entityType = data.barcode ? 'ean' : 'title';
             const entityValue = data.barcode || data.title.toLowerCase();
-            const followers = await all(`
+            const followers = await (0, db_js_1.all)(`
         SELECT DISTINCT user_id 
         FROM vuttik_product_follows 
         WHERE (product_id = ?) OR (entity_type = ? AND entity_value = ?)
@@ -1149,7 +1154,7 @@ app.put('/api/products/:id', async (req, res) => {
             for (const follower of followers) {
                 if (follower.user_id === existing.author_id)
                     continue;
-                await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?)', [uuidv4(), follower.user_id, '¡Bajó de precio!', `El producto "${data.title}" que sigues ahora está más barato.`, 0, new Date().toISOString(), 'price_drop']);
+                await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?)', [(0, uuid_1.v4)(), follower.user_id, '¡Bajó de precio!', `El producto "${data.title}" que sigues ahora está más barato.`, 0, new Date().toISOString(), 'price_drop']);
             }
         }
         await logAction(userId, 'UPDATE_PRODUCT', id, 'product', { title: data.title, oldTitle: existing.title });
@@ -1164,15 +1169,15 @@ app.post('/api/products/:id/vote', async (req, res) => {
     const { id } = req.params;
     const { userId, voteType } = req.body;
     try {
-        const existing = await get('SELECT vote_type FROM vuttik_product_votes WHERE product_id = ? AND user_id = ?', [id, userId]);
+        const existing = await (0, db_js_1.get)('SELECT vote_type FROM vuttik_product_votes WHERE product_id = ? AND user_id = ?', [id, userId]);
         // Auto-toggle: If clicking the same vote type, remove it. 
         // Or if the frontend explicitly sends null, remove it.
         if (voteType === null || (existing && existing.vote_type === voteType)) {
-            await run('DELETE FROM vuttik_product_votes WHERE product_id = ? AND user_id = ?', [id, userId]);
+            await (0, db_js_1.run)('DELETE FROM vuttik_product_votes WHERE product_id = ? AND user_id = ?', [id, userId]);
             await logAction(userId, 'VOTE_PRODUCT_REMOVE', id, 'product', { removedVote: existing?.vote_type });
         }
         else {
-            await run(`INSERT INTO vuttik_product_votes (product_id, user_id, vote_type, created_at)
+            await (0, db_js_1.run)(`INSERT INTO vuttik_product_votes (product_id, user_id, vote_type, created_at)
          VALUES (?, ?, ?, ?)
          ON CONFLICT(product_id, user_id) DO UPDATE SET vote_type = excluded.vote_type`, [id, userId, voteType, new Date().toISOString()]);
             await logAction(userId, 'VOTE_PRODUCT', id, 'product', { voteType });
@@ -1206,10 +1211,10 @@ app.get('/api/posts', async (req, res) => {
             query += ' WHERE ' + conditions.join(' AND ');
         }
         query += ' ORDER BY p.created_at DESC';
-        const rows = await all(query, params);
+        const rows = await (0, db_js_1.all)(query, params);
         const posts = await Promise.all(rows.map(async (r) => {
-            const likes = await all('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
-            const verifications = await all('SELECT user_id, is_veracious FROM vuttik_post_verifications WHERE post_id = ?', [r.id]);
+            const likes = await (0, db_js_1.all)('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
+            const verifications = await (0, db_js_1.all)('SELECT user_id, is_veracious FROM vuttik_post_verifications WHERE post_id = ?', [r.id]);
             return {
                 ...r,
                 author_name: r.author_name,
@@ -1229,13 +1234,13 @@ app.get('/api/posts', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
     const { id, authorId, authorName, authorAvatar, content, image, postedAs, isVerified } = req.body;
     try {
-        const user = await get('SELECT is_banned, strikes FROM vuttik_users WHERE uid = ?', [authorId]);
+        const user = await (0, db_js_1.get)('SELECT is_banned, strikes FROM vuttik_users WHERE uid = ?', [authorId]);
         if (user?.is_banned)
             return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
         if (user?.strikes >= 3)
             return res.status(403).json({ error: 'Tu cuenta está en modo sólo lectura debido a múltiples infracciones (strikes).' });
-        const postId = id || uuidv4();
-        await run('INSERT INTO vuttik_posts (id, author_id, author_name, author_avatar, content, image_url, is_verified, created_at, posted_as) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [postId, authorId, authorName, authorAvatar, content, image, isVerified ? 1 : 0, new Date().toISOString(), postedAs || 'personal']);
+        const postId = id || (0, uuid_1.v4)();
+        await (0, db_js_1.run)('INSERT INTO vuttik_posts (id, author_id, author_name, author_avatar, content, image_url, is_verified, created_at, posted_as) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [postId, authorId, authorName, authorAvatar, content, image, isVerified ? 1 : 0, new Date().toISOString(), postedAs || 'personal']);
         res.json({ id: postId, success: true });
         await logAction(authorId, 'CREATE_POST', postId, 'post', { snippet: content.substring(0, 50) });
     }
@@ -1247,13 +1252,13 @@ app.delete('/api/posts/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
     try {
-        const post = await get('SELECT author_id, content FROM vuttik_posts WHERE id = ?', [id]);
+        const post = await (0, db_js_1.get)('SELECT author_id, content FROM vuttik_posts WHERE id = ?', [id]);
         if (!post)
             return res.status(404).json({ error: 'Post not found' });
         if (post.author_id !== userId) {
             return res.status(403).json({ error: 'Not authorized to delete this post' });
         }
-        await run('DELETE FROM vuttik_posts WHERE id = ?', [id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_posts WHERE id = ?', [id]);
         res.json({ success: true });
         // Log action
         if (userId)
@@ -1266,7 +1271,7 @@ app.delete('/api/posts/:id', async (req, res) => {
 // --- Comments Routes ---
 app.get('/api/posts/:postId/comments', async (req, res) => {
     try {
-        const rows = await all('SELECT * FROM vuttik_comments WHERE post_id = ? ORDER BY created_at ASC', [req.params.postId]);
+        const rows = await (0, db_js_1.all)('SELECT * FROM vuttik_comments WHERE post_id = ? ORDER BY created_at ASC', [req.params.postId]);
         res.json(rows);
     }
     catch (error) {
@@ -1276,19 +1281,19 @@ app.get('/api/posts/:postId/comments', async (req, res) => {
 app.post('/api/posts/:postId/comments', async (req, res) => {
     const { postId } = req.params;
     const { authorId, authorName, authorAvatar, content } = req.body;
-    const id = uuidv4();
+    const id = (0, uuid_1.v4)();
     try {
-        const user = await get('SELECT is_banned, strikes FROM vuttik_users WHERE uid = ?', [authorId]);
+        const user = await (0, db_js_1.get)('SELECT is_banned, strikes FROM vuttik_users WHERE uid = ?', [authorId]);
         if (user?.is_banned)
             return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
         if (user?.strikes >= 3)
             return res.status(403).json({ error: 'Tu cuenta está en modo sólo lectura debido a múltiples infracciones (strikes).' });
-        await run('INSERT INTO vuttik_comments (id, post_id, author_id, author_name, author_avatar, content, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, postId, authorId, authorName, authorAvatar, content, new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_comments (id, post_id, author_id, author_name, author_avatar, content, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, postId, authorId, authorName, authorAvatar, content, new Date().toISOString()]);
         res.json({ id, success: true });
         // Notification
-        const post = await get('SELECT author_id FROM vuttik_posts WHERE id = ?', [postId]);
+        const post = await (0, db_js_1.get)('SELECT author_id FROM vuttik_posts WHERE id = ?', [postId]);
         if (post && post.author_id && post.author_id !== authorId) {
-            await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [uuidv4(), post.author_id, 'Nuevo Comentario', `${authorName || 'Alguien'} ha comentado en tu publicación.`, 0, new Date().toISOString()]);
+            await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [(0, uuid_1.v4)(), post.author_id, 'Nuevo Comentario', `${authorName || 'Alguien'} ha comentado en tu publicación.`, 0, new Date().toISOString()]);
         }
         // Log action
         await logAction(authorId, 'COMMENT', id, 'comment', { postId, snippet: content.substring(0, 30) });
@@ -1304,19 +1309,19 @@ app.post('/api/posts/:postId/like', async (req, res) => {
     if (!userId)
         return res.status(400).json({ error: 'userId required' });
     try {
-        const existing = await get('SELECT id FROM vuttik_post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
+        const existing = await (0, db_js_1.get)('SELECT id FROM vuttik_post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
         if (existing) {
-            await run('DELETE FROM vuttik_post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
+            await (0, db_js_1.run)('DELETE FROM vuttik_post_likes WHERE post_id = ? AND user_id = ?', [postId, userId]);
             await logAction(userId, 'UNLIKE_POST', postId, 'post', {});
             res.json({ liked: false });
         }
         else {
-            await run('INSERT INTO vuttik_post_likes (post_id, user_id, created_at) VALUES (?, ?, ?)', [postId, userId, new Date().toISOString()]);
+            await (0, db_js_1.run)('INSERT INTO vuttik_post_likes (post_id, user_id, created_at) VALUES (?, ?, ?)', [postId, userId, new Date().toISOString()]);
             await logAction(userId, 'LIKE_POST', postId, 'post', {});
             // Notify post author
-            const post = await get('SELECT author_id, author_name FROM vuttik_posts WHERE id = ?', [postId]);
+            const post = await (0, db_js_1.get)('SELECT author_id, author_name FROM vuttik_posts WHERE id = ?', [postId]);
             if (post && post.author_id && post.author_id !== userId) {
-                await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [uuidv4(), post.author_id, 'Nueva Reacción', `A alguien le gustó tu publicación.`, 0, new Date().toISOString()]);
+                await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [(0, uuid_1.v4)(), post.author_id, 'Nueva Reacción', `A alguien le gustó tu publicación.`, 0, new Date().toISOString()]);
             }
             res.json({ liked: true });
         }
@@ -1330,10 +1335,10 @@ app.delete('/api/comments/:id', async (req, res) => {
     const { id } = req.params;
     const { userId } = req.query;
     try {
-        const comment = await get('SELECT author_id, content FROM vuttik_comments WHERE id = ?', [id]);
+        const comment = await (0, db_js_1.get)('SELECT author_id, content FROM vuttik_comments WHERE id = ?', [id]);
         if (!comment)
             return res.status(404).json({ error: 'Comment not found' });
-        await run('DELETE FROM vuttik_comments WHERE id = ?', [id]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_comments WHERE id = ?', [id]);
         if (userId)
             await logAction(userId, 'DELETE_COMMENT', id, 'comment', { snippet: comment.content?.substring(0, 30) });
         res.json({ success: true });
@@ -1347,12 +1352,12 @@ app.put('/api/posts/:id', async (req, res) => {
     const { id } = req.params;
     const { userId, content } = req.body;
     try {
-        const post = await get('SELECT author_id FROM vuttik_posts WHERE id = ?', [id]);
+        const post = await (0, db_js_1.get)('SELECT author_id FROM vuttik_posts WHERE id = ?', [id]);
         if (!post)
             return res.status(404).json({ error: 'Post not found' });
         if (post.author_id !== userId)
             return res.status(403).json({ error: 'Not authorized' });
-        await run('UPDATE vuttik_posts SET content = ? WHERE id = ?', [content, id]);
+        await (0, db_js_1.run)('UPDATE vuttik_posts SET content = ? WHERE id = ?', [content, id]);
         await logAction(userId, 'EDIT_POST', id, 'post', { snippet: content?.substring(0, 50) });
         res.json({ success: true });
     }
@@ -1366,11 +1371,11 @@ app.put('/api/users/:uid/profile', async (req, res) => {
     const { displayName, bio, location, photoURL, age, gender, country, language, username } = req.body;
     try {
         if (username) {
-            const existingUsername = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, uid]);
+            const existingUsername = await (0, db_js_1.get)('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, uid]);
             if (existingUsername)
                 return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
         }
-        await run('UPDATE vuttik_users SET display_name = ?, bio = ?, location = ?, photo_url = COALESCE(?, photo_url), age = COALESCE(?, age), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?', [displayName, bio, location, photoURL || null, age || null, gender || null, country || null, language || null, username || null, uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET display_name = ?, bio = ?, location = ?, photo_url = COALESCE(?, photo_url), age = COALESCE(?, age), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?', [displayName, bio, location, photoURL || null, age || null, gender || null, country || null, language || null, username || null, uid]);
         await logAction(uid, 'UPDATE_PROFILE', uid, 'user', { displayName });
         res.json({ success: true });
     }
@@ -1379,12 +1384,12 @@ app.put('/api/users/:uid/profile', async (req, res) => {
     }
 });
 // --- Change User Role (Admin) ---
-app.put('/api/users/:uid/role', authenticateToken, async (req, res) => {
+app.put('/api/users/:uid/role', auth_js_1.authenticateToken, async (req, res) => {
     const { uid } = req.params;
     const { role, adminId } = req.body;
     try {
-        const old = await get('SELECT role FROM vuttik_users WHERE uid = ?', [uid]);
-        await run('UPDATE vuttik_users SET role = ? WHERE uid = ?', [role, uid]);
+        const old = await (0, db_js_1.get)('SELECT role FROM vuttik_users WHERE uid = ?', [uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET role = ? WHERE uid = ?', [role, uid]);
         await logAction(adminId || 'admin', 'CHANGE_USER_ROLE', uid, 'user', { newRole: role, oldRole: old?.role });
         res.json({ success: true });
     }
@@ -1393,11 +1398,11 @@ app.put('/api/users/:uid/role', authenticateToken, async (req, res) => {
     }
 });
 // --- Unban User ---
-app.post('/api/users/:uid/unban', authenticateToken, async (req, res) => {
+app.post('/api/users/:uid/unban', auth_js_1.authenticateToken, async (req, res) => {
     const { uid } = req.params;
     const { adminId } = req.body;
     try {
-        await run('UPDATE vuttik_users SET is_banned = 0 WHERE uid = ?', [uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET is_banned = 0 WHERE uid = ?', [uid]);
         await logAction(adminId || 'admin', 'UNBAN_USER', uid, 'user');
         res.json({ success: true });
     }
@@ -1405,13 +1410,13 @@ app.post('/api/users/:uid/unban', authenticateToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.post('/api/users/:uid/strike', authenticateToken, async (req, res) => {
+app.post('/api/users/:uid/strike', auth_js_1.authenticateToken, async (req, res) => {
     const { uid } = req.params;
     const { guardianId } = req.body;
     try {
-        const user = await get('SELECT strikes FROM vuttik_users WHERE uid = ?', [uid]);
+        const user = await (0, db_js_1.get)('SELECT strikes FROM vuttik_users WHERE uid = ?', [uid]);
         const newStrikes = (user?.strikes || 0) + 1;
-        await run('UPDATE vuttik_users SET strikes = ? WHERE uid = ?', [newStrikes, uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET strikes = ? WHERE uid = ?', [newStrikes, uid]);
         await logAction(guardianId, 'issue_strike', uid, 'user', { strikes: newStrikes });
         res.json({ success: true, strikes: newStrikes });
     }
@@ -1423,7 +1428,7 @@ app.post('/api/posts/:postId/verify', async (req, res) => {
     const { postId } = req.params;
     const { userId, isVeracious } = req.body;
     try {
-        await run('INSERT OR REPLACE INTO vuttik_post_verifications (post_id, user_id, is_veracious, created_at) VALUES (?, ?, ?, ?)', [postId, userId, isVeracious ? 1 : 0, new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT OR REPLACE INTO vuttik_post_verifications (post_id, user_id, is_veracious, created_at) VALUES (?, ?, ?, ?)', [postId, userId, isVeracious ? 1 : 0, new Date().toISOString()]);
         res.json({ success: true });
         // Log action
         await logAction(userId, 'VOTE_VERACITY', postId, 'post', { isVeracious });
@@ -1438,7 +1443,7 @@ app.get('/api/users/:uid/analytics', async (req, res) => {
     const { uid } = req.params;
     try {
         // Total Views (products + profile)
-        const viewsResult = await get(`
+        const viewsResult = await (0, db_js_1.get)(`
       SELECT (
         SELECT COUNT(*) FROM vuttik_metrics m 
         JOIN vuttik_products p ON m.target_id = p.id 
@@ -1449,14 +1454,14 @@ app.get('/api/users/:uid/analytics', async (req, res) => {
       ) as count
     `, [uid, uid]);
         // Actions count (Real engagement)
-        const actionsResult = await all(`
+        const actionsResult = await (0, db_js_1.all)(`
       SELECT action, COUNT(*) as count 
       FROM vuttik_metrics 
       WHERE user_id = ? 
       GROUP BY action
     `, [uid]);
         // Trend (Daily views for the last 7 days)
-        const trend = await all(`
+        const trend = await (0, db_js_1.all)(`
       SELECT date, SUM(count) as value FROM (
         SELECT date(timestamp) as date, COUNT(*) as count 
         FROM vuttik_metrics m
@@ -1486,7 +1491,7 @@ app.post('/api/reports', async (req, res) => {
     try {
         const id = Math.random().toString(36).substr(2, 9);
         const now = new Date().toISOString();
-        await run(`INSERT INTO vuttik_reports 
+        await (0, db_js_1.run)(`INSERT INTO vuttik_reports 
        (id, reporter_id, target_id, target_type, target_title, author_id, author_name, reason, status, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`, [id, reporterId, targetId, targetType, targetTitle, authorId, authorName, reason, now]);
         await logAction(reporterId, 'report_created', targetId, targetType, { reason, targetTitle, authorName });
@@ -1498,7 +1503,7 @@ app.post('/api/reports', async (req, res) => {
 });
 app.get('/api/reports', async (req, res) => {
     try {
-        const reports = await all(`
+        const reports = await (0, db_js_1.all)(`
       SELECT r.*, u.username as reporter_username, u.display_name as reporter_name, u.strikes as reporter_strikes, u.photo_url as reporter_photo
       FROM vuttik_reports r
       LEFT JOIN vuttik_users u ON r.reporter_id = u.uid
@@ -1510,12 +1515,12 @@ app.get('/api/reports', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.put('/api/reports/:id/status', authenticateToken, async (req, res) => {
+app.put('/api/reports/:id/status', auth_js_1.authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { status, guardianId } = req.body;
     try {
-        const report = await get('SELECT * FROM vuttik_reports WHERE id = ?', [id]);
-        await run('UPDATE vuttik_reports SET status = ? WHERE id = ?', [status, id]);
+        const report = await (0, db_js_1.get)('SELECT * FROM vuttik_reports WHERE id = ?', [id]);
+        await (0, db_js_1.run)('UPDATE vuttik_reports SET status = ? WHERE id = ?', [status, id]);
         if (guardianId && report) {
             await logAction(guardianId, `report_${status}`, report.target_id, report.target_type, { reportId: id, targetTitle: report.target_title });
         }
@@ -1526,11 +1531,11 @@ app.put('/api/reports/:id/status', authenticateToken, async (req, res) => {
     }
 });
 // --- Admin Actions ---
-app.post('/api/users/:uid/ban', authenticateToken, async (req, res) => {
+app.post('/api/users/:uid/ban', auth_js_1.authenticateToken, async (req, res) => {
     const { uid } = req.params;
     const { adminId } = req.body;
     try {
-        await run('UPDATE vuttik_users SET is_banned = 1 WHERE uid = ?', [uid]);
+        await (0, db_js_1.run)('UPDATE vuttik_users SET is_banned = 1 WHERE uid = ?', [uid]);
         res.json({ success: true });
         await logAction(adminId, 'BAN_USER', uid, 'user');
     }
@@ -1552,10 +1557,10 @@ app.post('/api/metrics', async (req, res) => {
             // Calculate volume if it's a contact action
             let volumeIncrement = 0;
             if (action === 'contact' && targetId) {
-                const product = await get('SELECT price FROM vuttik_products WHERE id = ?', [targetId]);
+                const product = await (0, db_js_1.get)('SELECT price FROM vuttik_products WHERE id = ?', [targetId]);
                 volumeIncrement = product?.price || 0;
             }
-            await run(`
+            await (0, db_js_1.run)(`
         INSERT INTO vuttik_daily_stats (date, ${field}, total_p2p_volume) 
         VALUES (?, 1, ?) 
         ON CONFLICT(date) DO UPDATE SET 
@@ -1574,13 +1579,13 @@ app.post('/api/metrics', async (req, res) => {
 // Mega Guardian Overview
 app.get('/api/stats/mega-guardian', async (req, res) => {
     try {
-        const totalUsers = await get('SELECT COUNT(*) as count FROM vuttik_users');
-        const totalProducts = await get('SELECT COUNT(*) as count FROM vuttik_products');
-        const pendingReports = await get("SELECT COUNT(*) as count FROM vuttik_metrics WHERE action = 'flag'");
+        const totalUsers = await (0, db_js_1.get)('SELECT COUNT(*) as count FROM vuttik_users');
+        const totalProducts = await (0, db_js_1.get)('SELECT COUNT(*) as count FROM vuttik_products');
+        const pendingReports = await (0, db_js_1.get)("SELECT COUNT(*) as count FROM vuttik_metrics WHERE action = 'flag'");
         // P2P Volume - Sum from daily stats for speed, but fallback to real metrics if needed
-        const volumeData = await get('SELECT SUM(total_p2p_volume) as total FROM vuttik_daily_stats');
+        const volumeData = await (0, db_js_1.get)('SELECT SUM(total_p2p_volume) as total FROM vuttik_daily_stats');
         // Distribution by category
-        const distribution = await all(`
+        const distribution = await (0, db_js_1.all)(`
       SELECT c.name, COUNT(p.id) as value 
       FROM vuttik_categories c 
       LEFT JOIN vuttik_products p ON c.id = p.category_id 
@@ -1604,7 +1609,7 @@ app.get('/api/stats/mega-guardian', async (req, res) => {
 // Trends (7 days)
 app.get('/api/stats/trends', async (req, res) => {
     try {
-        const rows = await all(`
+        const rows = await (0, db_js_1.all)(`
       SELECT date as name, searches as busquedas, views as ventas 
       FROM vuttik_daily_stats 
       ORDER BY date DESC LIMIT 7
@@ -1619,19 +1624,19 @@ app.get('/api/stats/trends', async (req, res) => {
 app.get('/api/stats/business/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
-        const totalViews = await get(`
+        const totalViews = await (0, db_js_1.get)(`
       SELECT COUNT(*) as count 
       FROM vuttik_metrics m 
       JOIN vuttik_products p ON m.target_id = p.id 
       WHERE p.author_id = ? AND p.posted_as = 'business' AND m.action = 'view'
     `, [userId]);
-        const totalContacts = await get(`
+        const totalContacts = await (0, db_js_1.get)(`
       SELECT COUNT(*) as count 
       FROM vuttik_metrics m 
       JOIN vuttik_products p ON m.target_id = p.id 
       WHERE p.author_id = ? AND p.posted_as = 'business' AND m.action = 'contact'
     `, [userId]);
-        const rawDailyStats = await all(`
+        const rawDailyStats = await (0, db_js_1.all)(`
       SELECT 
         date(m.timestamp) as day, 
         SUM(CASE WHEN m.action = 'view' THEN 1 ELSE 0 END) as views,
@@ -1678,12 +1683,12 @@ app.post('/api/follows', async (req, res) => {
     if (!followerId || !followingId)
         return res.status(400).json({ error: 'Missing params' });
     try {
-        await run('INSERT OR IGNORE INTO vuttik_follows (follower_id, following_id, created_at) VALUES (?, ?, ?)', [followerId, followingId, new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT OR IGNORE INTO vuttik_follows (follower_id, following_id, created_at) VALUES (?, ?, ?)', [followerId, followingId, new Date().toISOString()]);
         res.json({ success: true });
         // Notification
-        const followerUser = await get('SELECT name FROM vuttik_users WHERE uid = ?', [followerId]);
+        const followerUser = await (0, db_js_1.get)('SELECT name FROM vuttik_users WHERE uid = ?', [followerId]);
         const followerName = followerUser?.name || 'Un usuario';
-        await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [uuidv4(), followingId, 'Nuevo Seguidor', `${followerName} ha comenzado a seguirte.`, 0, new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)', [(0, uuid_1.v4)(), followingId, 'Nuevo Seguidor', `${followerName} ha comenzado a seguirte.`, 0, new Date().toISOString()]);
         await logAction(followerId, 'FOLLOW', followingId, 'user');
     }
     catch (error) {
@@ -1696,7 +1701,7 @@ app.delete('/api/follows', async (req, res) => {
     if (!followerId || !followingId)
         return res.status(400).json({ error: 'Missing params' });
     try {
-        await run('DELETE FROM vuttik_follows WHERE follower_id = ? AND following_id = ?', [followerId, followingId]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_follows WHERE follower_id = ? AND following_id = ?', [followerId, followingId]);
         res.json({ success: true });
         await logAction(followerId, 'UNFOLLOW', followingId, 'user');
     }
@@ -1707,7 +1712,7 @@ app.delete('/api/follows', async (req, res) => {
 // Get list of users that userId follows
 app.get('/api/follows/:userId/following', async (req, res) => {
     try {
-        const rows = await all('SELECT following_id FROM vuttik_follows WHERE follower_id = ?', [req.params.userId]);
+        const rows = await (0, db_js_1.all)('SELECT following_id FROM vuttik_follows WHERE follower_id = ?', [req.params.userId]);
         res.json(rows.map((r) => r.following_id));
     }
     catch (error) {
@@ -1717,7 +1722,7 @@ app.get('/api/follows/:userId/following', async (req, res) => {
 // Get list of users that follow userId
 app.get('/api/follows/:userId/followers', async (req, res) => {
     try {
-        const rows = await all(`
+        const rows = await (0, db_js_1.all)(`
       SELECT f.follower_id, u.display_name, u.photo_url, u.username, u.role
       FROM vuttik_follows f
       JOIN vuttik_users u ON f.follower_id = u.uid
@@ -1737,7 +1742,7 @@ app.post('/api/products/:id/follow', async (req, res) => {
     if (!userId)
         return res.status(400).json({ error: 'Missing userId' });
     try {
-        const product = await get('SELECT barcode, title FROM vuttik_products WHERE id = ?', [id]);
+        const product = await (0, db_js_1.get)('SELECT barcode, title FROM vuttik_products WHERE id = ?', [id]);
         if (!product)
             return res.status(404).json({ error: 'Product not found' });
         let entityType = 'title';
@@ -1746,7 +1751,7 @@ app.post('/api/products/:id/follow', async (req, res) => {
             entityType = 'ean';
             entityValue = product.barcode;
         }
-        await run('INSERT OR IGNORE INTO vuttik_product_follows (user_id, product_id, entity_type, entity_value, created_at) VALUES (?, ?, ?, ?, ?)', [userId, id, entityType, entityValue, new Date().toISOString()]);
+        await (0, db_js_1.run)('INSERT OR IGNORE INTO vuttik_product_follows (user_id, product_id, entity_type, entity_value, created_at) VALUES (?, ?, ?, ?, ?)', [userId, id, entityType, entityValue, new Date().toISOString()]);
         res.json({ success: true });
     }
     catch (error) {
@@ -1759,7 +1764,7 @@ app.delete('/api/products/:id/follow', async (req, res) => {
     if (!userId)
         return res.status(400).json({ error: 'Missing userId' });
     try {
-        const product = await get('SELECT barcode, title FROM vuttik_products WHERE id = ?', [id]);
+        const product = await (0, db_js_1.get)('SELECT barcode, title FROM vuttik_products WHERE id = ?', [id]);
         if (!product)
             return res.status(404).json({ error: 'Product not found' });
         let entityType = 'title';
@@ -1768,7 +1773,7 @@ app.delete('/api/products/:id/follow', async (req, res) => {
             entityType = 'ean';
             entityValue = product.barcode;
         }
-        await run('DELETE FROM vuttik_product_follows WHERE user_id = ? AND entity_type = ? AND entity_value = ?', [userId, entityType, entityValue]);
+        await (0, db_js_1.run)('DELETE FROM vuttik_product_follows WHERE user_id = ? AND entity_type = ? AND entity_value = ?', [userId, entityType, entityValue]);
         res.json({ success: true });
     }
     catch (error) {
@@ -1777,7 +1782,7 @@ app.delete('/api/products/:id/follow', async (req, res) => {
 });
 app.get('/api/users/:uid/following-products', async (req, res) => {
     try {
-        const rows = await all(`
+        const rows = await (0, db_js_1.all)(`
       SELECT p.id as product_id
       FROM vuttik_product_follows f
       JOIN vuttik_products p ON 
@@ -1785,7 +1790,7 @@ app.get('/api/users/:uid/following-products', async (req, res) => {
         (f.entity_type = 'title' AND LOWER(p.title) = f.entity_value)
       WHERE f.user_id = ?
     `, [req.params.uid]);
-        const directFollows = await all('SELECT product_id FROM vuttik_product_follows WHERE user_id = ?', [req.params.uid]);
+        const directFollows = await (0, db_js_1.all)('SELECT product_id FROM vuttik_product_follows WHERE user_id = ?', [req.params.uid]);
         const ids = new Set([...rows.map((r) => r.product_id), ...directFollows.map((r) => r.product_id)]);
         res.json(Array.from(ids));
     }
@@ -1808,7 +1813,7 @@ app.get('/api/posts/feed', async (req, res) => {
       `;
             let queryParams = [];
             if (filter === 'following' && userId) {
-                const following = await all('SELECT following_id FROM vuttik_follows WHERE follower_id = ?', [userId]);
+                const following = await (0, db_js_1.all)('SELECT following_id FROM vuttik_follows WHERE follower_id = ?', [userId]);
                 if (following.length > 0) {
                     const placeholders = following.map(() => '?').join(',');
                     query += ` WHERE p.author_id IN (${placeholders})`;
@@ -1819,9 +1824,9 @@ app.get('/api/posts/feed', async (req, res) => {
                 }
             }
             query += ' ORDER BY p.created_at DESC LIMIT 50';
-            const rows = await all(query, queryParams);
+            const rows = await (0, db_js_1.all)(query, queryParams);
             posts = await Promise.all(rows.map(async (r) => {
-                const likes = await all('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
+                const likes = await (0, db_js_1.all)('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
                 return {
                     ...r,
                     author_name: r.author_name,
@@ -1835,7 +1840,7 @@ app.get('/api/posts/feed', async (req, res) => {
         }
         // Fetch products
         if (filter === 'following' && userId && (!type || type === 'all' || type === 'products')) {
-            const pRows = await all(`
+            const pRows = await (0, db_js_1.all)(`
         SELECT DISTINCT p.*
         FROM vuttik_products p
         JOIN vuttik_product_follows f ON 
@@ -1862,7 +1867,7 @@ app.get('/api/posts/feed', async (req, res) => {
 app.get('/api/users/:uid/unread-messages', async (req, res) => {
     try {
         const uid = req.params.uid;
-        const row = await get(`SELECT COUNT(*) as unreadCount FROM vuttik_messages m
+        const row = await (0, db_js_1.get)(`SELECT COUNT(*) as unreadCount FROM vuttik_messages m
        JOIN vuttik_conversations c ON m.conversation_id = c.id
        WHERE (c.participant_1 = ? OR c.participant_2 = ?) 
          AND m.sender_id != ? 
@@ -1876,7 +1881,7 @@ app.get('/api/users/:uid/unread-messages', async (req, res) => {
 // Get all conversations for a user
 app.get('/api/conversations/:userId', async (req, res) => {
     try {
-        const rows = await all(`SELECT c.*, 
+        const rows = await (0, db_js_1.all)(`SELECT c.*, 
         COALESCE(c.p1_name, u1.display_name) as p1_name, 
         COALESCE(c.p1_photo, u1.photo_url) as p1_photo,
         COALESCE(c.p2_name, u2.display_name) as p2_name, 
@@ -1899,16 +1904,16 @@ app.post('/api/conversations', async (req, res) => {
         return res.status(400).json({ error: 'Missing params' });
     try {
         // Check if conversation already exists (in either order)
-        const existing = await get(`SELECT * FROM vuttik_conversations 
+        const existing = await (0, db_js_1.get)(`SELECT * FROM vuttik_conversations 
        WHERE (participant_1 = ? AND participant_2 = ?) 
           OR (participant_1 = ? AND participant_2 = ?)`, [userId1, userId2, userId2, userId1]);
         if (existing)
             return res.json(existing);
         // Create new conversation
-        const id = uuidv4();
+        const id = (0, uuid_1.v4)();
         const now = new Date().toISOString();
-        await run('INSERT INTO vuttik_conversations (id, participant_1, participant_2, created_at, last_message_at, p1_name, p1_photo, p2_name, p2_photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [id, userId1, userId2, now, now, p1Name || null, p1Photo || null, p2Name || null, p2Photo || null]);
-        const created = await get('SELECT * FROM vuttik_conversations WHERE id = ?', [id]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_conversations (id, participant_1, participant_2, created_at, last_message_at, p1_name, p1_photo, p2_name, p2_photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [id, userId1, userId2, now, now, p1Name || null, p1Photo || null, p2Name || null, p2Photo || null]);
+        const created = await (0, db_js_1.get)('SELECT * FROM vuttik_conversations WHERE id = ?', [id]);
         res.json(created);
     }
     catch (error) {
@@ -1919,7 +1924,7 @@ app.post('/api/conversations', async (req, res) => {
 // Get messages for a conversation
 app.get('/api/messages/:conversationId', async (req, res) => {
     try {
-        const rows = await all('SELECT * FROM vuttik_messages WHERE conversation_id = ? ORDER BY sent_at ASC', [req.params.conversationId]);
+        const rows = await (0, db_js_1.all)('SELECT * FROM vuttik_messages WHERE conversation_id = ? ORDER BY sent_at ASC', [req.params.conversationId]);
         res.json(rows);
     }
     catch (error) {
@@ -1932,12 +1937,12 @@ app.post('/api/messages', async (req, res) => {
     if (!conversationId || !senderId || !content)
         return res.status(400).json({ error: 'Missing params' });
     try {
-        const id = uuidv4();
+        const id = (0, uuid_1.v4)();
         const now = new Date().toISOString();
-        await run('INSERT INTO vuttik_messages (id, conversation_id, sender_id, content, sent_at) VALUES (?, ?, ?, ?, ?)', [id, conversationId, senderId, content, now]);
+        await (0, db_js_1.run)('INSERT INTO vuttik_messages (id, conversation_id, sender_id, content, sent_at) VALUES (?, ?, ?, ?, ?)', [id, conversationId, senderId, content, now]);
         // Update last message on conversation
-        await run('UPDATE vuttik_conversations SET last_message = ?, last_message_at = ? WHERE id = ?', [content, now, conversationId]);
-        const msg = await get('SELECT * FROM vuttik_messages WHERE id = ?', [id]);
+        await (0, db_js_1.run)('UPDATE vuttik_conversations SET last_message = ?, last_message_at = ? WHERE id = ?', [content, now, conversationId]);
+        const msg = await (0, db_js_1.get)('SELECT * FROM vuttik_messages WHERE id = ?', [id]);
         res.json(msg);
         await logAction(senderId, 'SEND_MESSAGE', id, 'message', { conversationId });
     }
@@ -1949,7 +1954,7 @@ app.post('/api/messages', async (req, res) => {
 app.patch('/api/messages/read', async (req, res) => {
     const { conversationId, userId } = req.body;
     try {
-        await run('UPDATE vuttik_messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?', [conversationId, userId]);
+        await (0, db_js_1.run)('UPDATE vuttik_messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?', [conversationId, userId]);
         res.json({ success: true });
     }
     catch (error) {
@@ -1957,7 +1962,7 @@ app.patch('/api/messages/read', async (req, res) => {
     }
 });
 // Audit Logs — Returns ALL events from vuttik_metrics ordered by timestamp DESC
-app.get('/api/audit-logs', authenticateToken, async (req, res) => {
+app.get('/api/audit-logs', auth_js_1.authenticateToken, async (req, res) => {
     const limit = parseInt(req.query.limit) || 300;
     // Events that are NOT meaningful DB writes — exclude them from trazabilidad
     const NOISE_EVENTS = [
@@ -1966,7 +1971,7 @@ app.get('/api/audit-logs', authenticateToken, async (req, res) => {
     ];
     const placeholders = NOISE_EVENTS.map(() => '?').join(', ');
     try {
-        const logs = await all(`
+        const logs = await (0, db_js_1.all)(`
       SELECT 
         m.id,
         m.user_id,
