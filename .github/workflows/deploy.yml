@@ -79,17 +79,16 @@ jobs:
           export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
           npm install --production
           
-          # Stop old server
+          # Stop any manually started server processes to let Passenger take over
           pkill -f "node index.js" || true
           pkill -f "npx tsx" || true
           pkill -9 lsnode || true
           fuser -k 3005/tcp || true
-          sleep 2
           
-          # Start fresh server
-          export NODE_ENV=production
-          nohup npx tsx index.ts >> backend.log 2>&1 < /dev/null &
-          echo "Server started with PID $!"
+          # Restart LiteSpeed Passenger App
+          mkdir -p tmp
+          touch tmp/restart.txt
+          echo "Server restarted via Passenger tmp/restart.txt"
           EOF
           
           for i in 1 2 3 4 5; do
