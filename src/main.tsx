@@ -11,7 +11,16 @@ import { BrowserRouter } from 'react-router-dom';
 import PosApp from './pos/App.tsx';
 
 // Si el subdominio es 'pos', renderizar Vuttik POS
-if (window.location.hostname.startsWith('pos.')) {
+const isPos = window.location.hostname.startsWith('pos.');
+
+// Proxy Google OAuth redirect back to pos.vuttik.com
+const params = new URLSearchParams(window.location.search);
+if (params.get('state') === 'pos_google' && !isPos) {
+  params.set('state', 'google');
+  window.location.href = `https://pos.vuttik.com/login?${params.toString()}`;
+}
+
+if (isPos) {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <PosApp />
