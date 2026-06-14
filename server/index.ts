@@ -14,7 +14,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://vuttik.com',
-  'https://www.vuttik.com'
+  'https://www.vuttik.com',
+  'https://pos.vuttik.com'
 ];
 app.use(cors({
   origin: (origin, callback) => {
