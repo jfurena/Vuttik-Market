@@ -25,7 +25,7 @@ import { UserRole } from './types';
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="h-screen w-screen flex items-center justify-center font-sans text-white bg-slate-900">Cargando...</div>;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to={`/login${window.location.search}`} replace />;
   return <>{children}</>;
 }
 
@@ -33,7 +33,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function RequireBusiness({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
   if (loading) return <div className="h-screen w-screen flex items-center justify-center font-sans text-white bg-slate-900">Cargando...</div>;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to={`/login${window.location.search}`} replace />;
   // If owner but no business selected, go to business selector
   if (!profile?.business_id) return <Navigate to="/businesses" />;
   return <>{children}</>;
