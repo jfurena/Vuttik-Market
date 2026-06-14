@@ -61,7 +61,7 @@ jobs:
           mkdir -p temp_deploy
           tar -xzf deploy.tar.gz -C temp_deploy
           find public_html/assets -mindepth 1 -delete || true
-          cp -r temp_deploy/dist/* public_html/
+          cp -a temp_deploy/dist/. public_html/
           cp -r temp_deploy/server/* server/
           rm -rf temp_deploy deploy.tar.gz
           cd server
