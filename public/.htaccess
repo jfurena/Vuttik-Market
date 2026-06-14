@@ -2,10 +2,10 @@
   RewriteEngine On
   RewriteBase /
 
-  # Proxy /api/ requests to Node.js backend on port 3005
+  # Proxy /api/ and /pos/api/ requests to Node.js backend on port 3005
   # LiteSpeed supports RewriteRule with [P] when mod_proxy is enabled
-  RewriteCond %{REQUEST_URI} ^/api/
-  RewriteRule ^api/(.*)$ http://127.0.0.1:3005/api/$1 [P,L]
+  RewriteCond %{REQUEST_URI} ^/(pos/)?api/
+  RewriteRule ^(pos/)?api/(.*)$ http://127.0.0.1:3005/api/$2 [P,L]
 
   # SPA fallback: all other non-file requests go to index.html
   RewriteRule ^index\.html$ - [L]
