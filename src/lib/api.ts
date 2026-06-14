@@ -41,7 +41,8 @@ async function request(path: string, options: RequestInit = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.error || `Error del servidor (${response.status})`);
+    const errorDetails = data?.details ? `: ${JSON.stringify(data.details)}` : '';
+    throw new Error((data?.error || `Error del servidor (${response.status})`) + errorDetails);
   }
 
   return data;
