@@ -1732,10 +1732,14 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   } else {
-    // En desarrollo, usar Vite
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
-    app.use(vite.middlewares);
+    // En desarrollo, intentar usar Vite si está instalado
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
+      app.use(vite.middlewares);
+    } catch (e) {
+      console.warn("Vite no está instalado, ejecutando sin middleware de desarrollo.");
+    }
   }
 
   // === SYNC ENGINE (BACKGROUND) ===
