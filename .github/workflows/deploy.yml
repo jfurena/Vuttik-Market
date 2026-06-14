@@ -87,7 +87,7 @@ jobs:
           sleep 2
           
           # Start fresh server
-          nohup node index.js >> backend.log 2>&1 < /dev/null &
+          nohup npx tsx index.ts >> backend.log 2>&1 < /dev/null &
           echo "Server started with PID $!"
           EOF
           
