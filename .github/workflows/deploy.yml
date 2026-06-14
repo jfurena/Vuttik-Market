@@ -36,44 +36,45 @@ jobs:
           cp -r server deploy_package/
           tar -czf deploy.tar.gz -C deploy_package .
 
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
       - name: Upload Deployment Archive
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "deploy.tar.gz"
-          target: "/home/sinagjwx/domains/vuttik.com/"
+        run: |
+          echo "Starting SCP transfer..."
+          for i in 1 2 3 4 5; do
+            scp -o ConnectTimeout=15 -i ~/.ssh/id_rsa deploy.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/sinagjwx/domains/vuttik.com/ && echo "SCP Success" && exit 0 || echo "SCP failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "SCP failed after 5 retries."
+          exit 1
 
       - name: Extract, Clean, and Restart
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/sinagjwx/domains/vuttik.com/
-            
-            # Extract archive
-            mkdir -p temp_deploy
-            tar -xzf deploy.tar.gz -C temp_deploy
-            
-            # Clean remote frontend assets
-            find public_html/assets -mindepth 1 -delete || true
-            
-            # Copy frontend files
-            cp -r temp_deploy/dist/* public_html/
-            
-            # Copy backend files
-            cp -r temp_deploy/server/* server/
-            
-            # Clean up deployment files
-            rm -rf temp_deploy deploy.tar.gz
-            
-            # Restart backend
-            cd server
-            npm install --production
-            
-            # Restart LiteSpeed Node process
-            touch ../tmp/restart.txt
-            pkill -9 lsnode || true
+        run: |
+          echo "Starting SSH commands..."
+          cat << 'EOF' > run_deploy.sh
+          cd /home/sinagjwx/domains/vuttik.com/
+          mkdir -p temp_deploy
+          tar -xzf deploy.tar.gz -C temp_deploy
+          find public_html/assets -mindepth 1 -delete || true
+          cp -r temp_deploy/dist/* public_html/
+          cp -r temp_deploy/server/* server/
+          rm -rf temp_deploy deploy.tar.gz
+          cd server
+          export NODE_HOME="/home/sinagjwx/nodejs"
+          export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+          npm install --production
+          touch ../tmp/restart.txt
+          pkill -9 lsnode || true
+          EOF
+          
+          for i in 1 2 3 4 5; do
+            ssh -o ConnectTimeout=15 -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' < run_deploy.sh && echo "SSH Success" && exit 0 || echo "SSH failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "SSH failed after 5 retries."
+          exit 1
