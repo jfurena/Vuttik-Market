@@ -7,11 +7,14 @@ import { UserRole } from '../types';
 import { ApiService, isPracticeModeActive, setPracticeModeActive } from '../services/api';
 import TrainingTour from './TrainingTour';
 
+import LocationPromptModal from './LocationPromptModal';
+
 export default function Layout() {
   const { profile, logout, exitBusiness } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = React.useState(false);
   const [showTour, setShowTour] = React.useState(false);
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [syncStatus, setSyncStatus] = React.useState<'synced' | 'syncing' | 'offline'>(navigator.onLine ? 'synced' : 'offline');
@@ -251,6 +254,12 @@ export default function Layout() {
 
     if (profile.rol === UserRole.CAJERO) {
       checkEmployeeLocation();
+    } else if (profile.rol === UserRole.OWNER) {
+      ApiService.getSettings().then(settings => {
+        if (!settings || !settings.allowed_location) {
+          setShowLocationPrompt(true);
+        }
+      });
     }
   }, [profile, checkEmployeeLocation]);
 
@@ -322,6 +331,7 @@ export default function Layout() {
 
   return (
     <div className={cn("bg-gray-50 flex flex-col font-sans", location.pathname === '/pos' ? "h-screen overflow-hidden" : "min-h-screen")}>
+      <LocationPromptModal isOpen={showLocationPrompt} onComplete={() => setShowLocationPrompt(false)} />
       {isPractice && (
         <div className="bg-gradient-to-r from-amber-600 via-amber-550 to-amber-700 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 shadow-md shrink-0 z-50 border-b border-amber-500/30 flex-col sm:flex-row text-center sm:text-left">
           <div className="flex items-center gap-2.5">

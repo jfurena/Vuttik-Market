@@ -411,7 +411,28 @@ async function startServer() {
     res.json({ id: db.businesses[idx].id, nombre: db.businesses[idx].nombre, codigo: db.businesses[idx].codigo });
   });
 
-  // Delete business
+  // Update business location
+  app.patch('/api/businesses/:bizId/location', requireOwnerAuth, async (req, res) => {
+    const { bizId } = req.params;
+    const { location, lat, lng } = req.body;
+    const s = req.session as any;
+    
+    // Sync to SQLite Vuttik Market
+    try {
+      await run(
+        `UPDATE vuttik_business_profiles 
+         SET location = ?
+         WHERE uid = ? AND owner_uid = ?`,
+        [location, bizId, s.owner_id]
+      );
+    } catch (err) {
+      console.error('Error syncing POS business location to SQLite:', err);
+    }
+    
+    res.json({ success: true });
+  });
+
+  // Check business auth
   app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
     const { bizId } = req.params;
     const s = req.session as any;
@@ -611,18 +632,24 @@ async function startServer() {
     try {
       const sqliteProductId = 'pos-' + newProduct.id;
       const ownerName = biz.nombre || 'Negocio POS';
-      const location = biz.settings?.allowed_location || 'Ubicación no especificada';
+      const locationObj = biz.settings?.allowed_location;
+      const location = typeof locationObj === 'object' ? locationObj.address : (locationObj || 'Ubicación no especificada');
+      const lat = typeof locationObj === 'object' ? locationObj.lat : null;
+      const lng = typeof locationObj === 'object' ? locationObj.lng : null;
+
       await run(`
         INSERT INTO vuttik_products 
-        (id, title, price, author_id, author_name, location, store_name, is_independent, created_at, barcode) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         sqliteProductId,
         newProduct.nombre,
         Number(newProduct.precio_venta) || 0,
-        biz.owner_id,
+        s.business_id,
         ownerName,
         location,
+        lat,
+        lng,
         ownerName,
         1, // is_independent
         new Date().toISOString(),
@@ -759,7 +786,7 @@ async function startServer() {
         Number(product.precio_venta) || 0,
         product.codigo_barras || '',
         sqliteProductId,
-        biz.owner_id
+        s.business_id
       ]);
     } catch (err) {
       console.error('Error updating POS product in Vuttik SQLite:', err);
@@ -784,7 +811,7 @@ async function startServer() {
     // Sync delete to Vuttik SQLite
     try {
       const sqliteProductId = 'pos-' + id;
-      await run('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, biz.owner_id]);
+      await run('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, s.business_id]);
     } catch (err) {
       console.error('Error deleting POS product in Vuttik SQLite:', err);
     }
