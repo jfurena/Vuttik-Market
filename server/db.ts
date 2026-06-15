@@ -56,7 +56,7 @@ export async function initDB() {
           const now = new Date().toISOString();
           try {
             await run(`
-              INSERT OR IGNORE INTO vuttik_users (uid, email, name, role, created_at)
+              INSERT OR IGNORE INTO vuttik_users (uid, email, display_name, role, created_at)
               VALUES (?, ?, ?, 'business', ?)
             `, [biz.id, `${biz.id}@business.local`, biz.nombre || 'Negocio', now]);
             

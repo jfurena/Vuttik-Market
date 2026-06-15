@@ -371,7 +371,7 @@ async function startServer() {
     try {
       const now = new Date().toISOString();
       await run(`
-        INSERT OR IGNORE INTO vuttik_users (uid, email, name, role, created_at)
+        INSERT OR IGNORE INTO vuttik_users (uid, email, display_name, role, created_at)
         VALUES (?, ?, ?, 'business', ?)
       `, [newBizId, `${newBizId}@business.local`, nombre.trim(), now]);
 
