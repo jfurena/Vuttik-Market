@@ -183,11 +183,11 @@ export const ApiService = {
     return res.json();
   },
 
-  async createBusiness(nombre: string) {
+  async createBusiness(nombre: string, ubicacion: string, tipo: string) {
     const res = await fetch(`${API_BASE}/businesses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre })
+      body: JSON.stringify({ nombre, ubicacion, tipo })
     });
     if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al crear negocio.'); }
     return res.json();
