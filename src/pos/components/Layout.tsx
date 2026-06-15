@@ -331,7 +331,7 @@ export default function Layout() {
 
   return (
     <div className={cn("bg-gray-50 flex flex-col font-sans", location.pathname === '/pos' ? "h-screen overflow-hidden" : "min-h-screen")}>
-      <LocationPromptModal isOpen={showLocationPrompt} onComplete={() => setShowLocationPrompt(false)} />
+      <LocationPromptModal isOpen={showLocationPrompt} businessId={profile?.business_id || ''} onComplete={() => setShowLocationPrompt(false)} />
       {isPractice && (
         <div className="bg-gradient-to-r from-amber-600 via-amber-550 to-amber-700 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 shadow-md shrink-0 z-50 border-b border-amber-500/30 flex-col sm:flex-row text-center sm:text-left">
           <div className="flex items-center gap-2.5">

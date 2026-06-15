@@ -6,10 +6,11 @@ import LocationInput from '../../components/LocationInput';
 
 interface LocationPromptModalProps {
   isOpen: boolean;
+  businessId: string;
   onComplete: () => void;
 }
 
-export default function LocationPromptModal({ isOpen, onComplete }: LocationPromptModalProps) {
+export default function LocationPromptModal({ isOpen, businessId, onComplete }: LocationPromptModalProps) {
   const [locationName, setLocationName] = useState('');
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +31,7 @@ export default function LocationPromptModal({ isOpen, onComplete }: LocationProm
       
       // Also update the business profile in Vuttik Market (SQLite) using our custom endpoint
       try {
-        await fetch('/api/businesses/' + ApiService.getBusinessId() + '/location', {
+        await fetch('/api/businesses/' + businessId + '/location', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
