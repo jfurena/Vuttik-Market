@@ -493,7 +493,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               </div>
             </div>
 
-            {currentUserId === targetUserId && (profileUser.role === 'negocio' || profileUser.role === 'business' || profileUser.role === 'guardian' || profileUser.role === 'mega_guardian' || profileUser.role === 'admin' || profileUser.planId === 'negocio') && (
+            {currentUserId === targetUserId && (
                <div className="flex justify-center w-full mb-10">
                  <button 
                    onClick={() => window.location.href = '/panel/negocio'}

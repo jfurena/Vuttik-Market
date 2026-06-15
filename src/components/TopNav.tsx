@@ -48,7 +48,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
 
   const menuItems = [
     { id: 'profile', path: '/perfil', label: 'Mi Perfil', icon: User, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
-    { id: 'negocio', path: '/panel/negocio', label: 'Modo Negocio', icon: Store, role: ['negocio', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'negocio_dash' },
+    { id: 'negocio', path: '/panel/negocio', label: 'Modo Negocio', icon: Store, role: ['user', 'negocio', 'business', 'guardian', 'mega_guardian', 'admin'], feature: 'negocio_dash' },
     { id: 'guardian', path: '/panel/guardian', label: 'Modo Guardian', icon: Shield, role: ['guardian', 'mega_guardian', 'admin'], feature: 'guardian_dash' },
     { id: 'mega-guardian', path: '/panel/mega-guardian', label: 'Modo Mega Guardian', icon: ShieldAlert, role: ['mega_guardian', 'admin'], feature: 'mega_guardian_dash' },
     { id: 'herramientas', path: '/herramientas', label: 'Otras herramientas', icon: LayoutGrid, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
