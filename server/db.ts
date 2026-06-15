@@ -2,6 +2,7 @@ import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dbPath = path.resolve(__dirname, '../vuttik.db');
@@ -42,6 +43,29 @@ export async function initDB() {
     await run(`UPDATE vuttik_business_profiles SET owner_uid = uid WHERE owner_uid IS NULL`);
   } catch (e) {
     // Column might already exist or table doesn't exist yet
+  }
+
+  // Auto-migration: Sync POS db.json businesses to SQLite
+  try {
+    const dbJsonPath = process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json');
+    if (fs.existsSync(dbJsonPath)) {
+      const posDb = JSON.parse(fs.readFileSync(dbJsonPath, 'utf8'));
+      if (posDb.businesses && posDb.businesses.length > 0) {
+        console.log(`Syncing ${posDb.businesses.length} POS businesses to SQLite...`);
+        for (const biz of posDb.businesses) {
+          const now = new Date().toISOString();
+          await run(
+            `INSERT INTO vuttik_business_profiles 
+             (uid, owner_uid, name, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT(uid) DO UPDATE SET owner_uid=excluded.owner_uid, name=excluded.name`,
+            [biz.id, biz.owner_id, biz.nombre, biz.fecha_creacion || now, now]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error syncing db.json businesses to SQLite:', e);
   }
 
 

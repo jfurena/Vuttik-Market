@@ -384,7 +384,7 @@ async function startServer() {
   });
 
   // Update business name
-  app.patch('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
+  app.patch('/api/businesses/:bizId', requireOwnerAuth, async (req, res) => {
     const { bizId } = req.params;
     const { nombre } = req.body;
     const s = req.session as any;
@@ -393,6 +393,21 @@ async function startServer() {
     if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado.' });
     if (nombre) db.businesses[idx].nombre = nombre.trim();
     saveDB(db);
+
+    // Sync to SQLite
+    try {
+      const now = new Date().toISOString();
+      await run(
+        `INSERT INTO vuttik_business_profiles 
+         (uid, owner_uid, name, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(uid) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at`,
+        [bizId, s.owner_id, db.businesses[idx].nombre, db.businesses[idx].fecha_creacion || now, now]
+      );
+    } catch (err) {
+      console.error('Error syncing POS business edit to SQLite:', err);
+    }
+
     res.json({ id: db.businesses[idx].id, nombre: db.businesses[idx].nombre, codigo: db.businesses[idx].codigo });
   });
 
