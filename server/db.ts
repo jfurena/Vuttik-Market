@@ -54,13 +54,53 @@ export async function initDB() {
         console.log(`Syncing ${posDb.businesses.length} POS businesses to SQLite...`);
         for (const biz of posDb.businesses) {
           const now = new Date().toISOString();
-          await run(
-            `INSERT INTO vuttik_business_profiles 
-             (uid, owner_uid, name, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?)
-             ON CONFLICT(uid) DO UPDATE SET owner_uid=excluded.owner_uid, name=excluded.name`,
-            [biz.id, biz.owner_id, biz.nombre, biz.fecha_creacion || now, now]
-          );
+          try {
+            await run(`
+              INSERT OR IGNORE INTO vuttik_users (uid, email, name, role, created_at)
+              VALUES (?, ?, ?, 'business', ?)
+            `, [biz.id, `${biz.id}@business.local`, biz.nombre || 'Negocio', now]);
+            
+            await run(
+              `INSERT INTO vuttik_business_profiles 
+               (uid, owner_uid, name, created_at, updated_at) 
+               VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT(uid) DO UPDATE SET owner_uid=excluded.owner_uid, name=excluded.name`,
+              [biz.id, biz.owner_id, biz.nombre, biz.fecha_creacion || now, now]
+            );
+
+            // Sync all products for this business
+            if (biz.products && Array.isArray(biz.products)) {
+              for (const p of biz.products) {
+                const sqliteProductId = 'pos-' + p.id;
+                const ownerName = biz.nombre || 'Negocio POS';
+                const locationObj = biz.settings?.allowed_location;
+                const location = typeof locationObj === 'object' ? locationObj.address : (locationObj || 'Ubicación no especificada');
+                const lat = typeof locationObj === 'object' ? locationObj.lat : null;
+                const lng = typeof locationObj === 'object' ? locationObj.lng : null;
+
+                await run(`
+                  INSERT OR IGNORE INTO vuttik_products 
+                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                  sqliteProductId,
+                  p.nombre,
+                  Number(p.precio_venta) || 0,
+                  biz.id,
+                  ownerName,
+                  location,
+                  lat,
+                  lng,
+                  ownerName,
+                  1,
+                  p.fecha_creacion || now,
+                  p.codigo_barras || ''
+                ]);
+              }
+            }
+          } catch (e) {
+            console.error('Error syncing individual biz:', biz.id, e);
+          }
         }
       }
     }

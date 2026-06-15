@@ -370,6 +370,11 @@ async function startServer() {
     // Also save it to SQLite so it appears in Vuttik Market
     try {
       const now = new Date().toISOString();
+      await run(`
+        INSERT OR IGNORE INTO vuttik_users (uid, email, name, role, created_at)
+        VALUES (?, ?, ?, 'business', ?)
+      `, [newBizId, `${newBizId}@business.local`, nombre.trim(), now]);
+
       await run(
         `INSERT INTO vuttik_business_profiles 
          (uid, owner_uid, name, created_at, updated_at) 
