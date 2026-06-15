@@ -1092,6 +1092,11 @@ app.get('/api/products', async (req, res) => {
         params.push(postedAs);
       }
 
+      // If viewing the global market (no author specified), hide POS products with 0 stock
+      if (!authorId) {
+        conditions.push("(p.id NOT LIKE 'pos-%' OR p.stock > 0)");
+      }
+
       if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
       }

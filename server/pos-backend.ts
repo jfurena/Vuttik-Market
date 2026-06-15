@@ -430,6 +430,14 @@ async function startServer() {
          WHERE uid = ? AND owner_uid = ?`,
         [location, bizId, s.owner_id]
       );
+      
+      // Update all products belonging to this business
+      await run(
+        `UPDATE vuttik_products
+         SET location = ?, lat = ?, lng = ?
+         WHERE author_id = ?`,
+        [location, lat || null, lng || null, bizId]
+      );
     } catch (err) {
       console.error('Error syncing POS business location to SQLite:', err);
     }
@@ -642,10 +650,22 @@ async function startServer() {
       const lat = typeof locationObj === 'object' ? locationObj.lat : null;
       const lng = typeof locationObj === 'object' ? locationObj.lng : null;
 
+      // Resolve category
+      const seccion = newProduct.seccion || 'General';
+      let catId = 'GLOBAL';
+      const existingCat = await get('SELECT id FROM vuttik_categories WHERE name = ? COLLATE NOCASE', [seccion]);
+      if (existingCat) {
+        catId = existingCat.id;
+      } else {
+        catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
+        await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', 
+          [catId, seccion, 100, '["sell"]', '[]', '{}']);
+      }
+
       await run(`
         INSERT INTO vuttik_products 
-        (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         sqliteProductId,
         newProduct.nombre,
@@ -659,7 +679,10 @@ async function startServer() {
         1, // is_independent
         new Date().toISOString(),
         newProduct.codigo_barras || '',
-        'business'
+        'business',
+        catId,
+        'sell',
+        Number(newProduct.stock) || 0
       ]);
     } catch (err) {
       console.error('Error syncing POS product to Vuttik SQLite:', err);
@@ -783,14 +806,29 @@ async function startServer() {
     try {
       const sqliteProductId = 'pos-' + id;
       const product = biz.products[index];
+
+      // Resolve category
+      const seccion = product.seccion || 'General';
+      let catId = 'GLOBAL';
+      const existingCat = await get('SELECT id FROM vuttik_categories WHERE name = ? COLLATE NOCASE', [seccion]);
+      if (existingCat) {
+        catId = existingCat.id;
+      } else {
+        catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
+        await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', 
+          [catId, seccion, 100, '["sell"]', '[]', '{}']);
+      }
+
       await run(`
         UPDATE vuttik_products 
-        SET title = ?, price = ?, barcode = ?
+        SET title = ?, price = ?, barcode = ?, category_id = ?, stock = ?
         WHERE id = ? AND author_id = ?
       `, [
         product.nombre,
         Number(product.precio_venta) || 0,
         product.codigo_barras || '',
+        catId,
+        Number(product.stock) || 0,
         sqliteProductId,
         s.business_id
       ]);

@@ -78,10 +78,26 @@ export async function initDB() {
                 const lat = typeof locationObj === 'object' ? locationObj.lat : null;
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
 
+                // Resolve category
+                const seccion = p.seccion || 'General';
+                let catId = 'GLOBAL';
+                const existingCat = await get('SELECT id FROM vuttik_categories WHERE name = ? COLLATE NOCASE', [seccion]);
+                if (existingCat) {
+                  catId = existingCat.id;
+                } else {
+                  catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
+                  await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', 
+                    [catId, seccion, 100, '["sell"]', '[]', '{}']);
+                }
+
                 await run(`
-                  INSERT OR IGNORE INTO vuttik_products 
-                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  INSERT INTO vuttik_products 
+                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  ON CONFLICT(id) DO UPDATE SET
+                    title=excluded.title, price=excluded.price, barcode=excluded.barcode,
+                    location=excluded.location, lat=excluded.lat, lng=excluded.lng,
+                    category_id=excluded.category_id, type_id=excluded.type_id, stock=excluded.stock
                 `, [
                   sqliteProductId,
                   p.nombre,
@@ -95,7 +111,10 @@ export async function initDB() {
                   1,
                   p.fecha_creacion || now,
                   p.codigo_barras || '',
-                  'business'
+                  'business',
+                  catId,
+                  'sell',
+                  Number(p.stock) || 0
                 ]);
               }
             }
@@ -292,6 +311,7 @@ export async function initDB() {
   try { await run("ALTER TABLE vuttik_products ADD COLUMN is_independent BOOLEAN DEFAULT 0"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_products ADD COLUMN country TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_products ADD COLUMN province TEXT"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_products ADD COLUMN stock INTEGER DEFAULT -1"); } catch (e) {}
 
   // Chains Table
   await run(`
