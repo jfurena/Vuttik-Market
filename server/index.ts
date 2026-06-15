@@ -52,7 +52,7 @@ app.use((req, res, next) => {
   next();
 });
 
-import { posApp } from './pos-backend.js';
+import { posApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.js';
 
 app.use('/api/auth', authRouter);
 app.use('/pos', posApp);
@@ -439,21 +439,31 @@ app.put('/api/business-profiles/:uid', async (req, res) => {
   const { name, description, location, phone, workingHours, socialLinks, logo, requesterUid } = req.body;
   const uid = req.params.uid;
 
-  if (requesterUid !== uid) {
-    const member = await get('SELECT role FROM vuttik_business_members WHERE business_uid = ? AND member_uid = ?', [uid, requesterUid]);
-    if (!member || member.role !== 'owner') {
-      return res.status(403).json({ error: 'Solo el dueño puede editar este negocio' });
+  // Check if editing an existing business
+  const existingBiz = await get('SELECT owner_uid FROM vuttik_business_profiles WHERE uid = ?', [uid]);
+
+  if (existingBiz) {
+    if (existingBiz.owner_uid !== requesterUid) {
+      const member = await get('SELECT role FROM vuttik_business_members WHERE business_uid = ? AND member_uid = ?', [uid, requesterUid]);
+      if (!member || member.role !== 'owner') {
+        return res.status(403).json({ error: 'Solo el dueño puede editar este negocio' });
+      }
     }
   }
 
   try {
     const now = new Date().toISOString();
+    const ownerUid = existingBiz ? existingBiz.owner_uid : requesterUid;
     await run(
-      `INSERT OR REPLACE INTO vuttik_business_profiles 
-       (uid, name, description, location, phone, working_hours, social_links, logo, updated_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT logo FROM vuttik_business_profiles WHERE uid = ?)), ?, COALESCE((SELECT created_at FROM vuttik_business_profiles WHERE uid = ?), ?))`,
+      `INSERT INTO vuttik_business_profiles 
+       (uid, owner_uid, name, description, location, phone, working_hours, social_links, logo, updated_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT logo FROM vuttik_business_profiles WHERE uid = ?)), ?, COALESCE((SELECT created_at FROM vuttik_business_profiles WHERE uid = ?), ?))
+       ON CONFLICT(uid) DO UPDATE SET 
+       name=excluded.name, description=excluded.description, location=excluded.location, phone=excluded.phone, 
+       working_hours=excluded.working_hours, social_links=excluded.social_links, logo=excluded.logo, updated_at=excluded.updated_at`,
       [
         uid, 
+        ownerUid,
         name || '', 
         description || '', 
         location || '', 
@@ -467,6 +477,24 @@ app.put('/api/business-profiles/:uid', async (req, res) => {
         now
       ]
     );
+
+    // Sync to POS database (db.json)
+    try {
+      const db = getDB();
+      const existingPosBizIndex = db.businesses.findIndex((b: any) => b.id === uid);
+      if (existingPosBizIndex >= 0) {
+        db.businesses[existingPosBizIndex].nombre = name || '';
+      } else {
+        const existingCodes = db.businesses.map((b: any) => b.codigo);
+        const codigo = generateCode(name || 'NEG', existingCodes);
+        const newBiz = emptyBusiness(uid, name || 'Nuevo Negocio', codigo, ownerUid);
+        db.businesses.push(newBiz);
+      }
+      saveDB(db);
+    } catch (err) {
+      console.error('Error syncing business to POS cache:', err);
+    }
+
     await logAction(requesterUid || uid, 'UPDATE_BUSINESS_PROFILE', uid, 'business_profile', { name });
     res.json({ success: true });
   } catch (error) {
@@ -583,9 +611,9 @@ app.get('/api/users/:uid/businesses', async (req, res) => {
     const rows = await all(
       `SELECT DISTINCT b.uid, b.name, b.logo, b.phone, u.email
        FROM vuttik_business_profiles b
-       LEFT JOIN vuttik_users u ON b.uid = u.uid
+       LEFT JOIN vuttik_users u ON b.owner_uid = u.uid
        LEFT JOIN vuttik_business_members m ON b.uid = m.business_uid
-       WHERE b.uid = ? OR (m.member_uid = ? AND m.status = "accepted")`,
+       WHERE b.owner_uid = ? OR (m.member_uid = ? AND m.status = "accepted")`,
       [req.params.uid, req.params.uid]
     );
     res.json(rows);

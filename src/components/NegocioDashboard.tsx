@@ -123,7 +123,10 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
-      await api.saveBusinessProfile(user.uid, {
+      const isNew = !profile;
+      const targetBizUid = isNew ? `biz-${Date.now()}` : user.uid;
+
+      await api.saveBusinessProfile(targetBizUid, {
         name: profileForm.name,
         description: profileForm.description,
         location: profileForm.location,
@@ -133,11 +136,17 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
         logo: profileForm.logo
       }, user.originalUid || user.uid);
       setProfile(profileForm);
-      if (isBusinessModeActive) {
+      if (isBusinessModeActive && !isNew) {
         updateUser({ displayName: profileForm.name });
       }
       setIsEditingProfile(false);
+      
+      if (isNew) {
+        alert('Negocio creado exitosamente. Cambiando a tu nuevo panel...');
+        await switchProfileMode(targetBizUid);
+      }
     } catch (error) {
+
       console.error('Error updating business profile:', error);
       alert('Error al guardar el perfil. Intenta de nuevo.');
     }

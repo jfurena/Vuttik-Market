@@ -22,8 +22,11 @@ const safeDate = (dateStr: any) => {
   }
 };
 
+import { useAuth } from '../contexts/AuthContext';
+
 export default function Profile({ currentUserId, onViewProduct }: { currentUserId?: string, onViewProduct?: (id: string) => void }) {
   const navigate = useNavigate();
+  const { setShowGlobalBusinessSelector } = useAuth();
   const { userId, username } = useParams<{ userId?: string, username?: string }>();
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
   const [profileUser, setProfileUser] = useState<any>(null);
@@ -496,7 +499,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             {currentUserId === targetUserId && (
                <div className="flex justify-center w-full mb-10">
                  <button 
-                   onClick={() => window.location.href = '/panel/negocio'}
+                   onClick={() => setShowGlobalBusinessSelector(true)}
                    className="flex items-center gap-2 bg-vuttik-navy text-white px-6 py-3 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-vuttik-navy/20"
                  >
                    <Store size={18} />

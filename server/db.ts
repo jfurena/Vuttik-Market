@@ -34,6 +34,16 @@ export async function initDB() {
     }
   }
 
+  // Auto-migration to add owner_uid to business profiles
+  try {
+    await run(`ALTER TABLE vuttik_business_profiles ADD COLUMN owner_uid TEXT`);
+    console.log('Added owner_uid column to vuttik_business_profiles');
+    // For existing profiles where uid === owner_uid, migrate them
+    await run(`UPDATE vuttik_business_profiles SET owner_uid = uid WHERE owner_uid IS NULL`);
+  } catch (e) {
+    // Column might already exist or table doesn't exist yet
+  }
+
 
   // Users Table
   await run(`
@@ -429,6 +439,7 @@ export async function initDB() {
   await run(`
     CREATE TABLE IF NOT EXISTS vuttik_business_profiles (
       uid TEXT PRIMARY KEY,
+      owner_uid TEXT,
       name TEXT,
       description TEXT,
       location TEXT,
@@ -438,7 +449,7 @@ export async function initDB() {
       social_links TEXT, -- JSON object {instagram, facebook, twitter, website}
       created_at TEXT,
       updated_at TEXT,
-      FOREIGN KEY(uid) REFERENCES vuttik_users(uid)
+      FOREIGN KEY(owner_uid) REFERENCES vuttik_users(uid)
     )
   `);
 

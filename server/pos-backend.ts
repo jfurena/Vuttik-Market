@@ -15,7 +15,7 @@ const DB_FILE = process.env.VUTTIK_DB_PATH
   || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
 
 // === DB STRUCTURE ===
-const emptyBusiness = (id: string, nombre: string, codigo: string, owner_id: string) => ({
+export const emptyBusiness = (id: string, nombre: string, codigo: string, owner_id: string) => ({
   id,
   codigo,
   nombre,
@@ -43,7 +43,7 @@ const initialDB = {
 };
 
 // === DB HELPERS ===
-const getDB = () => {
+export const getDB = () => {
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
     return JSON.parse(JSON.stringify(initialDB));
@@ -54,7 +54,7 @@ const getDB = () => {
   return db;
 };
 
-const saveDB = (data: any) => {
+export const saveDB = (data: any) => {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 };
 
@@ -68,7 +68,7 @@ const getBiz = (db: any, bizId: string) => {
 };
 
 // Generate a short code like SOL-001
-const generateCode = (nombre: string, existingCodes: string[]) => {
+export const generateCode = (nombre: string, existingCodes: string[]) => {
   const prefix = nombre.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3) || 'NEG';
   let num = 1;
   let code = `${prefix}-${String(num).padStart(3, '0')}`;
@@ -355,16 +355,31 @@ async function startServer() {
   });
 
   // Create business
-  app.post('/api/businesses', requireOwnerAuth, (req, res) => {
+  app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
     const { nombre } = req.body;
     if (!nombre || !nombre.trim()) return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
     const s = req.session as any;
     const db = getDB();
     const existingCodes = db.businesses.map((b: any) => b.codigo);
     const codigo = generateCode(nombre, existingCodes);
-    const newBiz = emptyBusiness('biz-' + Date.now(), nombre.trim(), codigo, s.owner_id);
+    const newBizId = 'biz-' + Date.now();
+    const newBiz = emptyBusiness(newBizId, nombre.trim(), codigo, s.owner_id);
     db.businesses.push(newBiz);
     saveDB(db);
+    
+    // Also save it to SQLite so it appears in Vuttik Market
+    try {
+      const now = new Date().toISOString();
+      await run(
+        `INSERT INTO vuttik_business_profiles 
+         (uid, owner_uid, name, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [newBizId, s.owner_id, nombre.trim(), now, now]
+      );
+    } catch (err) {
+      console.error('Error syncing POS business to SQLite:', err);
+    }
+
     res.json({ id: newBiz.id, nombre: newBiz.nombre, codigo: newBiz.codigo, fecha_creacion: newBiz.fecha_creacion });
   });
 
