@@ -682,7 +682,7 @@ async function startServer() {
         'business',
         catId,
         'sell',
-        Number(newProduct.stock) || 0
+        Number(newProduct.cantidad_disponible) || 0
       ]);
     } catch (err) {
       console.error('Error syncing POS product to Vuttik SQLite:', err);
@@ -828,7 +828,7 @@ async function startServer() {
         Number(product.precio_venta) || 0,
         product.codigo_barras || '',
         catId,
-        Number(product.stock) || 0,
+        Number(product.cantidad_disponible) || 0,
         sqliteProductId,
         s.business_id
       ]);
@@ -1062,6 +1062,9 @@ async function startServer() {
         biz.products[pIndex].cantidad_disponible -= item.cantidad;
         biz.products[pIndex].fecha_actualizacion = new Date();
         costoTotal += (biz.products[pIndex].costo_compra || 0) * item.cantidad;
+
+        // Sync new stock to Vuttik SQLite Market
+        run(`UPDATE vuttik_products SET stock = ? WHERE id = ?`, [biz.products[pIndex].cantidad_disponible, 'pos-' + item.producto_id]).catch(e => console.error('Error updating stock on sale:', e));
       }
       if (!biz.inventory_movements) biz.inventory_movements = [];
       biz.inventory_movements.push({ id: 'mov-' + Date.now() + Math.random(), producto_id: item.producto_id, tipo_movimiento: 'Venta', cantidad: -item.cantidad, usuario_id: sale.usuario_id, fecha: new Date(), motivo: `Venta ${sale.codigo_recibo}` });
@@ -1153,7 +1156,19 @@ async function startServer() {
     }
     
     logActivity(biz, { usuario_id: usuario_id || s.owner_id, usuario_nombre: usuario_nombre || 'Dueño', accion: 'Reembolso de Venta', detalles: `Venta #${sale.codigo_recibo} reembolsada. Monto: ${sale.total}. Motivo: ${motivo}`, modulo: 'Ventas' });
-    if (sale.items) { sale.items.forEach((item: any) => { const pIndex = (biz.products || []).findIndex((p: any) => p.id === item.producto_id); if (pIndex !== -1) { biz.products[pIndex].cantidad_disponible += item.cantidad; biz.products[pIndex].fecha_actualizacion = new Date(); } if (!biz.inventory_movements) biz.inventory_movements = []; biz.inventory_movements.push({ id: 'mov-' + Date.now() + Math.random(), producto_id: item.producto_id, tipo_movimiento: 'Reembolso', cantidad: item.cantidad, usuario_id: sale.usuario_id, fecha: new Date(), motivo: `Reembolso Venta ${sale.codigo_recibo}` }); }); }
+    if (sale.items) { 
+      sale.items.forEach((item: any) => { 
+        const pIndex = (biz.products || []).findIndex((p: any) => p.id === item.producto_id); 
+        if (pIndex !== -1) { 
+          biz.products[pIndex].cantidad_disponible += item.cantidad; 
+          biz.products[pIndex].fecha_actualizacion = new Date(); 
+          // Sync new stock to Vuttik SQLite Market
+          run(`UPDATE vuttik_products SET stock = ? WHERE id = ?`, [biz.products[pIndex].cantidad_disponible, 'pos-' + item.producto_id]).catch(e => console.error('Error updating stock on refund:', e));
+        } 
+        if (!biz.inventory_movements) biz.inventory_movements = []; 
+        biz.inventory_movements.push({ id: 'mov-' + Date.now() + Math.random(), producto_id: item.producto_id, tipo_movimiento: 'Reembolso', cantidad: item.cantidad, usuario_id: sale.usuario_id, fecha: new Date(), motivo: `Reembolso Venta ${sale.codigo_recibo}` }); 
+      }); 
+    }
     const shiftIndex = (biz.shifts || []).findIndex((sh: any) => sh.id === sale.turno_id);
     if (shiftIndex !== -1) { const shift = biz.shifts[shiftIndex]; shift.total_reembolsos += sale.total; shift.total_ventas -= sale.total; if (sale.metodo_pago === 'Efectivo') { shift.total_efectivo -= sale.total; shift.monto_esperado -= sale.total; } else if (sale.metodo_pago === 'Tarjeta') shift.total_tarjeta -= sale.total; else if (sale.metodo_pago === 'Transferencia') shift.total_transferencia -= sale.total; shift.fecha_actualizacion = new Date(); }
     saveDB(db);
@@ -1182,7 +1197,17 @@ async function startServer() {
     }
     
     logActivity(biz, { usuario_id: s.owner_id || s.employee_id, usuario_nombre: 'Administrador', accion: 'Cancelación de Venta', detalles: `Venta #${sale.codigo_recibo} cancelada. Monto: ${sale.total}`, modulo: 'Ventas' });
-    if (sale.items) { sale.items.forEach((item: any) => { const pIndex = (biz.products || []).findIndex((p: any) => p.id === item.producto_id); if (pIndex !== -1) { biz.products[pIndex].cantidad_disponible += item.cantidad; biz.products[pIndex].fecha_actualizacion = new Date(); } }); }
+    if (sale.items) { 
+      sale.items.forEach((item: any) => { 
+        const pIndex = (biz.products || []).findIndex((p: any) => p.id === item.producto_id); 
+        if (pIndex !== -1) { 
+          biz.products[pIndex].cantidad_disponible += item.cantidad; 
+          biz.products[pIndex].fecha_actualizacion = new Date(); 
+          // Sync new stock to Vuttik SQLite Market
+          run(`UPDATE vuttik_products SET stock = ? WHERE id = ?`, [biz.products[pIndex].cantidad_disponible, 'pos-' + item.producto_id]).catch(e => console.error('Error updating stock on cancel:', e));
+        } 
+      }); 
+    }
     const shiftIndex = (biz.shifts || []).findIndex((sh: any) => sh.id === sale.turno_id);
     if (shiftIndex !== -1) { const shift = biz.shifts[shiftIndex]; shift.total_cancelaciones += sale.total; shift.total_ventas -= sale.total; if (sale.metodo_pago === 'Efectivo') { shift.total_efectivo -= sale.total; shift.monto_esperado -= sale.total; } else if (sale.metodo_pago === 'Tarjeta') shift.total_tarjeta -= sale.total; else if (sale.metodo_pago === 'Transferencia') shift.total_transferencia -= sale.total; shift.fecha_actualizacion = new Date(); }
     saveDB(db);

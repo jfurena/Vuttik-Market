@@ -114,7 +114,7 @@ export async function initDB() {
                   'business',
                   catId,
                   'sell',
-                  Number(p.stock) || 0
+                  Number(p.cantidad_disponible) || 0
                 ]);
               }
             }
