@@ -254,7 +254,7 @@ export default function Layout() {
 
     if (profile.rol === UserRole.CAJERO) {
       checkEmployeeLocation();
-    } else if (profile.rol === UserRole.OWNER) {
+    } else if (profile.rol === UserRole.ADMIN) {
       ApiService.getSettings().then(settings => {
         if (!settings || !settings.allowed_location) {
           setShowLocationPrompt(true);
