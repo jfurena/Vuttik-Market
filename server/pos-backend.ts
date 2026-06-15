@@ -15,11 +15,13 @@ const DB_FILE = process.env.VUTTIK_DB_PATH
   || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
 
 // === DB STRUCTURE ===
-export const emptyBusiness = (id: string, nombre: string, codigo: string, owner_id: string) => ({
+export const emptyBusiness = (id: string, nombre: string, codigo: string, owner_id: string, ubicacion: string = '', tipo: string = '') => ({
   id,
   codigo,
   nombre,
   owner_id,
+  ubicacion,
+  tipo,
   fecha_creacion: new Date(),
   employees: [],
   products: [],
@@ -356,14 +358,14 @@ async function startServer() {
 
   // Create business
   app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
-    const { nombre } = req.body;
+    const { nombre, ubicacion, tipo } = req.body;
     if (!nombre || !nombre.trim()) return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
     const s = req.session as any;
     const db = getDB();
     const existingCodes = db.businesses.map((b: any) => b.codigo);
     const codigo = generateCode(nombre, existingCodes);
     const newBizId = 'biz-' + Date.now();
-    const newBiz = emptyBusiness(newBizId, nombre.trim(), codigo, s.owner_id);
+    const newBiz = emptyBusiness(newBizId, nombre.trim(), codigo, s.owner_id, ubicacion?.trim() || '', tipo || '');
     db.businesses.push(newBiz);
     saveDB(db);
     
@@ -377,9 +379,9 @@ async function startServer() {
 
       await run(
         `INSERT INTO vuttik_business_profiles 
-         (uid, owner_uid, name, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [newBizId, s.owner_id, nombre.trim(), now, now]
+         (uid, owner_uid, name, location, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [newBizId, s.owner_id, nombre.trim(), ubicacion?.trim() || '', now, now]
       );
     } catch (err) {
       console.error('Error syncing POS business to SQLite:', err);

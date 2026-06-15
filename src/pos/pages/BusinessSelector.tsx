@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiService } from '../services/api';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Store, Loader2, LogOut, Hash, Package, ShoppingBag, ChevronRight, X, AlertCircle, User, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, Store, Loader2, LogOut, Hash, Package, ShoppingBag, ChevronRight, X, AlertCircle, User, TrendingUp, DollarSign, MapPin, Briefcase } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
 
 interface BizSummary {
@@ -26,6 +26,8 @@ export default function BusinessSelector() {
   const [showCreate, setShowCreate] = useState(false);
   const [showProfitModal, setShowProfitModal] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newUbicacion, setNewUbicacion] = useState('');
+  const [newTipo, setNewTipo] = useState('');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
@@ -56,12 +58,17 @@ export default function BusinessSelector() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!newName.trim() || !newUbicacion.trim() || !newTipo) {
+      setError('Por favor completa todos los campos.');
+      return;
+    }
     setCreating(true);
     setError('');
     try {
-      await ApiService.createBusiness(newName.trim());
+      await ApiService.createBusiness(newName.trim(), newUbicacion.trim(), newTipo);
       setNewName('');
+      setNewUbicacion('');
+      setNewTipo('');
       setShowCreate(false);
       await load();
     } catch (err: any) {
@@ -86,7 +93,7 @@ export default function BusinessSelector() {
           className="flex items-center justify-between mb-10 mt-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
         >
           <div className="flex items-center gap-6">
-            <img src="/Logo.png" alt="Vuttik POS" className="w-16 object-contain hidden sm:block" />
+            <img src="/vuttik-pos-logo.png" alt="Vuttik POS" className="w-16 object-contain hidden sm:block" />
             <div>
               <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Panel de Control de Vuttik</p>
               <h1 className="text-3xl font-black text-gray-900">
@@ -265,13 +272,41 @@ export default function BusinessSelector() {
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold"
                   />
                 </div>
+                
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    required type="text" value={newUbicacion} onChange={e => setNewUbicacion(e.target.value)}
+                    placeholder="Ubicación del local (ej: Av. Principal #123)"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold"
+                  />
+                </div>
+
+                <div className="relative">
+                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <select
+                    required value={newTipo} onChange={e => setNewTipo(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Selecciona el tipo de establecimiento</option>
+                    <option value="Supermercado">Supermercado</option>
+                    <option value="Ferretería">Ferretería</option>
+                    <option value="Farmacia">Farmacia</option>
+                    <option value="Colmado">Colmado</option>
+                    <option value="Tienda de Ropa">Tienda de Ropa</option>
+                    <option value="Repuestos">Repuestos de Vehículos</option>
+                    <option value="Restaurante">Restaurante / Comida Rápida</option>
+                    <option value="Tecnología">Tienda de Tecnología</option>
+                    <option value="Otro">Otro tipo de establecimiento</option>
+                  </select>
+                </div>
                 <p className="text-gray-500 text-xs font-bold">Se generará automáticamente un código único para tus empleados (ej: MIT-001).</p>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">
                     Cancelar
                   </button>
-                  <button type="submit" disabled={creating || !newName.trim()} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
-                    {creating ? <Loader2 className="animate-spin" size={16} /> : 'Crear'}
+                  <button type="submit" disabled={creating || !newName.trim() || !newUbicacion.trim() || !newTipo} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
+                    {creating ? <Loader2 className="animate-spin" size={16} /> : 'Crear Negocio'}
                   </button>
                 </div>
               </form>
