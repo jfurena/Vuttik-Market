@@ -126,6 +126,9 @@ authRouter.get('/me', authenticateToken, async (req: any, res) => {
     let photoURL = user.photo_url;
     let effectiveUid = user.uid;
 
+    let businessName = undefined;
+    let businessLogo = undefined;
+
     if (user.active_profile_mode && user.active_profile_mode !== 'personal') {
       let bUid = user.active_profile_mode;
       
@@ -142,8 +145,8 @@ authRouter.get('/me', authenticateToken, async (req: any, res) => {
       const business = await get('SELECT name, logo FROM vuttik_business_profiles WHERE uid = ?', [bUid]);
       if (business) {
         effectiveUid = bUid;
-        displayName = business.name || displayName;
-        photoURL = business.logo || photoURL;
+        businessName = business.name;
+        businessLogo = business.logo;
       }
     }
 
@@ -153,6 +156,8 @@ authRouter.get('/me', authenticateToken, async (req: any, res) => {
         originalUid: user.uid,
         displayName, 
         photoURL, 
+        businessName,
+        businessLogo,
         planId: user.plan_id,
         isBanned: !!user.is_banned,
         onboardingCompleted: !!user.onboarding_completed,

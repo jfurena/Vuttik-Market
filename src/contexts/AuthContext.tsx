@@ -11,12 +11,14 @@ export interface AuthUser {
   planId: string;
   isBanned: boolean;
   onboardingCompleted: boolean;
-  activeProfileMode?: 'personal' | 'business';
+  activeProfileMode?: 'personal' | 'business' | string;
   age?: number;
   gender?: string;
   country?: string;
   username?: string;
   emailVerified: boolean;
+  businessName?: string;
+  businessLogo?: string;
 }
 
 interface AuthContextType {

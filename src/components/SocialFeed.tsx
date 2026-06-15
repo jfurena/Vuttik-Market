@@ -137,8 +137,8 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
     try {
       await api.publishPost({
         authorId: currentUser.uid,
-        authorName: currentUser.displayName || 'Usuario',
-        authorAvatar: currentUser.photoURL || '',
+        authorName: isBusinessModeActive && currentUser.businessName ? currentUser.businessName : (currentUser.displayName || 'Usuario'),
+        authorAvatar: isBusinessModeActive && currentUser.businessLogo ? currentUser.businessLogo : (currentUser.photoURL || ''),
         content: newPostContent,
         image: newPostImage,
         location: 'República Dominicana',
