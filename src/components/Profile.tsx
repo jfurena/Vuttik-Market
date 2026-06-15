@@ -59,9 +59,9 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
       try {
         let user;
         if (username) {
-          user = await api.getUserByUsername(username);
+          user = await api.getUserByUsername(username, true);
         } else if (targetUserId) {
-          user = await api.getUser(targetUserId);
+          user = await api.getUser(targetUserId, true);
         }
         if (user) {
           setProfileUser(user);

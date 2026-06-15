@@ -83,8 +83,8 @@ export const api = {
   facebookCallback: (data: any) => request('/api/auth/facebook/callback', { method: 'POST', body: JSON.stringify(data) }),
 
   // Users
-  getUser: (uid: string) => request(`/api/users/${uid}`),
-  getUserByUsername: (username: string) => request(`/api/users/by-username/${encodeURIComponent(username)}`),
+  getUser: (uid: string, raw?: boolean) => request(`/api/users/${uid}${raw ? '?raw=true' : ''}`),
+  getUserByUsername: (username: string, raw?: boolean) => request(`/api/users/by-username/${encodeURIComponent(username)}${raw ? '?raw=true' : ''}`),
   getAllUsers: () => request('/api/users'),
   checkUsername: (username: string) => request(`/api/users/check-username?username=${encodeURIComponent(username)}`),
   suggestUsername: (name: string) => request(`/api/users/suggest-username?name=${encodeURIComponent(name)}`),

@@ -308,7 +308,7 @@ app.get('/api/users/:uid', async (req, res) => {
       let bio = user.bio;
       let location = user.location;
       
-      if (user.active_profile_mode === 'business') {
+      if (user.active_profile_mode === 'business' && req.query.raw !== 'true') {
         const business = await get('SELECT name, description, location as biz_location, logo FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
         if (business) {
           displayName = business.name || displayName;
@@ -362,7 +362,7 @@ app.get('/api/users/by-username/:username', async (req, res) => {
       let bio = user.bio;
       let location = user.location;
       
-      if (user.active_profile_mode === 'business') {
+      if (user.active_profile_mode === 'business' && req.query.raw !== 'true') {
         const business = await get('SELECT name, description, location as biz_location, logo FROM vuttik_business_profiles WHERE uid = ?', [user.uid]);
         if (business) {
           displayName = business.name || displayName;
