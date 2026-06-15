@@ -2,6 +2,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import express from 'express';
 import cors from 'cors';
+import multer from 'multer';
+import session from 'express-session';
+import path from 'path';
 import helmet from 'helmet';
 import { initDB, run, all, get } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,6 +32,20 @@ app.use(express.urlencoded({ limit: '5mb', extended: true }));
 // Security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' } // allow images to be served cross-origin
+}));
+
+const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
+app.use(session({
+  name: 'vuttik_pos_sid',
+  secret: sessionSecret,
+  resave: true,
+  saveUninitialized: true,
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+  }
 }));
 
 // Global request logger

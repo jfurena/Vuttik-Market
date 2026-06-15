@@ -304,6 +304,15 @@ authRouter.post('/google/callback', async (req, res) => {
     }
 
     const token = generateOAuthJWT(user.uid, user.email, user.role);
+    
+    // Set POS session explicitly so POS dashboard can authenticate via cookie
+    const s = (req as any).session;
+    if (s) {
+      s.owner_id = user.uid;
+      s.rol = 'admin';
+      if (typeof s.save === 'function') s.save();
+    }
+
     res.json({ 
         token, 
         user: { 

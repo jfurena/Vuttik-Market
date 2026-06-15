@@ -123,19 +123,7 @@ async function startServer() {
   const app = express();
   app.use(express.json());
 
-  const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
-  app.use(session({
-    name: 'vuttik_pos_sid',
-    secret: sessionSecret,
-    resave: true,
-    saveUninitialized: true,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 horas
-    }
-  }));
+  // Session is now handled globally in index.ts
 
   // =============================================
   // === AUTH ROUTES ===
