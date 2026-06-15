@@ -152,8 +152,6 @@ authRouter.get('/me', authenticateToken, async (req: any, res) => {
 
     res.json({
         ...user,
-        uid: effectiveUid,
-        originalUid: user.uid,
         displayName, 
         photoURL, 
         businessName,

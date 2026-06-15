@@ -135,8 +135,10 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
       return;
     }
     try {
+      const authorId = isBusinessModeActive ? (currentUser.activeProfileMode !== 'personal' && currentUser.activeProfileMode !== 'business' ? currentUser.activeProfileMode : currentUser.uid) : currentUser.uid;
+      
       await api.publishPost({
-        authorId: currentUser.uid,
+        authorId,
         authorName: isBusinessModeActive && currentUser.businessName ? currentUser.businessName : (currentUser.displayName || 'Usuario'),
         authorAvatar: isBusinessModeActive && currentUser.businessLogo ? currentUser.businessLogo : (currentUser.photoURL || ''),
         content: newPostContent,
@@ -172,8 +174,9 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
     if (await dialog.confirm(`¿Quieres repostear la publicación de ${post.author_name}?`)) {
       try {
         const repostContent = `🔁 Reposteado de @${post.author_name}\n\n${post.content}`;
+        const bId = isBusinessModeActive ? (currentUser.activeProfileMode !== 'personal' && currentUser.activeProfileMode !== 'business' ? currentUser.activeProfileMode : currentUser.uid) : currentUser.uid;
         await api.publishPost({
-          authorId: currentUser.uid,
+          authorId: bId,
           authorName: currentUser.displayName || 'Usuario',
           authorAvatar: currentUser.photoURL || '',
           content: repostContent,
@@ -325,8 +328,9 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
   const handleAddComment = async () => {
     if (!selectedPostForComments || !newComment.trim() || !currentUser) return;
     try {
+      const bId = isBusinessModeActive ? (currentUser.activeProfileMode !== 'personal' && currentUser.activeProfileMode !== 'business' ? currentUser.activeProfileMode : currentUser.uid) : currentUser.uid;
       await api.addComment(selectedPostForComments.id, {
-        authorId: currentUser.uid,
+        authorId: bId,
         authorName: currentUser.displayName || 'Usuario',
         authorAvatar: currentUser.photoURL || '',
         content: newComment

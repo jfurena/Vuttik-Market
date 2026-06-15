@@ -343,6 +343,25 @@ app.get('/api/users/:uid', async (req, res) => {
       };
       res.json(mappedUser);
     } else {
+      // Check if it's a business profile
+      const business = await get('SELECT * FROM vuttik_business_profiles WHERE uid = ?', [req.params.uid]);
+      if (business) {
+        return res.json({
+          uid: business.uid,
+          displayName: business.name,
+          photoURL: business.logo,
+          bio: business.description,
+          location: business.location,
+          role: 'business',
+          planId: 'free',
+          createdAt: business.created_at,
+          isBanned: false,
+          onboardingCompleted: true,
+          activeProfileMode: 'personal',
+          followerCount: 0,
+          followingCount: 0
+        });
+      }
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
