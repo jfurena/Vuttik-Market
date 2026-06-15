@@ -222,7 +222,7 @@ async function startServer() {
   });
 
   // Get current session user
-  app.get('/api/auth/me', (req, res) => {
+  app.get('/api/auth/me', async (req, res) => {
     const s = req.session as any;
     if (!s.owner_id && !s.employee_id) return res.json(null);
 
@@ -230,28 +230,35 @@ async function startServer() {
 
     if (s.owner_id && !s.business_id) {
       // Owner without business selected → return owner info
-      const owner = db.owners.find((o: any) => o.id === s.owner_id);
-      if (!owner) return res.json(null);
-      const { password_hash: _, ...safe } = owner;
-      return res.json({ ...safe, rol: 'admin', estado: 'activo' });
+      try {
+        const owner: any = await get('SELECT uid, email, display_name, role FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+        if (!owner) return res.json(null);
+        return res.json({ id: owner.uid, nombre: owner.display_name, correo: owner.email, rol: 'admin', estado: 'activo' });
+      } catch (err) {
+        return res.json(null);
+      }
     }
 
     if (s.owner_id && s.business_id) {
       // Owner inside a business
-      const owner = db.owners.find((o: any) => o.id === s.owner_id);
-      const biz = db.businesses.find((b: any) => b.id === s.business_id);
-      if (!owner || !biz) return res.json(null);
-      return res.json({
-        id: owner.id,
-        nombre: owner.nombre,
-        correo: owner.correo,
-        rol: 'admin',
-        estado: 'activo',
-        business_id: biz.id,
-        business_nombre: biz.nombre,
-        business_codigo: biz.codigo,
-        owner_id: owner.id
-      });
+      try {
+        const owner: any = await get('SELECT uid, email, display_name, role FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+        const biz = db.businesses.find((b: any) => b.id === s.business_id);
+        if (!owner || !biz) return res.json(null);
+        return res.json({
+          id: owner.uid,
+          nombre: owner.display_name,
+          correo: owner.email,
+          rol: 'admin',
+          estado: 'activo',
+          business_id: biz.id,
+          business_nombre: biz.nombre,
+          business_codigo: biz.codigo,
+          owner_id: owner.uid
+        });
+      } catch (err) {
+        return res.json(null);
+      }
     }
 
     if (s.employee_id && s.business_id) {
@@ -1014,8 +1021,18 @@ async function startServer() {
     const db = getDB();
     const biz = getBiz(db, s.business_id);
     // Validate using owner password
-    const owner = db.owners.find((o: any) => o.id === biz.owner_id);
-    const valid = owner ? await bcrypt.compare(password, owner.password_hash) : false;
+    let valid = false;
+    try {
+      const owner: any = await get('SELECT password_hash, oauth_provider FROM vuttik_users WHERE uid = ?', [biz.owner_id]);
+      if (owner) {
+        if (!owner.password_hash) {
+          return res.status(401).json({ error: 'La cuenta del dueño está vinculada a Google sin contraseña. No se puede validar la clave.' });
+        }
+        valid = await bcrypt.compare(password, owner.password_hash);
+      }
+    } catch(err) {
+      console.error(err);
+    }
     if (!valid) return res.status(401).json({ error: 'La clave de seguridad ingresada es incorrecta.' });
     if (!motivo || motivo.trim().length === 0) return res.status(400).json({ error: 'El motivo del reembolso es obligatorio' });
     const saleIndex = (biz.sales || []).findIndex((sale: any) => sale.id === saleId);
