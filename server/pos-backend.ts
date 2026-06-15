@@ -644,8 +644,8 @@ async function startServer() {
 
       await run(`
         INSERT INTO vuttik_products 
-        (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         sqliteProductId,
         newProduct.nombre,
@@ -658,7 +658,8 @@ async function startServer() {
         ownerName,
         1, // is_independent
         new Date().toISOString(),
-        newProduct.codigo_barras || ''
+        newProduct.codigo_barras || '',
+        'business'
       ]);
     } catch (err) {
       console.error('Error syncing POS product to Vuttik SQLite:', err);

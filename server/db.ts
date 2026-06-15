@@ -80,8 +80,8 @@ export async function initDB() {
 
                 await run(`
                   INSERT OR IGNORE INTO vuttik_products 
-                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `, [
                   sqliteProductId,
                   p.nombre,
@@ -94,7 +94,8 @@ export async function initDB() {
                   ownerName,
                   1,
                   p.fecha_creacion || now,
-                  p.codigo_barras || ''
+                  p.codigo_barras || '',
+                  'business'
                 ]);
               }
             }
@@ -102,6 +103,11 @@ export async function initDB() {
             console.error('Error syncing individual biz:', biz.id, e);
           }
         }
+        
+        // Fix any POS products that were inserted with posted_as='personal'
+        try {
+          await run(`UPDATE vuttik_products SET posted_as = 'business' WHERE id LIKE 'pos-%'`);
+        } catch (e) {}
       }
     }
   } catch (e) {
