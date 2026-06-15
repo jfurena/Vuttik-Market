@@ -90,7 +90,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
         {isBusinessModeActive && (
           <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-vuttik-blue/10 border border-vuttik-blue/20 rounded-2xl shadow-sm transition-all" title="Estás interactuando como este negocio">
             <Store size={16} className="text-vuttik-blue" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-vuttik-navy">{user?.displayName || 'Modo Negocio'}</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-vuttik-navy">{user?.businessName || user?.displayName || 'Modo Negocio'}</span>
           </div>
         )}
         <div className="relative">

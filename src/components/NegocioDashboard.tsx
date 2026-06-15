@@ -52,15 +52,17 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
       )
     : 'owner';
 
+  const businessUid = user?.activeProfileMode && user.activeProfileMode !== 'personal' && user.activeProfileMode !== 'business' ? user.activeProfileMode : user?.uid;
+
   const loadData = async () => {
     if (!user) return;
     try {
       const [productsData, profileData, teamData, invitesData, postsData] = await Promise.all([
-        api.getProducts(undefined, user.uid, 'business').catch(() => []),
-        api.getBusinessProfile(user.uid).catch(() => null),
-        api.getBusinessMembers(user.uid).catch(() => []),
+        api.getProducts(undefined, businessUid, 'business').catch(() => []),
+        api.getBusinessProfile(businessUid).catch(() => null),
+        api.getBusinessMembers(businessUid).catch(() => []),
         api.getBusinessInvites(user.originalUid || user.uid).catch(() => []),
-        api.getUserSocialPosts(user.uid, 'business').catch(() => [])
+        api.getUserSocialPosts(businessUid, 'business').catch(() => [])
       ]);
       setInventory(productsData);
       setTeamMembers(teamData);
@@ -109,8 +111,8 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
     const loadRealStats = async () => {
       try {
         const [stats, followersData] = await Promise.all([
-          api.getBusinessStats(user.uid),
-          api.getFollowers(user.uid).catch(() => ({ count: 0 }))
+          api.getBusinessStats(businessUid),
+          api.getFollowers(businessUid).catch(() => ({ count: 0 }))
         ]);
         setRealStats({ ...stats, followers: followersData.count || 0 });
       } catch (error) {
@@ -123,8 +125,8 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
-      const isNew = !profile;
-      const targetBizUid = isNew ? `biz-${Date.now()}` : user.uid;
+      const isNew = !profile || profile.name === user.displayName;
+      const targetBizUid = isNew && (!businessUid || businessUid === user.uid) ? `biz-${Date.now()}` : businessUid;
 
       await api.saveBusinessProfile(targetBizUid, {
         name: profileForm.name,
@@ -219,7 +221,7 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
     if (!user || !inviteEmail) return;
     setIsInviting(true);
     try {
-      await api.inviteBusinessMember({ businessUid: user.uid, email: inviteEmail });
+      await api.inviteBusinessMember({ businessUid, email: inviteEmail });
       setInviteEmail('');
       alert('Invitación enviada correctamente.');
       loadData();
