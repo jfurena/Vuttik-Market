@@ -6,10 +6,21 @@
     PassengerEnabled off
   </IfModule>
 
-  # Proxy /api/ and /pos/api/ requests to Node.js backend on port 3005
-  # LiteSpeed supports RewriteRule with [P] when mod_proxy is enabled
-  RewriteCond %{REQUEST_URI} ^/(pos/)?api/
-  RewriteRule ^(pos/)?api/(.*)$ http://127.0.0.1:3005/api/$2 [P,L]
+  # --- POS Subdomain API Routing ---
+  RewriteCond %{HTTP_HOST} ^pos\.vuttik\.com$ [NC]
+  # Exception: Google OAuth Callback MUST hit the main authRouter
+  RewriteCond %{REQUEST_URI} ^/api/auth/google/callback$
+  RewriteRule ^api/auth/google/callback$ http://127.0.0.1:3005/api/auth/google/callback [P,L]
+
+  RewriteCond %{HTTP_HOST} ^pos\.vuttik\.com$ [NC]
+  # All other POS API requests go to posApp (mounted at /pos/api/...)
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^api/(.*)$ http://127.0.0.1:3005/pos/api/$1 [P,L]
+
+  # --- Main Domain API Routing ---
+  RewriteCond %{HTTP_HOST} !^pos\.vuttik\.com$ [NC]
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^api/(.*)$ http://127.0.0.1:3005/api/$1 [P,L]
 
   # SPA fallback: all other non-file requests go to index.html
   RewriteRule ^index\.html$ - [L]
