@@ -359,18 +359,18 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
     <div className="flex flex-col gap-6 md:gap-8 pb-32 px-4 md:px-6 w-full">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl md:text-4xl font-display font-black text-vuttik-navy">Social</h2>
-        <p className="text-base md:text-lg text-vuttik-text-muted">Conéctate con la comunidad.</p>
+        <h2 className="text-3xl md:text-4xl font-display font-black text-on-surface">Social</h2>
+        <p className="text-base md:text-lg text-on-surface-variant">Conéctate con la comunidad.</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-vuttik-gray rounded-2xl">
+      <div className="flex gap-2 p-1.5 bg-surface-container rounded-3xl">
         <button
           onClick={() => setActiveTab('feed')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-3xl font-bold text-sm transition-all ${
             activeTab === 'feed'
-              ? 'bg-white text-vuttik-navy shadow-sm'
-              : 'text-vuttik-text-muted hover:text-vuttik-navy'
+              ? 'bg-white text-on-surface shadow-sm'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           <Rss size={16} />
@@ -378,10 +378,10 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
         </button>
         <button
           onClick={() => setActiveTab('search')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-3xl font-bold text-sm transition-all ${
             activeTab === 'search'
-              ? 'bg-white text-vuttik-navy shadow-sm'
-              : 'text-vuttik-text-muted hover:text-vuttik-navy'
+              ? 'bg-white text-on-surface shadow-sm'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           <Users size={16} />
@@ -404,20 +404,20 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
               <div className="flex gap-2">
                 <button
                   onClick={() => setFeedFilter('all')}
-                  className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
+                  className={`flex-1 py-3 px-4 rounded-3xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
                     feedFilter === 'all'
                       ? 'bg-vuttik-blue text-white border-vuttik-blue shadow-lg shadow-vuttik-blue/20'
-                      : 'bg-white text-vuttik-navy border-gray-100 hover:border-vuttik-blue'
+                      : 'bg-white text-on-surface border-gray-100 hover:border-vuttik-blue'
                   }`}
                 >
                   Todas
                 </button>
                 <button
                   onClick={() => setFeedFilter('following')}
-                  className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
+                  className={`flex-1 py-3 px-4 rounded-3xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
                     feedFilter === 'following'
                       ? 'bg-vuttik-navy text-white border-vuttik-navy shadow-lg shadow-vuttik-navy/20'
-                      : 'bg-white text-vuttik-navy border-gray-100 hover:border-vuttik-navy'
+                      : 'bg-white text-on-surface border-gray-100 hover:border-vuttik-navy'
                   }`}
                 >
                   Siguiendo
@@ -428,24 +428,24 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                 <div className="flex gap-2">
                   <button
                     onClick={() => setFeedContentType('all')}
-                    className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                      feedContentType === 'all' ? 'bg-vuttik-gray text-vuttik-navy' : 'bg-transparent text-vuttik-text-muted hover:bg-vuttik-gray/50'
+                    className={`flex-1 py-2 px-3 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      feedContentType === 'all' ? 'bg-surface-container text-on-surface' : 'bg-transparent text-on-surface-variant hover:bg-surface-container/50'
                     }`}
                   >
                     Todo
                   </button>
                   <button
                     onClick={() => setFeedContentType('posts')}
-                    className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                      feedContentType === 'posts' ? 'bg-vuttik-gray text-vuttik-navy' : 'bg-transparent text-vuttik-text-muted hover:bg-vuttik-gray/50'
+                    className={`flex-1 py-2 px-3 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      feedContentType === 'posts' ? 'bg-surface-container text-on-surface' : 'bg-transparent text-on-surface-variant hover:bg-surface-container/50'
                     }`}
                   >
                     Publicaciones
                   </button>
                   <button
                     onClick={() => setFeedContentType('products')}
-                    className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                      feedContentType === 'products' ? 'bg-vuttik-gray text-vuttik-navy' : 'bg-transparent text-vuttik-text-muted hover:bg-vuttik-gray/50'
+                    className={`flex-1 py-2 px-3 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      feedContentType === 'products' ? 'bg-surface-container text-on-surface' : 'bg-transparent text-on-surface-variant hover:bg-surface-container/50'
                     }`}
                   >
                     Productos
@@ -455,9 +455,9 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
             </div>
 
             {/* Create Post */}
-            <div className="bg-vuttik-gray rounded-[24px] md:rounded-[32px] p-3 md:p-6 flex flex-col gap-3">
+            <div className="bg-surface-container rounded-[24px] md:rounded-[32px] p-3 md:p-6 flex flex-col gap-3">
               <div className="flex items-center gap-2 md:gap-4">
-                <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-vuttik-gray/50 text-vuttik-navy overflow-hidden shrink-0">
+                <div className="w-9 h-9 md:w-12 md:h-12 rounded-3xl md:rounded-3xl bg-surface-container/50 text-on-surface overflow-hidden shrink-0">
                   <UserAvatar src={currentUser?.photoURL} alt={currentUser?.displayName || 'Usuario'} />
                 </div>
                 <input
@@ -466,7 +466,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handlePublish()}
-                  className="flex-1 bg-transparent border-none outline-none text-vuttik-navy font-medium placeholder:text-vuttik-text-muted/60 text-xs md:text-base min-w-0"
+                  className="flex-1 bg-transparent border-none outline-none text-on-surface font-medium placeholder:text-on-surface-variant/60 text-xs md:text-base min-w-0"
                 />
                 
                 <div className="flex items-center gap-2">
@@ -479,16 +479,16 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                   />
                   <label 
                     htmlFor="post-image-upload"
-                    className="p-2 md:p-3 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-xl cursor-pointer transition-colors"
+                    className="p-2 md:p-3 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-3xl cursor-pointer transition-colors"
                   >
                     <ImageIcon size={20} className="md:size-6" />
                   </label>
                   <div className="flex items-center gap-4">
-                    <span className="text-xs font-bold text-vuttik-text-muted">{newPostContent.length}/280</span>
+                    <span className="text-xs font-bold text-on-surface-variant">{newPostContent.length}/280</span>
                     <button 
                       onClick={handlePublish}
                       disabled={!newPostContent.trim()}
-                      className="bg-vuttik-blue text-white px-3 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[9px] md:text-xs uppercase tracking-widest shadow-lg shadow-vuttik-blue/20 hover:scale-105 transition-transform shrink-0 disabled:opacity-40 disabled:scale-100"
+                      className="bg-vuttik-blue text-white px-3 md:px-6 py-2 md:py-3 rounded-3xl md:rounded-3xl font-black text-[9px] md:text-xs uppercase tracking-widest shadow-lg shadow-vuttik-blue/20 hover:scale-105 transition-transform shrink-0 disabled:opacity-40 disabled:scale-100"
                     >
                       Publicar
                     </button>
@@ -498,7 +498,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
               
               {newPostImage && (
                 <div className="relative self-start ml-11 md:ml-16">
-                  <img src={newPostImage} alt="Preview" className="h-24 md:h-32 object-cover rounded-xl" />
+                  <img src={newPostImage} alt="Preview" className="h-24 md:h-32 object-cover rounded-3xl" />
                   <button 
                     onClick={() => setNewPostImage(null)}
                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
@@ -515,7 +515,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                 <div className="w-8 h-8 border-4 border-vuttik-blue border-t-transparent rounded-full animate-spin" />
               </div>
             ) : posts.length === 0 ? (
-              <div className="text-center py-16 text-vuttik-text-muted">
+              <div className="text-center py-16 text-on-surface-variant">
                 <Rss size={40} className="mx-auto mb-4 opacity-30" />
                 <p className="font-bold">
                   {feedFilter === 'following'
@@ -577,15 +577,15 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                           onClick={() => onNavigateToProfile(post.author_id)}
                           className="flex items-center gap-3 md:gap-4 text-left min-w-0"
                         >
-                          <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-[20px] bg-vuttik-gray/50 text-vuttik-navy shadow-sm shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 md:w-14 md:h-14 rounded-3xl md:rounded-[20px] bg-surface-container/50 text-on-surface shadow-sm shrink-0 overflow-hidden">
                             <UserAvatar src={post.author_avatar} alt={post.author_name} />
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 md:gap-2">
-                              <h4 className="text-sm md:text-lg font-display font-black text-vuttik-navy truncate">{post.author_name}</h4>
+                              <h4 className="text-sm md:text-lg font-display font-black text-on-surface truncate">{post.author_name}</h4>
                               {post.is_verified && <ShieldCheck size={14} className="text-vuttik-blue md:size-[18px] shrink-0" />}
                             </div>
-                            <p className="text-[10px] md:text-xs text-vuttik-text-muted font-bold truncate">
+                            <p className="text-[10px] md:text-xs text-on-surface-variant font-bold truncate">
                               {post.location} · {formatDate(post.created_at)}
                             </p>
                           </div>
@@ -598,10 +598,10 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                               onClick={() => handleFollow(post.author_id)}
                               disabled={isFollowLoading}
                               title={isFollowing ? 'Dejar de seguir' : 'Seguir'}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all border ${
                                 isFollowing
                                   ? 'border-vuttik-blue/30 text-vuttik-blue bg-vuttik-blue/5 hover:bg-red-50 hover:text-red-500 hover:border-red-200'
-                                  : 'border-vuttik-navy/20 text-vuttik-navy bg-white hover:bg-vuttik-navy hover:text-white'
+                                  : 'border-vuttik-navy/20 text-on-surface bg-white hover:bg-vuttik-navy hover:text-white'
                               } ${isFollowLoading ? 'opacity-50' : ''}`}
                             >
                               {isFollowing ? <UserCheck size={12} /> : <UserPlus size={12} />}
@@ -610,7 +610,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                           )}
                           <button
                             onClick={() => { setPromoTargetId(post.id); setShowPromoModal(true); }}
-                            className="p-2 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-xl transition-colors"
+                            className="p-2 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-3xl transition-colors"
                             title="Promocionar"
                           >
                             <Megaphone size={16} className="md:size-5" />
@@ -618,14 +618,14 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                           <div className="relative">
                             <button 
                               onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-                              className="p-2 text-vuttik-text-muted hover:bg-vuttik-gray rounded-xl transition-colors"
+                              className="p-2 text-on-surface-variant hover:bg-surface-container rounded-3xl transition-colors"
                             >
                               <MoreHorizontal size={18} className="md:size-5" />
                             </button>
                             {activeMenu === post.id && (
                               <>
                                 <div className="fixed inset-0 z-40" onClick={() => setActiveMenu(null)} />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-3xl shadow-xl border border-gray-100 py-2 z-50">
                                   {isOwn ? (
                                     <>
                                       <button 
@@ -634,7 +634,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                                           setEditingContent(post.content);
                                           setActiveMenu(null);
                                         }}
-                                        className="w-full px-4 py-2 text-left text-sm font-bold text-vuttik-navy hover:bg-vuttik-gray transition-colors flex items-center gap-2"
+                                        className="w-full px-4 py-2 text-left text-sm font-bold text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
                                       >
                                         Editar publicación
                                       </button>
@@ -649,7 +649,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                                     <>
                                       <button 
                                         onClick={() => { setActiveMenu(null); handleReportPost(post); }}
-                                        className="w-full px-4 py-2 text-left text-sm font-bold text-vuttik-navy hover:bg-vuttik-gray transition-colors"
+                                        className="w-full px-4 py-2 text-left text-sm font-bold text-on-surface hover:bg-surface-container transition-colors"
                                       >
                                         Reportar
                                       </button>
@@ -702,27 +702,27 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                             <textarea
                               value={editingContent}
                               onChange={(e) => setEditingContent(e.target.value)}
-                              className="w-full bg-vuttik-gray/50 border border-gray-100 rounded-2xl p-4 text-sm md:text-lg text-vuttik-navy outline-none resize-none focus:ring-2 focus:ring-vuttik-blue/20"
+                              className="w-full bg-surface-container/50 border border-gray-100 rounded-3xl p-4 text-sm md:text-lg text-on-surface outline-none resize-none focus:ring-2 focus:ring-vuttik-blue/20"
                               rows={3}
                             />
                             <div className="flex justify-end gap-2 mt-2">
                               <button 
                                 onClick={() => setEditingPostId(null)}
-                                className="px-4 py-2 text-xs md:text-sm font-bold text-vuttik-text-muted hover:text-vuttik-navy transition-colors"
+                                className="px-4 py-2 text-xs md:text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors"
                               >
                                 Cancelar
                               </button>
                               <button 
                                 onClick={() => handleEditPost(post.id)}
                                 disabled={!editingContent.trim() || editingContent === post.content}
-                                className="px-4 py-2 text-xs md:text-sm font-black bg-vuttik-blue text-white rounded-xl shadow-lg shadow-vuttik-blue/20 disabled:opacity-50"
+                                className="px-4 py-2 text-xs md:text-sm font-black bg-vuttik-blue text-white rounded-3xl shadow-lg shadow-vuttik-blue/20 disabled:opacity-50"
                               >
                                 Guardar
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <p className="text-vuttik-navy text-sm md:text-lg leading-relaxed">{post.content}</p>
+                          <p className="text-on-surface text-sm md:text-lg leading-relaxed">{post.content}</p>
                         )}
                       </div>
 
@@ -731,7 +731,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                         <div className="px-5 md:px-8 pb-6">
                           <button 
                             onClick={() => setSelectedImage(post.image_url!)}
-                            className="w-full aspect-square overflow-hidden bg-vuttik-gray/50 cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100/50"
+                            className="w-full aspect-square overflow-hidden bg-surface-container/50 cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100/50"
                           >
                             <img src={post.image_url} alt="Post" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </button>
@@ -744,7 +744,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                         <div className="flex items-center gap-1 md:gap-4">
                           <button 
                             onClick={() => handleLike(post.id)}
-                            className="flex items-center gap-1.5 md:gap-2 text-vuttik-text-muted hover:text-red-500 transition-all group"
+                            className="flex items-center gap-1.5 md:gap-2 text-on-surface-variant hover:text-red-500 transition-all group"
                           >
                             <div className="p-2 md:p-2.5 rounded-full group-hover:bg-red-50 transition-colors">
                               <Heart size={18} className={`md:size-[22px] ${post.likes?.includes(currentUser?.uid || '') ? 'fill-red-500 text-red-500' : ''}`} />
@@ -754,7 +754,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
 
                           <button 
                             onClick={() => handleOpenComments(post)}
-                            className="flex items-center gap-1.5 md:gap-2 text-vuttik-text-muted hover:text-vuttik-blue transition-all group"
+                            className="flex items-center gap-1.5 md:gap-2 text-on-surface-variant hover:text-vuttik-blue transition-all group"
                           >
                             <div className="p-2 md:p-2.5 rounded-full group-hover:bg-vuttik-blue/10 transition-colors">
                               <MessageCircle size={18} className="md:size-[22px]" />
@@ -764,7 +764,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
 
                           <button 
                             onClick={() => handleRepost(post)}
-                            className="flex items-center gap-1.5 md:gap-2 text-vuttik-text-muted hover:text-green-500 transition-all group"
+                            className="flex items-center gap-1.5 md:gap-2 text-on-surface-variant hover:text-green-500 transition-all group"
                           >
                             <div className="p-2 md:p-2.5 rounded-full group-hover:bg-green-50 transition-colors">
                               <Repeat size={18} className="md:size-[22px]" />
@@ -777,7 +777,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
 
                           <button 
                             onClick={() => handleShare(post)}
-                            className="p-2 md:p-2.5 text-vuttik-text-muted hover:text-vuttik-navy hover:bg-vuttik-gray rounded-full transition-all"
+                            className="p-2 md:p-2.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-all"
                           >
                             <Share2 size={18} className="md:size-[22px]" />
                           </button>
@@ -803,14 +803,14 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
           >
             {/* Search input */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-vuttik-text-muted" size={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
               <input
                 type="text"
                 placeholder="Buscar por nombre o @usuario..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
-                className="w-full bg-vuttik-gray border-none rounded-2xl px-12 py-4 focus:ring-2 focus:ring-vuttik-blue/20 transition-all outline-none text-sm"
+                className="w-full bg-surface-container border-none rounded-3xl px-12 py-4 focus:ring-2 focus:ring-vuttik-blue/20 transition-all outline-none text-sm"
               />
               {searching && (
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -823,7 +823,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
             {searchQuery.length > 1 && (
               <div className="flex flex-col gap-3">
                 {searchResults.length === 0 && !searching && (
-                  <div className="text-center py-12 text-vuttik-text-muted">
+                  <div className="text-center py-12 text-on-surface-variant">
                     <Users size={36} className="mx-auto mb-3 opacity-30" />
                     <p className="font-bold text-sm">No se encontraron perfiles para "{searchQuery}"</p>
                   </div>
@@ -840,14 +840,14 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                       className="bg-white border border-gray-100 rounded-[24px] p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all"
                     >
                       <button onClick={() => onNavigateToProfile(user.uid)} className="flex items-center gap-3 flex-1 text-left min-w-0">
-                        <div className="w-12 h-12 rounded-2xl bg-vuttik-gray/50 text-vuttik-navy overflow-hidden shrink-0">
+                        <div className="w-12 h-12 rounded-3xl bg-surface-container/50 text-on-surface overflow-hidden shrink-0">
                           <UserAvatar src={user.photo_url} alt={user.display_name} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-black text-vuttik-navy truncate">{user.display_name}</p>
+                          <p className="text-sm font-black text-on-surface truncate">{user.display_name}</p>
                           <div className="flex items-center gap-2">
                             {user.username && <span className="text-xs text-vuttik-blue font-bold">@{user.username}</span>}
-                            <span className="text-[10px] text-vuttik-text-muted font-bold uppercase tracking-widest">{user.role}</span>
+                            <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">{user.role}</span>
                           </div>
                         </div>
                       </button>
@@ -855,7 +855,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                         <button
                           onClick={() => handleFollow(user.uid)}
                           disabled={isFollowLoading}
-                          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border shrink-0 ${
+                          className={`flex items-center gap-1.5 px-4 py-2 rounded-3xl text-xs font-black uppercase tracking-widest transition-all border shrink-0 ${
                             isFollowing
                               ? 'border-vuttik-blue/30 text-vuttik-blue bg-vuttik-blue/5'
                               : 'border-vuttik-navy bg-vuttik-navy text-white hover:bg-vuttik-blue hover:border-vuttik-blue'
@@ -872,7 +872,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
             )}
 
             {searchQuery.length <= 1 && (
-              <div className="text-center py-16 text-vuttik-text-muted">
+              <div className="text-center py-16 text-on-surface-variant">
                 <Search size={48} className="mx-auto mb-4 opacity-20" />
                 <p className="font-bold">Escribe al menos 2 caracteres para buscar perfiles</p>
                 <p className="text-xs mt-2">Puedes buscar usuarios, negocios y empresas</p>
@@ -910,12 +910,12 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
             >
               <div className="p-8 border-b border-gray-50 flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-display font-black text-vuttik-navy">Comentarios</h3>
-                  <p className="text-xs text-vuttik-text-muted font-bold">Respuesta a {selectedPostForComments.author_name}</p>
+                  <h3 className="text-2xl font-display font-black text-on-surface">Comentarios</h3>
+                  <p className="text-xs text-on-surface-variant font-bold">Respuesta a {selectedPostForComments.author_name}</p>
                 </div>
                 <button 
                   onClick={() => setSelectedPostForComments(null)}
-                  className="p-3 bg-vuttik-gray rounded-2xl text-vuttik-text-muted hover:text-vuttik-navy transition-colors"
+                  className="p-3 bg-surface-container rounded-3xl text-on-surface-variant hover:text-on-surface transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -927,28 +927,28 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                     <div className="w-8 h-8 border-4 border-vuttik-blue/20 border-t-vuttik-blue rounded-full animate-spin mx-auto"></div>
                   </div>
                 ) : postComments.length === 0 ? (
-                  <div className="py-12 text-center text-vuttik-text-muted italic font-bold">
+                  <div className="py-12 text-center text-on-surface-variant italic font-bold">
                     No hay comentarios aún. ¡Sé el primero en responder!
                   </div>
                 ) : (
                   postComments.map((comment, i) => (
                     <div key={comment.id || i} className="flex gap-4">
-                      <div className="w-8 h-8 rounded-xl bg-vuttik-gray/50 text-vuttik-navy shrink-0 overflow-hidden">
+                      <div className="w-8 h-8 rounded-3xl bg-surface-container/50 text-on-surface shrink-0 overflow-hidden">
                         <UserAvatar src={comment.author_avatar} alt={comment.author_name} />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-black text-vuttik-navy">{comment.author_name}</span>
-                          <span className="text-[10px] text-vuttik-text-muted font-bold">{formatDate(comment.created_at)}</span>
+                          <span className="text-sm font-black text-on-surface">{comment.author_name}</span>
+                          <span className="text-[10px] text-on-surface-variant font-bold">{formatDate(comment.created_at)}</span>
                         </div>
-                        <p className="text-sm text-vuttik-navy leading-relaxed bg-vuttik-gray/40 p-4 rounded-2xl rounded-tl-none">{comment.content}</p>
+                        <p className="text-sm text-on-surface leading-relaxed bg-surface-container/40 p-4 rounded-3xl rounded-tl-none">{comment.content}</p>
                       </div>
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="p-8 border-t border-gray-50 bg-vuttik-gray/20 rounded-b-[40px]">
+              <div className="p-8 border-t border-gray-50 bg-surface-container/20 rounded-b-[40px]">
                 <div className="flex gap-4">
                   <input 
                     type="text" 
@@ -956,12 +956,12 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                    className="flex-1 bg-white border-none rounded-2xl px-6 py-4 text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-vuttik-blue/20"
+                    className="flex-1 bg-white border-none rounded-3xl px-6 py-4 text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-vuttik-blue/20"
                   />
                   <button 
                     onClick={handleAddComment}
                     disabled={!newComment.trim()}
-                    className="bg-vuttik-blue text-white px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-vuttik-blue/20 disabled:opacity-40"
+                    className="bg-vuttik-blue text-white px-6 py-4 rounded-3xl font-black text-xs uppercase tracking-widest shadow-lg shadow-vuttik-blue/20 disabled:opacity-40"
                   >
                     Enviar
                   </button>

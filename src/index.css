@@ -5,18 +5,26 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
 
-  --color-vuttik-navy: #002B49;
+  --color-vuttik-navy: #060B19;
   --color-vuttik-deep: #020D1A;
-  --color-vuttik-blue: #3B82F6;
-  --color-vuttik-sky: #60A5FA;
+  --color-vuttik-blue: #1E62FF;
+  --color-vuttik-sky: #38BDF8;
   --color-vuttik-cyan: #22D3EE;
   --color-vuttik-gray: #F8FAFC;
-  --color-vuttik-text-muted: #94A3B8;
+  --color-vuttik-text-muted: #7e8396;
+  
+  --color-sky-accent: #38BDF8;
+  --color-success: #10B981;
+  --color-alert: #EF4444;
+  --color-surface: #f7f9fb;
+  --color-surface-dim: #d8dadc;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #46464c;
 
   --radius-vuttik: 22px;
   
-  --shadow-pro: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
-  --shadow-pro-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.06), 0 0 4px rgba(0,0,0,0.03);
+  --shadow-pro: 0 8px 32px -4px rgba(6, 11, 25, 0.04), 0 0 4px rgba(6, 11, 25, 0.02);
+  --shadow-pro-hover: 0 16px 40px -4px rgba(6, 11, 25, 0.08), 0 0 6px rgba(6, 11, 25, 0.04);
 }
 
 @layer base {

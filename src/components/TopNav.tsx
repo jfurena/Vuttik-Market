@@ -70,7 +70,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
   });
 
   return (
-    <header className="glass-nav-pro sticky top-0 left-0 right-0 z-40 px-6 md:px-10 py-4 md:py-5 flex justify-between items-center md:bg-white/80 md:backdrop-blur-2xl md:border-b border-gray-100/50">
+    <header className="glass-nav-pro sticky top-0 left-0 right-0 z-40 px-6 md:px-10 py-4 md:py-5 flex justify-between items-center md:bg-white/80 backdrop-blur-2xl md:backdrop-blur-2xl md:border-b border-gray-100/50">
       <div 
         className="flex items-center gap-2.5 md:gap-3 md:hidden shrink-0 cursor-pointer"
         onClick={() => navigate('/')}
@@ -78,25 +78,25 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
         <div className="w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl shadow-sm bg-white border border-gray-50">
           <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain p-1" referrerPolicy="no-referrer" />
         </div>
-        <h1 className="text-xl tracking-tight font-display font-black text-vuttik-navy">Vuttik <span className="text-vuttik-blue">Market</span></h1>
+        <h1 className="text-xl tracking-tight font-display font-black text-on-surface">Vuttik <span className="text-vuttik-blue">Market</span></h1>
       </div>
       
       <div className="hidden md:block">
-        <h2 className="text-3xl font-display font-black text-vuttik-navy tracking-tight">Panel de Control</h2>
-        <p className="text-vuttik-text-muted/80 text-sm font-medium mt-1">Bienvenido de nuevo a Vuttik Market</p>
+        <h2 className="text-3xl font-display font-black text-on-surface tracking-tight">Panel de Control</h2>
+        <p className="text-on-surface-variant/80 text-sm font-medium mt-1">Bienvenido de nuevo a Vuttik Market</p>
       </div>
       
       <div className="flex items-center gap-3 md:gap-5 ml-auto relative">
         {isBusinessModeActive && (
           <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-vuttik-blue/10 border border-vuttik-blue/20 rounded-2xl shadow-sm transition-all" title="Estás interactuando como este negocio">
             <Store size={16} className="text-vuttik-blue" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-vuttik-navy">{user?.businessName || user?.displayName || 'Modo Negocio'}</span>
+            <span className="text-[11px] font-black uppercase tracking-widest text-on-surface">{user?.businessName || user?.displayName || 'Modo Negocio'}</span>
           </div>
         )}
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className={`relative p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showNotifications ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-vuttik-navy/60 hover:text-vuttik-blue'} ${unreadCount > 0 ? 'border-red-200/50 bg-red-50/30' : 'border-gray-100/50'}`}
+            className={`relative p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showNotifications ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-on-surface/60 hover:text-vuttik-blue'} ${unreadCount > 0 ? 'border-red-200/50 bg-red-50/30' : 'border-gray-100/50'}`}
           >
             <Bell size={20} className={`md:size-5 transition-colors ${unreadCount > 0 && !showNotifications ? 'text-red-500' : ''}`} />
             {unreadCount > 0 && (
@@ -143,7 +143,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                           <div className="flex justify-between items-start mb-1.5">
                             <h4 className="text-sm font-black leading-tight pr-2 text-vuttik-blue">Nuevos Mensajes</h4>
                           </div>
-                          <p className="text-xs text-vuttik-text-muted leading-relaxed">
+                          <p className="text-xs text-on-surface-variant leading-relaxed">
                             Tienes {unreadMessagesCount} {unreadMessagesCount === 1 ? 'mensaje sin leer' : 'mensajes sin leer'} en tu bandeja.
                           </p>
                         </div>
@@ -154,7 +154,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                         <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
                           <Bell size={24} />
                         </div>
-                        <span className="text-vuttik-text-muted text-sm font-bold">No tienes notificaciones</span>
+                        <span className="text-on-surface-variant text-sm font-bold">No tienes notificaciones</span>
                       </div>
                     ) : notifications.map((n) => (
                       <div 
@@ -188,10 +188,10 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-1.5">
-                            <h4 className={`text-sm font-black leading-tight pr-2 ${!n.is_read ? 'text-vuttik-blue' : 'text-vuttik-navy'}`}>{n.title}</h4>
-                            <span className="text-[10px] text-vuttik-text-muted whitespace-nowrap font-bold mt-0.5">{new Date(n.created_at).toLocaleDateString()}</span>
+                            <h4 className={`text-sm font-black leading-tight pr-2 ${!n.is_read ? 'text-vuttik-blue' : 'text-on-surface'}`}>{n.title}</h4>
+                            <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-bold mt-0.5">{new Date(n.created_at).toLocaleDateString()}</span>
                           </div>
-                          <p className="text-xs text-vuttik-text-muted leading-relaxed line-clamp-3">{n.message}</p>
+                          <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-3">{n.message}</p>
                         </div>
                       </div>
                     ))}
@@ -215,7 +215,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
         <div className="relative">
           <button 
             onClick={() => setShowMenu(!showMenu)}
-            className={`p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showMenu ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-vuttik-navy/60 hover:text-vuttik-blue border-gray-100/50'}`}
+            className={`p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showMenu ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-on-surface/60 hover:text-vuttik-blue border-gray-100/50'}`}
           >
             <Menu size={20} className="md:size-5" />
           </button>
@@ -231,7 +231,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                   className="absolute right-0 mt-4 w-64 bg-white border border-gray-100 rounded-[32px] shadow-2xl overflow-hidden z-50"
                 >
                   <div className="p-6 border-b border-gray-50">
-                    <h3 className="text-sm font-black text-vuttik-navy uppercase tracking-widest">Menú</h3>
+                    <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">Menú</h3>
                   </div>
                   <div className="p-2">
                     {filteredMenu.map((item) => (
@@ -245,7 +245,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
                           }
                           setShowMenu(false);
                         }}
-                        className="w-full flex items-center gap-3 p-4 hover:bg-vuttik-gray rounded-2xl transition-colors text-vuttik-navy group"
+                        className="w-full flex items-center gap-3 p-4 hover:bg-surface-container rounded-2xl transition-colors text-on-surface group"
                       >
                         <div className="p-2 bg-gray-50 rounded-xl group-hover:bg-white transition-colors">
                           <item.icon size={18} className="text-vuttik-blue" />

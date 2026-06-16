@@ -332,7 +332,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
           {/* Overlapping Avatar */}
           <div className="relative group mb-4 md:mb-6">
             <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-white p-1.5 md:p-2 shadow-2xl">
-              <div className="w-full h-full rounded-full bg-vuttik-gray/50 overflow-hidden flex items-center justify-center text-vuttik-navy border-4 border-vuttik-gray/10 shadow-inner">
+              <div className="w-full h-full rounded-full bg-surface-container/50 overflow-hidden flex items-center justify-center text-on-surface border-4 border-vuttik-gray/10 shadow-inner">
                 <UserAvatar src={profileUser.photoURL || profileUser.photo_url} alt={profileUser.displayName || profileUser.display_name} />
               </div>
             </div>
@@ -355,7 +355,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
           {/* Identity Info */}
           <div className="text-center max-w-2xl">
             <div className="flex flex-col items-center gap-2 md:gap-4 mb-4">
-              <h2 className="text-3xl md:text-5xl font-display font-black text-vuttik-navy tracking-tight leading-none">
+              <h2 className="text-3xl md:text-5xl font-display font-black text-on-surface tracking-tight leading-none">
                 {profileUser.displayName || profileUser.display_name}
               </h2>
               {(profileUser.username) && (
@@ -416,7 +416,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                     }}
                     className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm transition-colors ${
                       isFollowing 
-                        ? 'bg-gray-100 text-vuttik-text-muted hover:bg-red-50 hover:text-red-500' 
+                        ? 'bg-gray-100 text-on-surface-variant hover:bg-red-50 hover:text-red-500' 
                         : 'bg-vuttik-blue text-white hover:bg-blue-600'
                     }`}
                   >
@@ -442,14 +442,14 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                   <textarea
                     value={newBio}
                     onChange={(e) => setNewBio(e.target.value)}
-                    className="w-full bg-vuttik-gray border-2 border-vuttik-blue/20 rounded-2xl p-4 text-sm md:text-lg leading-relaxed font-medium text-vuttik-navy focus:outline-none focus:border-vuttik-blue resize-none shadow-sm"
+                    className="w-full bg-surface-container border-2 border-vuttik-blue/20 rounded-2xl p-4 text-sm md:text-lg leading-relaxed font-medium text-on-surface focus:outline-none focus:border-vuttik-blue resize-none shadow-sm"
                     rows={4}
                     placeholder="Escribe algo sobre ti..."
                   />
                   <div className="flex justify-end gap-2">
                     <button 
                       onClick={() => setIsEditingBio(false)}
-                      className="px-4 py-2 bg-gray-100 text-vuttik-text-muted rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 bg-gray-100 text-on-surface-variant rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors"
                       disabled={isSubmitting}
                     >
                       Cancelar
@@ -466,7 +466,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                 </div>
               ) : (
                 <div className="relative flex flex-col items-center">
-                  <p className="text-vuttik-text-muted text-sm md:text-lg leading-relaxed font-medium">
+                  <p className="text-on-surface-variant text-sm md:text-lg leading-relaxed font-medium">
                     {profileUser.bio || 'Especialista en la comunidad Vuttik. Comprometido con la transparencia y el comercio seguro en República Dominicana.'}
                   </p>
                   {currentUserId === targetUserId && (
@@ -475,7 +475,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                         setNewBio(profileUser.bio || '');
                         setIsEditingBio(true);
                       }}
-                      className="absolute -right-12 top-0 p-2 bg-white text-vuttik-text-muted hover:text-vuttik-blue rounded-full shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                      className="absolute -right-12 top-0 p-2 bg-white text-on-surface-variant hover:text-vuttik-blue rounded-full shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
                       title="Editar descripción"
                     >
                       <Edit2 size={16} />
@@ -486,11 +486,11 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 md:gap-10 mb-6">
-              <div className="flex items-center gap-2 text-vuttik-text-muted text-xs md:text-base font-bold bg-vuttik-gray/50 px-4 py-2 rounded-2xl">
+              <div className="flex items-center gap-2 text-on-surface-variant text-xs md:text-base font-bold bg-surface-container/50 px-4 py-2 rounded-2xl">
                 <MapPin size={18} className="text-vuttik-blue" />
                 {profileUser.location || 'República Dominicana'}
               </div>
-              <div className="flex items-center gap-2 text-vuttik-text-muted text-xs md:text-base font-bold bg-vuttik-gray/50 px-4 py-2 rounded-2xl">
+              <div className="flex items-center gap-2 text-on-surface-variant text-xs md:text-base font-bold bg-surface-container/50 px-4 py-2 rounded-2xl">
                 <Calendar size={18} className="text-vuttik-blue" />
                 Miembro desde {profileUser.createdAt || profileUser.created_at ? safeDate(profileUser.createdAt || profileUser.created_at) : 'Abril 2024'}
               </div>
@@ -511,19 +511,19 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             {/* Stats Cards (Floating Style) */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl mx-auto">
               <div className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform">
-                <div className="text-2xl md:text-3xl font-black text-vuttik-navy mb-1">98%</div>
-                <div className="text-[9px] md:text-[10px] text-vuttik-text-muted font-black uppercase tracking-widest opacity-60">Confianza</div>
+                <div className="text-2xl md:text-3xl font-black text-on-surface mb-1">98%</div>
+                <div className="text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-widest opacity-60">Confianza</div>
               </div>
               <div className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform">
-                <div className="text-2xl md:text-3xl font-black text-vuttik-navy mb-1">{userProducts.length}</div>
-                <div className="text-[9px] md:text-[10px] text-vuttik-text-muted font-black uppercase tracking-widest opacity-60">Publicaciones</div>
+                <div className="text-2xl md:text-3xl font-black text-on-surface mb-1">{userProducts.length}</div>
+                <div className="text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-widest opacity-60">Publicaciones</div>
               </div>
               <div 
                 onClick={() => setShowFollowersModal(true)}
                 className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform cursor-pointer"
               >
-                <div className="text-2xl md:text-3xl font-black text-vuttik-navy mb-1">{profileUser.followerCount || 0}</div>
-                <div className="text-[9px] md:text-[10px] text-vuttik-text-muted font-black uppercase tracking-widest opacity-60">Seguidores</div>
+                <div className="text-2xl md:text-3xl font-black text-on-surface mb-1">{profileUser.followerCount || 0}</div>
+                <div className="text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-widest opacity-60">Seguidores</div>
               </div>
             </div>
           </div>
@@ -541,7 +541,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                 className={`text-[11px] md:text-sm font-black uppercase tracking-widest transition-all border-b-4 pb-4 -mb-1 whitespace-nowrap ${
                   activeProfileTab === tab 
                     ? 'text-vuttik-blue border-vuttik-blue' 
-                    : 'text-vuttik-text-muted border-transparent hover:text-vuttik-navy opacity-60 hover:opacity-100'
+                    : 'text-on-surface-variant border-transparent hover:text-on-surface opacity-60 hover:opacity-100'
                 }`}
               >
                 {tab === 'posts' ? 'Publicaciones' : 'Analytics'}
@@ -595,12 +595,12 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full bg-vuttik-gray/50 border-2 border-dashed border-gray-200 rounded-[32px] aspect-square flex flex-col items-center justify-center p-8 text-center">
+                  <div className="col-span-full bg-surface-container/50 border-2 border-dashed border-gray-200 rounded-[32px] aspect-square flex flex-col items-center justify-center p-8 text-center">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-gray-300 mb-4">
                       <Grid size={32} />
                     </div>
-                    <h4 className="text-sm font-bold text-vuttik-navy mb-1">Sin publicaciones recientes</h4>
-                    <p className="text-xs text-vuttik-text-muted">Los registros de precios aparecerán aquí.</p>
+                    <h4 className="text-sm font-bold text-on-surface mb-1">Sin publicaciones recientes</h4>
+                    <p className="text-xs text-on-surface-variant">Los registros de precios aparecerán aquí.</p>
                   </div>
                 )}
               </div>
@@ -610,7 +610,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                 {loadingAnalytics ? (
                   <div className="py-20 text-center">
                     <div className="w-12 h-12 border-4 border-vuttik-blue/20 border-t-vuttik-blue rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-vuttik-text-muted font-bold">Analizando datos reales...</p>
+                    <p className="text-on-surface-variant font-bold">Analizando datos reales...</p>
                   </div>
                 ) : (
                   <>
@@ -620,9 +620,9 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                           <div className="p-2 bg-blue-50 text-vuttik-blue rounded-xl">
                             <Eye size={20} />
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Vistas Totales</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Vistas Totales</span>
                         </div>
-                        <p className="text-3xl font-display font-black text-vuttik-navy">
+                        <p className="text-3xl font-display font-black text-on-surface">
                           {analyticsData?.totalViews || 0}
                         </p>
                         <div className="flex items-center gap-1 text-green-500 text-xs font-bold mt-2">
@@ -636,12 +636,12 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                           <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
                             <Activity size={20} />
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Engagement</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Engagement</span>
                         </div>
-                        <p className="text-3xl font-display font-black text-vuttik-navy">
+                        <p className="text-3xl font-display font-black text-on-surface">
                           {analyticsData?.engagement?.reduce((acc: number, curr: any) => acc + curr.count, 0) || 0}
                         </p>
-                        <div className="text-[10px] text-vuttik-text-muted font-bold mt-2">
+                        <div className="text-[10px] text-on-surface-variant font-bold mt-2">
                           Acciones totales registradas
                         </div>
                       </div>
@@ -650,8 +650,8 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                     <div className="bg-white border border-gray-100 p-8 rounded-[40px] shadow-sm">
                       <div className="flex items-center justify-between mb-8">
                         <div>
-                          <h3 className="text-xl font-display font-black text-vuttik-navy">Rendimiento de Publicaciones</h3>
-                          <p className="text-sm text-vuttik-text-muted">Vistas registradas en los últimos 7 días</p>
+                          <h3 className="text-xl font-display font-black text-on-surface">Rendimiento de Publicaciones</h3>
+                          <p className="text-sm text-on-surface-variant">Vistas registradas en los últimos 7 días</p>
                         </div>
                       </div>
                       
@@ -693,7 +693,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                             </AreaChart>
                           </ResponsiveContainer>
                         ) : (
-                          <div className="h-full flex flex-col items-center justify-center text-vuttik-text-muted">
+                          <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
                             <TrendingUp size={48} className="opacity-20 mb-4" />
                             <p className="font-bold">No hay suficientes datos para mostrar una tendencia aún.</p>
                           </div>
@@ -748,21 +748,21 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl p-8"
             >
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-display font-black text-vuttik-navy">Foto de Perfil</h3>
-                <button onClick={() => setIsEditingPhoto(false)} className="p-2 bg-vuttik-gray rounded-xl text-vuttik-text-muted">
+                <h3 className="text-2xl font-display font-black text-on-surface">Foto de Perfil</h3>
+                <button onClick={() => setIsEditingPhoto(false)} className="p-2 bg-surface-container rounded-xl text-on-surface-variant">
                   <X size={20} />
                 </button>
               </div>
 
               <div className="space-y-6">
                 <div className="flex justify-center mb-4">
-                  <div className="w-32 h-32 rounded-[40px] bg-vuttik-gray overflow-hidden">
+                  <div className="w-32 h-32 rounded-[40px] bg-surface-container overflow-hidden">
                     <UserAvatar src={newPhotoURL} alt="Edit" />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-vuttik-text-muted uppercase tracking-widest text-center block">Sube una imagen o toma una foto</label>
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-center block">Sube una imagen o toma una foto</label>
                   
                   <input
                     id="profile-gallery-input"
@@ -776,14 +776,14 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                     <button
                       type="button"
                       onClick={() => setShowCamera(true)}
-                      className="aspect-[3/2] bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                      className="aspect-[3/2] bg-surface-container rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
                     >
                       <Camera size={28} />
                       <span className="text-[10px] font-black uppercase text-center leading-tight">Tomar<br/>Foto</span>
                     </button>
                     <label
                       htmlFor="profile-gallery-input"
-                      className="aspect-[3/2] bg-vuttik-gray rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-vuttik-text-muted hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                      className="aspect-[3/2] bg-surface-container rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
                     >
                       <ImageIcon size={28} />
                       <span className="text-[10px] font-black uppercase text-center leading-tight">Subir<br/>Foto</span>

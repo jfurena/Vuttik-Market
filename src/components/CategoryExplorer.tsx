@@ -102,8 +102,8 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
           <ShieldCheck size={12} className="md:size-[14px]" />
           Categorías por Consenso (Mega Guardianes)
         </div>
-        <h2 className="text-2xl md:text-4xl font-display font-black text-vuttik-navy">¿Qué buscas hoy?</h2>
-        <p className="text-vuttik-text-muted text-sm md:text-lg">Explora categorías validadas por la comunidad.</p>
+        <h2 className="text-2xl md:text-4xl font-display font-black text-on-surface">¿Qué buscas hoy?</h2>
+        <p className="text-on-surface-variant text-sm md:text-lg">Explora categorías validadas por la comunidad.</p>
       </div>
 
       <div className="relative">
@@ -131,7 +131,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
               onClick={() => handleCategoryClick(cat)}
               className="group relative bg-white border border-gray-100/60 p-8 md:p-10 rounded-[32px] md:rounded-[40px] text-left hover:shadow-pro-hover hover:-translate-y-1 transition-all duration-300 overflow-hidden shadow-pro"
             >
-              <div className={`w-14 h-14 md:w-16 md:h-16 ${color} rounded-[20px] md:rounded-3xl flex items-center justify-center text-white mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+              <div className={`w-14 h-14 md:w-16 md:h-16 ${color} rounded-full md:rounded-3xl flex items-center justify-center text-white mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
                 <Icon size={28} className="md:size-8" />
               </div>
               
@@ -168,7 +168,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
             >
               <button 
                 onClick={() => setSelectedCategory(null)}
-                className="absolute top-6 right-6 p-2 text-vuttik-text-muted hover:text-vuttik-navy"
+                className="absolute top-6 right-6 p-2 text-on-surface-variant hover:text-on-surface"
               >
                 <X size={24} />
               </button>
@@ -180,9 +180,9 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
                 })()}
               </div>
 
-              <h3 className="text-3xl font-display font-black text-vuttik-navy mb-2">{selectedCategory.name}</h3>
-              <p className="text-vuttik-text-muted mb-6 text-sm">{selectedCategory.description}</p>
-              <p className="text-vuttik-text-muted mb-10 font-bold">¿Qué deseas hacer en esta categoría?</p>
+              <h3 className="text-3xl font-display font-black text-on-surface mb-2">{selectedCategory.name}</h3>
+              <p className="text-on-surface-variant mb-6 text-sm">{selectedCategory.description}</p>
+              <p className="text-on-surface-variant mb-10 font-bold">¿Qué deseas hacer en esta categoría?</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {selectedCategory.allowedTypes.map(typeId => {
@@ -191,7 +191,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
                     <button 
                       key={typeId}
                       onClick={() => onSelectCategory(selectedCategory.id, typeId)}
-                      className="flex flex-col items-center gap-4 p-8 bg-vuttik-gray rounded-[32px] hover:bg-vuttik-blue hover:text-white transition-all group"
+                      className="flex flex-col items-center gap-4 p-8 bg-surface-container rounded-[32px] hover:bg-vuttik-blue hover:text-white transition-all group"
                     >
                       <CategoryIcon name={type?.icon || 'Tag'} size={48} className="text-vuttik-blue group-hover:text-white" />
                       <span className="font-black uppercase tracking-widest text-sm">{type?.label || typeId}</span>
@@ -206,11 +206,11 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
 
       {filteredCategories.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-20 h-20 bg-vuttik-gray rounded-full flex items-center justify-center text-gray-300 mb-4">
+          <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center text-gray-300 mb-4">
             <Search size={40} />
           </div>
-          <h3 className="text-xl font-bold text-vuttik-navy">No encontramos esa categoría</h3>
-          <p className="text-vuttik-text-muted mb-6">Prueba con términos más generales o explora el Global.</p>
+          <h3 className="text-xl font-bold text-on-surface">No encontramos esa categoría</h3>
+          <p className="text-on-surface-variant mb-6">Prueba con términos más generales o explora el Global.</p>
           <button 
             onClick={async () => {
               const name = prompt('¿Qué categoría sugieres que agreguemos?');
@@ -229,7 +229,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
                 alert('Error al enviar sugerencia.');
               }
             }}
-            className="px-6 py-3 bg-vuttik-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-lg shadow-vuttik-blue/20"
+            className="px-6 py-3 bg-vuttik-blue text-white rounded-full font-black text-sm uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-lg shadow-vuttik-blue/20"
           >
             Sugerir Nueva Categoría
           </button>

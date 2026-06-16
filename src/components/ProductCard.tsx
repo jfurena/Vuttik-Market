@@ -103,13 +103,13 @@ const ProductCard = (props: ProductCardProps) => {
         <div className={`z-20 flex gap-2 ${viewMode === 'list' ? 'absolute bottom-4 right-4' : 'absolute top-4 right-4'}`}>
           <button 
             onClick={(e) => { e.stopPropagation(); props.onEdit?.(id); }}
-            className="p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-vuttik-navy shadow-sm hover:bg-vuttik-blue hover:text-white transition-all border border-gray-100/50"
+            className="p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-on-surface shadow-pro hover:bg-vuttik-blue hover:text-white transition-all border border-gray-100/50"
           >
             <Edit2 size={16} />
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); props.onDelete?.(id); }}
-            className="p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-red-500 shadow-sm hover:bg-red-500 hover:text-white transition-all border border-gray-100/50"
+            className="p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-red-500 shadow-pro hover:bg-red-500 hover:text-white transition-all border border-gray-100/50"
           >
             <Trash2 size={16} />
           </button>
@@ -118,7 +118,7 @@ const ProductCard = (props: ProductCardProps) => {
 
       {/* Image Section */}
       <div className={`relative aspect-square overflow-hidden bg-gray-50/50 shrink-0 ${viewMode === 'list' ? 'w-[135px] sm:w-[150px] md:w-[220px]' : 'w-full'} p-1.5 sm:p-2`}>
-        <div className="w-full h-full rounded-[20px] overflow-hidden relative">
+        <div className="w-full h-full rounded-3xl overflow-hidden relative">
           {image ? (
             <img
               src={image}
@@ -133,18 +133,18 @@ const ProductCard = (props: ProductCardProps) => {
           )}
           
           <div className="absolute top-3 left-3 flex flex-wrap gap-2 pr-12">
-            <div className={`${type === 'inform' ? 'bg-orange-500' : (typeColors[type as keyof typeof typeColors] || 'bg-vuttik-navy')} text-white text-[10px] font-black px-3 py-1.5 rounded-xl backdrop-blur-md uppercase tracking-wider shadow-sm`}>
+            <div className={`${type === 'inform' ? 'bg-orange-500' : (typeColors[type as keyof typeof typeColors] || 'bg-vuttik-navy')} text-white text-[10px] font-black px-3 py-1.5 rounded-xl backdrop-blur-md uppercase tracking-wider shadow-pro`}>
               {type === 'inform' ? 'VENTA' : (typeLabel || typeLabels[type as keyof typeof typeLabels] || type)}
             </div>
             {isOffer && (
-              <div className="bg-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl backdrop-blur-md tracking-wider shadow-sm">
+              <div className="bg-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl backdrop-blur-md tracking-wider shadow-pro">
                 OFERTA
               </div>
             )}
           </div>
 
           <div 
-            className="hidden md:block absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur-xl rounded-xl p-3 text-vuttik-navy cursor-pointer hover:bg-white transition-colors z-30 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white"
+            className="hidden md:block absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur-xl rounded-xl p-3 text-on-surface cursor-pointer hover:bg-white transition-colors z-30 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white"
             onClick={(e) => {
               e.stopPropagation();
               if (props.onAuthorClick && props.authorId) {
@@ -153,7 +153,7 @@ const ProductCard = (props: ProductCardProps) => {
             }}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-full bg-gray-100 text-vuttik-navy shadow-inner flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden border border-gray-50">
+              <div className="w-10 h-10 rounded-full bg-gray-100 text-on-surface shadow-inner flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden border border-gray-50">
                 <UserAvatar src={authorAvatar} alt={authorName} />
               </div>
               <div className="flex-1 min-w-0">
@@ -185,7 +185,7 @@ const ProductCard = (props: ProductCardProps) => {
           </h3>
           <div className="flex flex-col gap-1 md:gap-1.5 mt-0.5 md:mt-1">
             {business && (
-              <div className="flex items-center gap-1.5 text-vuttik-navy text-[10px] md:text-xs font-bold">
+              <div className="flex items-center gap-1.5 text-on-surface text-[10px] md:text-xs font-bold">
                 <Store size={12} className="text-vuttik-blue md:size-3.5" />
                 <span className="truncate">{business}</span>
               </div>
@@ -214,14 +214,14 @@ const ProductCard = (props: ProductCardProps) => {
             <div className="flex items-center bg-gray-50/80 rounded-[10px] md:rounded-xl p-1 md:p-1.5 border border-gray-100/80">
               <button 
                 onClick={(e) => { e.stopPropagation(); onVote?.(id, 'up'); }}
-                className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition-all flex items-center gap-1 md:gap-1.5 ${userVote === 'up' ? 'bg-green-500 text-white shadow-md shadow-green-500/20' : 'text-green-600 hover:bg-white hover:shadow-sm'}`}
+                className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition-all flex items-center gap-1 md:gap-1.5 ${userVote === 'up' ? 'bg-green-500 text-white shadow-md shadow-green-500/20' : 'text-green-600 hover:bg-white hover:shadow-pro'}`}
               >
                 <ArrowUp size={14} className="md:size-4" />
                 <span className="text-xs md:text-sm font-black">{upvotes}</span>
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); onVote?.(id, 'down'); }}
-                className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition-all flex items-center gap-1 md:gap-1.5 ${userVote === 'down' ? 'bg-red-500 text-white shadow-md shadow-red-500/20' : 'text-red-600 hover:bg-white hover:shadow-sm'}`}
+                className={`p-1.5 md:p-2 rounded-md md:rounded-lg transition-all flex items-center gap-1 md:gap-1.5 ${userVote === 'down' ? 'bg-red-500 text-white shadow-md shadow-red-500/20' : 'text-red-600 hover:bg-white hover:shadow-pro'}`}
               >
                 <ArrowDown size={14} className="md:size-4" />
                 <span className="text-xs md:text-sm font-black">{downvotes}</span>

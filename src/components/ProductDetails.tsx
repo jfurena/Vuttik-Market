@@ -111,7 +111,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-2 bg-white/80 backdrop-blur-md rounded-full text-vuttik-navy hover:bg-vuttik-blue hover:text-white transition-all shadow-lg"
+          className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-2 bg-white/80 backdrop-blur-md rounded-full text-on-surface hover:bg-vuttik-blue hover:text-white transition-all shadow-lg"
         >
           <X size={20} className="md:size-6" />
         </button>
@@ -163,13 +163,13 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 {transactionTypes.find(t => t.id === product.typeId)?.label || product.typeId}
               </span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-display font-black text-vuttik-navy leading-tight mb-2">{product.title}</h2>
+            <h2 className="text-2xl md:text-3xl font-display font-black text-on-surface leading-tight mb-2">{product.title}</h2>
             
             {/* Price Box */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <div className="bg-vuttik-gray/50 px-4 py-2 md:px-5 md:py-3 rounded-2xl border border-gray-100 flex items-baseline gap-2">
-                <span className="text-2xl md:text-3xl font-display font-black text-vuttik-navy">{product.isOnSale ? product.salePrice : product.price}</span>
-                <span className="text-xs font-bold text-vuttik-text-muted">{product.currency}</span>
+              <div className="bg-surface-container/50 px-4 py-2 md:px-5 md:py-3 rounded-2xl border border-gray-100 flex items-baseline gap-2">
+                <span className="text-2xl md:text-3xl font-display font-black text-on-surface">{product.isOnSale ? product.salePrice : product.price}</span>
+                <span className="text-xs font-bold text-on-surface-variant">{product.currency}</span>
               </div>
               {product.isOnSale && (
                 <div className="bg-red-50 px-4 py-2 md:px-5 md:py-3 rounded-2xl border border-red-100 flex items-baseline gap-2">
@@ -182,21 +182,21 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
             {/* Description */}
             {product.description && (
               <div className="mb-4">
-                <p className="text-sm text-vuttik-navy leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap">
                   {product.description}
                 </p>
               </div>
             )}
 
             {/* Quick Details right under description */}
-            <div className="flex flex-col gap-2 mb-4 bg-vuttik-gray/30 px-4 py-3 rounded-2xl border border-gray-50">
-              <div className="flex items-start gap-2 text-vuttik-text-muted">
+            <div className="flex flex-col gap-2 mb-4 bg-surface-container/30 px-4 py-3 rounded-2xl border border-gray-50">
+              <div className="flex items-start gap-2 text-on-surface-variant">
                 <Building2 size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
                 <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Local:</span>
                 <span className="text-xs font-bold leading-tight flex-1 break-words">{product.business || 'No especificado'}</span>
               </div>
 
-              <div className="flex items-start gap-2 text-vuttik-text-muted">
+              <div className="flex items-start gap-2 text-on-surface-variant">
                 <MapPin size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
                 <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Ubic.:</span>
                 <span className="text-xs font-bold leading-tight flex-1 break-words">{getCleanLocation()}</span>
@@ -210,19 +210,19 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 )}
               </div>
 
-              <div className="flex items-start gap-2 text-vuttik-text-muted">
+              <div className="flex items-start gap-2 text-on-surface-variant">
                 <MapPin size={14} className="text-vuttik-blue shrink-0 opacity-70 mt-0.5" />
                 <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Provincia:</span>
                 <span className="text-xs font-bold leading-tight flex-1 break-words">{product.province || 'No especificada'}</span>
               </div>
 
-              <div className="flex items-start gap-2 text-vuttik-text-muted">
+              <div className="flex items-start gap-2 text-on-surface-variant">
                 <MapPin size={14} className="text-vuttik-blue shrink-0 opacity-50 mt-0.5" />
                 <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">País:</span>
                 <span className="text-xs font-bold leading-tight flex-1 break-words">{product.authorCountry || 'No especificado'}</span>
               </div>
               
-              <div className="flex items-start gap-2 text-vuttik-text-muted">
+              <div className="flex items-start gap-2 text-on-surface-variant">
                 <Phone size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
                 <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">Tel.:</span>
                 {product.phone ? (
@@ -234,7 +234,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 )}
               </div>
               
-              <div className="flex items-start gap-2 text-vuttik-text-muted">
+              <div className="flex items-start gap-2 text-on-surface-variant">
                 <Info size={14} className="text-vuttik-blue shrink-0 mt-0.5" />
                 <span className="text-[9px] font-black uppercase tracking-widest w-16 shrink-0 mt-0.5">EAN:</span>
                 <span className="text-xs font-bold leading-tight flex-1 break-words">{product.barcode || 'No especificado'}</span>
@@ -260,7 +260,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
             <button 
               onClick={handleFollowToggle}
               disabled={isSubmittingFollow}
-              className={`p-3 rounded-2xl active:scale-95 transition-all flex items-center justify-center ${isFollowing ? 'bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20' : 'bg-vuttik-gray text-vuttik-navy hover:bg-vuttik-blue hover:text-white'}`}
+              className={`p-3 rounded-2xl active:scale-95 transition-all flex items-center justify-center ${isFollowing ? 'bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/20' : 'bg-surface-container text-on-surface hover:bg-vuttik-blue hover:text-white'}`}
             >
               <Bookmark size={20} fill={isFollowing ? "currentColor" : "none"} />
             </button>
@@ -273,13 +273,13 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 <img src={product.authorAvatar || '/user unkwon.jpeg'} alt={product.authorName || 'Usuario'} className="w-full h-full object-cover" />
               </div>
               <div>
-                <p className="text-lg font-black text-vuttik-navy">{product.authorName || 'Usuario'}</p>
+                <p className="text-lg font-black text-on-surface">{product.authorName || 'Usuario'}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center text-yellow-400">
                     <Star size={14} fill="currentColor" />
                     <span className="text-xs font-bold ml-1">4.5</span>
                   </div>
-                  <span className="text-xs text-vuttik-text-muted font-bold">• Alta Confianza</span>
+                  <span className="text-xs text-on-surface-variant font-bold">• Alta Confianza</span>
                 </div>
               </div>
             </div>
@@ -290,12 +290,12 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           {product.customFields && Object.keys(product.customFields).length > 0 && (
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(product.customFields).map(([key, value]) => (
-                <div key={key} className="bg-vuttik-gray/50 p-4 rounded-2xl">
-                  <div className="flex items-center gap-2 text-vuttik-text-muted mb-1">
+                <div key={key} className="bg-surface-container/50 p-4 rounded-2xl">
+                  <div className="flex items-center gap-2 text-on-surface-variant mb-1">
                     <Tag size={16} className="text-vuttik-blue" />
                     <span className="text-[10px] font-black uppercase tracking-widest">{key}</span>
                   </div>
-                  <p className="text-sm font-bold text-vuttik-navy">{String(value)}</p>
+                  <p className="text-sm font-bold text-on-surface">{String(value)}</p>
                 </div>
               ))}
             </div>
@@ -307,7 +307,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
               <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
                 <button 
                   onClick={() => onEdit?.(product.id)}
-                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-white border-2 border-vuttik-navy text-vuttik-navy rounded-3xl font-black text-sm hover:bg-vuttik-navy hover:text-white transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-white border-2 border-vuttik-navy text-on-surface rounded-3xl font-black text-sm hover:bg-vuttik-navy hover:text-white transition-all"
                 >
                   <Edit2 size={18} />
                   Editar

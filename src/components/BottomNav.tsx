@@ -65,14 +65,14 @@ export default function BottomNav({ activeTab, onPublishClick }: BottomNavProps)
               <div className={`p-2 rounded-xl transition-all ${isActive ? 'bg-vuttik-blue/10' : ''}`}>
                 {tab.id === 'profile' && profileEmoji ? (
                   <div className="relative">
-                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-vuttik-blue' : 'text-vuttik-text-muted'} />
+                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-vuttik-blue' : 'text-on-surface-variant'} />
                     <span className="absolute -top-2 -right-2 text-xs">{profileEmoji}</span>
                   </div>
                 ) : (
-                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-vuttik-blue' : 'text-vuttik-text-muted'} />
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-vuttik-blue' : 'text-on-surface-variant'} />
                 )}
               </div>
-              <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter sm:tracking-wider mt-0.5 ${isActive ? 'text-vuttik-blue' : 'text-vuttik-text-muted'}`}>
+              <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter sm:tracking-wider mt-0.5 ${isActive ? 'text-vuttik-blue' : 'text-on-surface-variant'}`}>
                 {tab.label}
               </span>
             </motion.div>
