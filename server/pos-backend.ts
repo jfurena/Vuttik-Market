@@ -411,11 +411,55 @@ async function startServer() {
          ON CONFLICT(uid) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at`,
         [bizId, s.owner_id, db.businesses[idx].nombre, db.businesses[idx].fecha_creacion || now, now]
       );
+      // Update the business user display name in vuttik_users so global market products show the new name
+      await run(`UPDATE vuttik_users SET display_name = ? WHERE uid = ?`, [db.businesses[idx].nombre, bizId]);
+      // Update author_name in vuttik_products
+      await run(`UPDATE vuttik_products SET author_name = ?, store_name = ? WHERE author_id = ?`, [db.businesses[idx].nombre, db.businesses[idx].nombre, bizId]);
     } catch (err) {
       console.error('Error syncing POS business edit to SQLite:', err);
     }
 
     res.json({ id: db.businesses[idx].id, nombre: db.businesses[idx].nombre, codigo: db.businesses[idx].codigo });
+  });
+
+  // Transfer business
+  app.post('/api/businesses/:bizId/transfer', requireOwnerAuth, async (req, res) => {
+    const { bizId } = req.params;
+    const { email } = req.body;
+    const s = req.session as any;
+    
+    if (!email) return res.status(400).json({ error: 'El correo electrónico es requerido.' });
+
+    const db = getDB();
+    const idx = db.businesses.findIndex((b: any) => b.id === bizId && b.owner_id === s.owner_id);
+    if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado.' });
+
+    try {
+      // Look up new owner in SQLite
+      const newOwner = await get(`SELECT uid FROM vuttik_users WHERE email = ? AND role = 'user'`, [email.trim()]);
+      if (!newOwner) {
+        return res.status(404).json({ error: 'No se encontró ningún usuario con ese correo electrónico.' });
+      }
+
+      const newOwnerUid = newOwner.uid;
+      
+      // Update in POS DB
+      db.businesses[idx].owner_id = newOwnerUid;
+      saveDB(db);
+
+      // Sync to SQLite
+      await run(`UPDATE vuttik_business_profiles SET owner_uid = ?, updated_at = ? WHERE uid = ?`, [newOwnerUid, new Date().toISOString(), bizId]);
+
+      // If the current user's session active business was this one, clear it
+      if (s.business_id === bizId) {
+        s.business_id = undefined;
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Error transferring business:', err);
+      res.status(500).json({ error: 'Error interno del servidor al transferir el negocio.' });
+    }
   });
 
   // Update business location
@@ -448,14 +492,29 @@ async function startServer() {
   });
 
   // Check business auth
-  app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
+  app.delete('/api/businesses/:bizId', requireOwnerAuth, async (req, res) => {
     const { bizId } = req.params;
     const s = req.session as any;
     const db = getDB();
     const idx = db.businesses.findIndex((b: any) => b.id === bizId && b.owner_id === s.owner_id);
     if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado.' });
+    
     db.businesses.splice(idx, 1);
     saveDB(db);
+
+    try {
+      // Sync deletion to SQLite
+      await run(`DELETE FROM vuttik_business_profiles WHERE uid = ? AND owner_uid = ?`, [bizId, s.owner_id]);
+      await run(`DELETE FROM vuttik_users WHERE uid = ? AND role = 'business'`, [bizId]);
+      await run(`DELETE FROM vuttik_products WHERE author_id = ?`, [bizId]);
+    } catch (err) {
+      console.error('Error syncing POS business deletion to SQLite:', err);
+    }
+
+    if (s.business_id === bizId) {
+      s.business_id = undefined;
+    }
+
     res.json({ success: true });
   });
 

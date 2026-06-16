@@ -193,6 +193,34 @@ export const ApiService = {
     return res.json();
   },
 
+  async updateBusinessName(id: string, nombre: string) {
+    const res = await fetch(`${API_BASE}/businesses/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al actualizar negocio.'); }
+    return res.json();
+  },
+
+  async transferBusiness(id: string, email: string) {
+    const res = await fetch(`${API_BASE}/businesses/${id}/transfer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al transferir negocio.'); }
+    return res.json();
+  },
+
+  async deleteBusiness(id: string) {
+    const res = await fetch(`${API_BASE}/businesses/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al eliminar negocio.'); }
+    return res.json();
+  },
+
   async selectBusiness(business_id: string) {
     const res = await fetch(`${API_BASE}/auth/select-business`, {
       method: 'POST',

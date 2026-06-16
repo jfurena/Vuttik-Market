@@ -1,14 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendWelcomeEmail = exports.sendPasswordResetEmail = exports.sendVerificationEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+dotenv.config();
 // Create reusable transporter object using SMTP transport
-const transporter = nodemailer_1.default.createTransport({
+const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'mail.vuttik.com',
     port: parseInt(process.env.SMTP_PORT || '587', 10),
     secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
@@ -57,7 +51,7 @@ const getEmailTemplate = (title, message, buttonText, buttonLink) => `
 </body>
 </html>
 `;
-const sendVerificationEmail = async (email, name, token) => {
+export const sendVerificationEmail = async (email, name, token) => {
     const verificationLink = `https://vuttik.com/verificar?token=${token}`;
     const mailOptions = {
         from: '"Vuttik" <' + process.env.SMTP_USER + '>',
@@ -75,8 +69,7 @@ const sendVerificationEmail = async (email, name, token) => {
         return false;
     }
 };
-exports.sendVerificationEmail = sendVerificationEmail;
-const sendPasswordResetEmail = async (email, name, token) => {
+export const sendPasswordResetEmail = async (email, name, token) => {
     const resetLink = `https://vuttik.com/reset-password?token=${token}`;
     const mailOptions = {
         from: '"Vuttik" <' + process.env.SMTP_USER + '>',
@@ -94,8 +87,7 @@ const sendPasswordResetEmail = async (email, name, token) => {
         return false;
     }
 };
-exports.sendPasswordResetEmail = sendPasswordResetEmail;
-const sendWelcomeEmail = async (email, name) => {
+export const sendWelcomeEmail = async (email, name) => {
     const loginLink = `https://vuttik.com/`;
     const mailOptions = {
         from: '"Vuttik" <' + process.env.SMTP_USER + '>',
@@ -113,4 +105,3 @@ const sendWelcomeEmail = async (email, name) => {
         return false;
     }
 };
-exports.sendWelcomeEmail = sendWelcomeEmail;

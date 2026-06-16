@@ -1,26 +1,16 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.get = exports.all = exports.run = exports.db = void 0;
-exports.initDB = initDB;
-const sqlite3_1 = __importDefault(require("sqlite3"));
-const util_1 = require("util");
-const path_1 = __importDefault(require("path"));
-const url_1 = require("url");
-const __dirname = path_1.default.dirname((0, url_1.fileURLToPath)(import.meta.url));
-const dbPath = path_1.default.resolve(__dirname, '../vuttik.db');
-const db = new sqlite3_1.default.Database(dbPath);
-exports.db = db;
+import sqlite3 from 'sqlite3';
+import { promisify } from 'util';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dbPath = path.resolve(__dirname, '../vuttik.db');
+const db = new sqlite3.Database(dbPath);
 // Promisify database methods
-const run = (0, util_1.promisify)(db.run.bind(db));
-exports.run = run;
-const all = (0, util_1.promisify)(db.all.bind(db));
-exports.all = all;
-const get = (0, util_1.promisify)(db.get.bind(db));
-exports.get = get;
-async function initDB() {
+const run = promisify(db.run.bind(db));
+const all = promisify(db.all.bind(db));
+const get = promisify(db.get.bind(db));
+export async function initDB() {
     console.log('Initializing SQL database at:', dbPath);
     // Auto-migration to new table prefixes
     const tables_to_migrate = [
@@ -39,6 +29,98 @@ async function initDB() {
         catch (e) {
             console.error(`Migration error for ${t}:`, e);
         }
+    }
+    // Auto-migration to add owner_uid to business profiles
+    try {
+        await run(`ALTER TABLE vuttik_business_profiles ADD COLUMN owner_uid TEXT`);
+        console.log('Added owner_uid column to vuttik_business_profiles');
+        // For existing profiles where uid === owner_uid, migrate them
+        await run(`UPDATE vuttik_business_profiles SET owner_uid = uid WHERE owner_uid IS NULL`);
+    }
+    catch (e) {
+        // Column might already exist or table doesn't exist yet
+    }
+    // Auto-migration: Sync POS db.json businesses to SQLite
+    try {
+        const dbJsonPath = process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json');
+        if (fs.existsSync(dbJsonPath)) {
+            const posDb = JSON.parse(fs.readFileSync(dbJsonPath, 'utf8'));
+            if (posDb.businesses && posDb.businesses.length > 0) {
+                console.log(`Syncing ${posDb.businesses.length} POS businesses to SQLite...`);
+                for (const biz of posDb.businesses) {
+                    const now = new Date().toISOString();
+                    try {
+                        await run(`
+              INSERT OR IGNORE INTO vuttik_users (uid, email, display_name, role, created_at)
+              VALUES (?, ?, ?, 'business', ?)
+            `, [biz.id, `${biz.id}@business.local`, biz.nombre || 'Negocio', now]);
+                        await run(`INSERT INTO vuttik_business_profiles 
+               (uid, owner_uid, name, created_at, updated_at) 
+               VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT(uid) DO UPDATE SET owner_uid=excluded.owner_uid, name=excluded.name`, [biz.id, biz.owner_id, biz.nombre, biz.fecha_creacion || now, now]);
+                        // Sync all products for this business
+                        if (biz.products && Array.isArray(biz.products)) {
+                            for (const p of biz.products) {
+                                const sqliteProductId = 'pos-' + p.id;
+                                const ownerName = biz.nombre || 'Negocio POS';
+                                const locationObj = biz.settings?.allowed_location;
+                                const location = typeof locationObj === 'object' ? locationObj.address : (locationObj || 'Ubicación no especificada');
+                                const lat = typeof locationObj === 'object' ? locationObj.lat : null;
+                                const lng = typeof locationObj === 'object' ? locationObj.lng : null;
+                                // Resolve category
+                                const seccion = p.seccion || 'General';
+                                let catId = 'GLOBAL';
+                                const existingCat = await get('SELECT id FROM vuttik_categories WHERE name = ? COLLATE NOCASE', [seccion]);
+                                if (existingCat) {
+                                    catId = existingCat.id;
+                                }
+                                else {
+                                    catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
+                                    await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', [catId, seccion, 100, '["sell"]', '[]', '{}']);
+                                }
+                                await run(`
+                  INSERT INTO vuttik_products 
+                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  ON CONFLICT(id) DO UPDATE SET
+                    title=excluded.title, price=excluded.price, barcode=excluded.barcode,
+                    location=excluded.location, lat=excluded.lat, lng=excluded.lng,
+                    category_id=excluded.category_id, type_id=excluded.type_id, stock=excluded.stock
+                `, [
+                                    sqliteProductId,
+                                    p.nombre,
+                                    Number(p.precio_venta) || 0,
+                                    biz.id,
+                                    ownerName,
+                                    location,
+                                    lat,
+                                    lng,
+                                    ownerName,
+                                    1,
+                                    p.fecha_creacion || now,
+                                    p.codigo_barras || '',
+                                    'business',
+                                    catId,
+                                    'sell',
+                                    Number(p.cantidad_disponible) || 0
+                                ]);
+                            }
+                        }
+                    }
+                    catch (e) {
+                        console.error('Error syncing individual biz:', biz.id, e);
+                    }
+                }
+                // Fix any POS products that were inserted with posted_as='personal'
+                try {
+                    await run(`UPDATE vuttik_products SET posted_as = 'business' WHERE id LIKE 'pos-%'`);
+                }
+                catch (e) { }
+            }
+        }
+    }
+    catch (e) {
+        console.error('Error syncing db.json businesses to SQLite:', e);
     }
     // Users Table
     await run(`
@@ -323,6 +405,10 @@ async function initDB() {
         await run("ALTER TABLE vuttik_products ADD COLUMN province TEXT");
     }
     catch (e) { }
+    try {
+        await run("ALTER TABLE vuttik_products ADD COLUMN stock INTEGER DEFAULT -1");
+    }
+    catch (e) { }
     // Chains Table
     await run(`
     CREATE TABLE IF NOT EXISTS vuttik_chains (
@@ -540,6 +626,7 @@ async function initDB() {
     await run(`
     CREATE TABLE IF NOT EXISTS vuttik_business_profiles (
       uid TEXT PRIMARY KEY,
+      owner_uid TEXT,
       name TEXT,
       description TEXT,
       location TEXT,
@@ -549,7 +636,7 @@ async function initDB() {
       social_links TEXT, -- JSON object {instagram, facebook, twitter, website}
       created_at TEXT,
       updated_at TEXT,
-      FOREIGN KEY(uid) REFERENCES vuttik_users(uid)
+      FOREIGN KEY(owner_uid) REFERENCES vuttik_users(uid)
     )
   `);
     // Business Members Table (team management)
@@ -655,3 +742,4 @@ async function initDB() {
         console.error('Error during seeding check:', err);
     }
 }
+export { db, run, all, get };
