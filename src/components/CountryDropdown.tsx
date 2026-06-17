@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
-import countriesData from 'i18n-iso-countries';
+import * as countriesData from 'i18n-iso-countries';
 import esLocale from 'i18n-iso-countries/langs/es.json';
 
 countriesData.registerLocale(esLocale);

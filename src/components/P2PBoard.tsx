@@ -415,6 +415,23 @@ export default function P2PBoard({
                   <option value="DOP">DOP - Peso Dominicano</option>
                   <option value="USD">USD - Dólar Estadounidense</option>
                   <option value="EUR">EUR - Euro</option>
+                  <optgroup label="Todas las monedas">
+                    {/* @ts-ignore */}
+                    {(typeof Intl !== 'undefined' && typeof (Intl as any).supportedValuesOf === 'function' ? (Intl as any).supportedValuesOf('currency') : ['USD', 'EUR', 'DOP', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'MXN', 'BRL', 'COP', 'ARS', 'CLP', 'PEN']).filter((c: string) => !['DOP', 'USD', 'EUR'].includes(c)).map((code: string) => {
+                      let name = code;
+                      try {
+                        name = new Intl.DisplayNames(['es'], { type: 'currency' }).of(code) || code;
+                      } catch (e) {
+                        // ignore
+                      }
+                      const capitalized = name ? name.charAt(0).toUpperCase() + name.slice(1) : code;
+                      return (
+                        <option key={code} value={code}>
+                          {code} - {capitalized}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
                 </select>
               </div>
             </div>
