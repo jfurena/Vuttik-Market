@@ -714,7 +714,7 @@ export default function Dashboard() {
             key={i} 
             onClick={() => setActiveModal(card.id)}
             className={cn(
-              "bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm border flex flex-col gap-4 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer",
+              "bg-surface-container-lowest p-8 rounded-[2rem] shadow-md border border-outline-variant/20 flex flex-col gap-4 group hover:shadow-xl hover:border-primary hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden",
               card.borderColor
             )}
           >
@@ -951,13 +951,13 @@ export default function Dashboard() {
                   id={`admin-tab-${tab.id}`}
                   onClick={() => {
                     setActiveTab(tab.id as any);
-                    setSearchQuery(''); // Clear search query when changing tabs for instant ease of use
+                    setSearchQuery(''); 
                   }}
                   className={cn(
-                    "flex items-center gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black transition-all uppercase tracking-wider sm:tracking-widest shrink-0 whitespace-nowrap",
+                    "flex items-center gap-2 px-5 py-3 rounded-full text-sm font-label-md transition-all whitespace-nowrap",
                     activeTab === tab.id 
-                      ? "bg-surface-container-lowest text-vuttik-blue shadow-sm" 
-                      : "text-gray-400 hover:text-gray-600"
+                      ? "bg-primary text-on-primary shadow-sm" 
+                      : "bg-surface-container-high text-on-surface-variant hover:bg-surface-variant"
                   )}
                 >
                   <tab.icon className="h-4 w-4" />
@@ -994,25 +994,27 @@ export default function Dashboard() {
         ) : activeTab === 'fiado' ? (
           <div className="p-6 sm:p-8 md:p-10 border-t border-gray-50">
             {/* Global outstanding summary */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <div className="flex-1 bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 flex items-center gap-5">
-                <div className="h-14 w-14 bg-amber-400 text-white rounded-3xl flex items-center justify-center shadow-pro-hover">
+            <div className="flex flex-col sm:flex-row gap-6 mb-8">
+              <div className="flex-1 bg-surface-container-lowest border border-amber-200/50 rounded-[2rem] p-6 flex items-center gap-5 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-10 -mt-10 opacity-50 group-hover:scale-110 transition-transform"></div>
+                <div className="h-14 w-14 bg-amber-100 text-amber-600 rounded-[1.25rem] flex items-center justify-center shadow-sm relative z-10 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
                   <CreditCard className="h-7 w-7" />
                 </div>
-                <div>
-                  <p className="font-label-md font-black text-amber-700 uppercase tracking-widest">Total Fiado (período)</p>
-                  <p className="text-3xl font-black text-amber-900 font-mono">{formatCurrency(stats.fiadoStats?.totalFiado || 0)}</p>
-                  <p className="text-xs text-amber-600 font-medium mt-0.5">{stats.fiadoStats?.count || 0} ventas a crédito en este período</p>
+                <div className="relative z-10">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Fiado (período)</p>
+                  <p className="text-3xl font-black text-amber-900 font-mono mt-1">{formatCurrency(stats.fiadoStats?.totalFiado || 0)}</p>
+                  <p className="text-xs text-gray-500 font-medium mt-1">{stats.fiadoStats?.count || 0} ventas a crédito en este período</p>
                 </div>
               </div>
-              <div className="flex-1 bg-red-50 border-2 border-red-200 rounded-3xl p-6 flex items-center gap-5">
-                <div className="h-14 w-14 bg-red-500 text-white rounded-3xl flex items-center justify-center shadow-pro-hover">
+              <div className="flex-1 bg-surface-container-lowest border border-red-200/50 rounded-[2rem] p-6 flex items-center gap-5 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full -mr-10 -mt-10 opacity-50 group-hover:scale-110 transition-transform"></div>
+                <div className="h-14 w-14 bg-red-100 text-red-600 rounded-[1.25rem] flex items-center justify-center shadow-sm relative z-10 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300">
                   <AlertCircle className="h-7 w-7" />
                 </div>
-                <div>
-                  <p className="font-label-md font-black text-red-700 uppercase tracking-widest">Deuda Total Pendiente</p>
-                  <p className="text-3xl font-black text-red-900 font-mono">{formatCurrency(stats.fiadoStats?.totalPendienteGlobal || 0)}</p>
-                  <p className="text-xs text-red-600 font-medium mt-0.5">Total que te deben todos los clientes ahora mismo</p>
+                <div className="relative z-10">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Deuda Total Pendiente</p>
+                  <p className="text-3xl font-black text-red-600 font-mono mt-1">{formatCurrency(stats.fiadoStats?.totalPendienteGlobal || 0)}</p>
+                  <p className="text-xs text-gray-500 font-medium mt-1">Total que te deben todos los clientes ahora mismo</p>
                 </div>
               </div>
             </div>

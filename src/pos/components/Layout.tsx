@@ -330,7 +330,7 @@ export default function Layout() {
   };
 
   return (
-    <div className={cn("bg-surface flex flex-col font-sans", location.pathname === '/pos' ? "h-screen overflow-hidden" : "min-h-screen")}>
+    <div className={cn("bg-surface text-on-surface flex flex-col font-sans", location.pathname === '/pos' ? "h-screen overflow-hidden" : "min-h-screen")}>
       <LocationPromptModal isOpen={showLocationPrompt} businessId={profile?.business_id || ''} onComplete={() => setShowLocationPrompt(false)} />
       {isPractice && (
         <div className="bg-gradient-to-r from-amber-600 via-amber-550 to-amber-700 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 shadow-pro shrink-0 z-50 border-b border-amber-500/30 flex-col sm:flex-row text-center sm:text-left">
@@ -348,9 +348,30 @@ export default function Layout() {
           </button>
         </div>
       )}
-      <div className={cn("flex-1 flex bg-surface min-h-0", location.pathname === '/pos' && "overflow-hidden")}>
+      <div className={cn("flex-1 flex bg-surface min-h-0 md:pt-16", location.pathname === '/pos' && "overflow-hidden")}>
+
+      {/* Top AppBar Implementation */}
+      <header className="hidden md:flex fixed top-0 left-0 w-full z-40 items-center justify-between px-6 h-16 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm">
+        <div className="flex items-center gap-6 pl-64">
+          <span className="font-bold text-lg text-primary">Terminal #01</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary-container text-on-primary-container font-semibold hover:opacity-90 transition-all active:scale-95">
+            <ShoppingCart className="w-4 h-4" /> Turno Activo
+          </button>
+          <div className="flex items-center gap-2">
+            <button className="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors">
+              <Bell className="w-5 h-5 text-secondary" />
+            </button>
+            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+              {profile?.nombre?.charAt(0) || "U"}
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex w-72 flex-col bg-surface-container-lowest border-r border-outline-variant/20 sticky top-0 h-screen overflow-y-auto shrink-0">
+      <aside className="hidden md:flex w-64 flex-col bg-surface-container-low border-r border-outline-variant/20 fixed left-0 top-0 h-full z-50 overflow-y-auto shadow-md">
         <div className="p-8">
           <div className="flex flex-col gap-1 mb-8">
             <div className="flex items-center gap-3">
@@ -404,14 +425,14 @@ export default function Layout() {
                           className={cn(
                             "flex items-start gap-4 px-4 py-3 rounded-3xl font-body-md font-bold transition-all",
                             isActive 
-                              ? "bg-vuttik-blue text-white shadow-pro-hover shadow-blue-100 scale-[1.02]" 
-                              : "text-on-surface-variant hover:bg-surface hover:text-vuttik-navy"
+                              ? "bg-primary-container text-on-primary-container opacity-90 duration-150" 
+                              : "text-on-surface-variant hover:bg-surface-container-high hover:translate-x-1 duration-200"
                           )}
                         >
-                          <item.icon className={cn("h-5 w-5 mt-1 flex-shrink-0", isActive ? "text-white" : "text-gray-400")} />
+                          <item.icon className={cn("h-5 w-5 mt-1 flex-shrink-0", isActive ? "text-primary" : "text-gray-400")} />
                           <div className="flex flex-col text-left">
                             <div className="flex items-center gap-2">
-                              <span className={cn("text-sm", isActive ? "text-white" : "text-gray-955")}>{item.name}</span>
+                              <span className={cn("text-sm font-semibold", isActive ? "text-on-primary-container" : "text-on-surface")}>{item.name}</span>
                               {item.href === '/inventory' && criticalStockCount > 0 && (
                                 <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full animate-pulse flex items-center gap-0.5 shadow-sm">
                                   <Bell className="h-2.5 w-2.5" />
@@ -419,7 +440,7 @@ export default function Layout() {
                                 </span>
                               )}
                             </div>
-                            <span className={cn("text-[10px] font-medium leading-normal", isActive ? "text-blue-100" : "text-gray-400")}>
+                            <span className={cn("text-[10px] font-medium leading-normal", isActive ? "text-primary opacity-80" : "text-gray-400")}>
                               {item.description}
                             </span>
                           </div>
@@ -510,7 +531,7 @@ export default function Layout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className={cn("flex-1 flex flex-col min-w-0 overflow-hidden relative", location.pathname === '/pos' && "h-screen")}>
+      <div className={cn("flex-1 flex flex-col min-w-0 overflow-hidden relative md:ml-64", location.pathname === '/pos' && "h-screen")}>
         {/* Mobile Header */}
         <header className="md:hidden glass-nav-pro border-b border-outline-variant/20 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-2">

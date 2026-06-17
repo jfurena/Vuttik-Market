@@ -35,7 +35,7 @@
   --text-body-md: 16px;
   --text-body-md--line-height: 24px;
 
-  /* Colors from DESIGN.md */
+  /* Colors from DESIGN.md (Vuttik branded) */
   --color-surface: #f7f9fb;
   --color-surface-dim: #d8dadc;
   --color-surface-bright: #f7f9fb;
@@ -50,17 +50,17 @@
   --color-inverse-on-surface: #eff1f3;
   --color-outline: #76777d;
   --color-outline-variant: #c6c6cc;
-  --color-surface-tint: #595e6f;
-  --color-primary: #000000;
+  --color-surface-tint: #1E62FF;
+  --color-primary: #1E62FF;
   --color-on-primary: #ffffff;
-  --color-primary-container: #161b2a;
-  --color-on-primary-container: #7e8396;
-  --color-inverse-primary: #c1c6da;
-  --color-secondary: #004ad2;
+  --color-primary-container: #dce1ff;
+  --color-on-primary-container: #00164e;
+  --color-inverse-primary: #b5c4ff;
+  --color-secondary: #38BDF8;
   --color-on-secondary: #ffffff;
-  --color-secondary-container: #1d61fe;
-  --color-on-secondary-container: #f4f3ff;
-  --color-tertiary: #000000;
+  --color-secondary-container: #bae6fd;
+  --color-on-secondary-container: #0369a1;
+  --color-tertiary: #060B19;
   --color-on-tertiary: #ffffff;
   --color-tertiary-container: #001e2c;
   --color-on-tertiary-container: #008ebf;

@@ -1816,10 +1816,10 @@ export default function POS() {
         </div>
       </div>
 
-      {/* Main split grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden min-h-0">
-        {/* Search & Products List (Left, narrower) */}
-        <div className="lg:col-span-5 flex flex-col gap-4 overflow-hidden h-full">
+      {/* Main split layout */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden min-h-0">
+        {/* Search & Products List (Center, flexible) */}
+        <div className="flex-grow flex flex-col gap-4 overflow-hidden h-full">
           {/* Top Search Input Box */}
           <div className="relative group flex-shrink-0" id="pos-search-input-container">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 group-focus-within:text-vuttik-blue transition-colors" />
@@ -1863,8 +1863,8 @@ export default function POS() {
             })}
           </div>
 
-          {/* List Area - Vertically Stacked Products */}
-          <div id="pos-product-list" className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2 pb-4 content-start scrolling-none">
+          {/* List Area - Grid Products */}
+          <div id="pos-product-list" className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4 content-start scrolling-none hide-scrollbar">
             <AnimatePresence mode="popLayout">
               {filteredProducts.map(product => {
                 const isStockCritical = product.cantidad_disponible <= product.stock_minimo;
@@ -1877,43 +1877,34 @@ export default function POS() {
                     transition={{ duration: 0.12 }}
                     key={product.id}
                     onClick={() => addToCart(product)}
-                    className="bg-surface-container-lowest p-3 rounded-2xl border border-gray-150 hover:border-blue-300 hover:bg-blue-50/10 transition-all text-left flex items-center justify-between gap-3 group shadow-sm flex-shrink-0"
+                    className="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left flex flex-col gap-2 active:scale-95 group"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-full aspect-square bg-surface-container rounded-lg flex items-center justify-center overflow-hidden relative">
                       <div className={cn(
-                        "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border",
-                        isStockCritical ? "bg-red-50 text-red-600 border-red-100" : "bg-blue-50 text-vuttik-blue border-blue-100"
+                        "absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase z-10 shadow-sm",
+                        isStockCritical ? "bg-red-500 text-white" : "bg-white/80 text-primary backdrop-blur-sm"
                       )}>
-                        {isStockCritical ? (
-                          <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
+                        {product.cantidad_disponible} {product.unidad_venta.slice(0, 3)}
+                      </div>
+                      <div className="w-full h-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        {product.foto_url ? (
+                           <img src={product.foto_url} alt={product.nombre} className="w-full h-full object-cover" />
                         ) : (
-                          <Package className="h-4 w-4" />
+                           <Package className={cn("h-8 w-8 opacity-50", isStockCritical ? "text-red-500" : "text-primary")} />
                         )}
                       </div>
-                      
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[8px] font-black text-gray-400 tracking-widest uppercase">{product.categoria}</span>
-                          <span className={cn(
-                            "text-[8px] font-black uppercase tracking-widest px-1.5 py-0.2 rounded-md",
-                            isStockCritical ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
-                          )}>
-                            STOCK: {product.cantidad_disponible} {product.unidad_venta.toUpperCase()}(S)
-                          </span>
-                        </div>
-                        <h4 className="font-extrabold text-gray-905 group-hover:text-vuttik-blue transition-colors text-xs uppercase truncate mt-0.5 leading-snug">
+                    </div>
+                    
+                    <div className="flex flex-col flex-grow justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm text-on-surface line-clamp-2 leading-tight mt-1">
                           {product.nombre}
                         </h4>
+                        <p className="text-[10px] text-secondary mt-1 font-semibold uppercase">{product.categoria}</p>
                       </div>
-                    </div>
-
-                    <div className="text-right shrink-0 pl-2">
-                      <span className="block text-[15px] font-black text-vuttik-blue font-mono tracking-tight leading-none">
+                      <p className="text-primary font-display font-black text-lg tracking-tight mt-2">
                         RD${product.precio_venta}
-                      </span>
-                      <span className="text-[8px] font-black uppercase tracking-wider text-gray-400 block mt-0.5 leading-none">
-                        AGREGAR +
-                      </span>
+                      </p>
                     </div>
                   </motion.button>
                 );
@@ -1929,8 +1920,8 @@ export default function POS() {
           </div>
         </div>
 
-        {/* Right billing panel (detalles de venta - wider for best tracking experience) */}
-        <div className="lg:col-span-7 flex flex-col bg-surface-container-lowest rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-full">
+        {/* Right billing panel (detalles de venta - fixed width sidebar) */}
+        <div className="w-full lg:w-[420px] xl:w-[460px] flex flex-col bg-surface border-l border-outline-variant/30 overflow-hidden h-full shrink-0 shadow-lg z-10 rounded-l-[2rem] lg:rounded-none">
           <div className="px-5 py-3.5 border-b border-gray-105 bg-surface/55 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 bg-vuttik-blue text-white rounded-2xl flex items-center justify-center shadow-pro">
