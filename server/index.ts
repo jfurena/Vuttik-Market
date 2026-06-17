@@ -2280,3 +2280,64 @@ app.get('/api/audit-logs', authenticateToken, async (req, res) => {
   }
 });
 
+// Portfolios API
+
+app.get('/api/portfolios', async (req, res) => {
+  const userId = req.query.userId as string;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  try {
+    const portfolios = await all(`SELECT * FROM vuttik_portfolios WHERE user_id = ?`, [userId]);
+    // Parse the JSON string for products
+    const parsed = portfolios.map((p: any) => ({
+      ...p,
+      isPublic: p.is_public === 1,
+      products: JSON.parse(p.products || '[]')
+    }));
+    res.json(parsed);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/portfolios', async (req, res) => {
+  const { userId, name, isPublic } = req.body;
+  if (!userId || !name) return res.status(400).json({ error: 'Missing userId or name' });
+  try {
+    const id = 'port_' + Date.now();
+    const now = new Date().toISOString();
+    await run(
+      `INSERT INTO vuttik_portfolios (id, user_id, name, is_public, products, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, userId, name, isPublic ? 1 : 0, '[]', now, now]
+    );
+    res.json({ id, userId, name, isPublic, products: [], created_at: now, updated_at: now });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/portfolios/:id/products', async (req, res) => {
+  const { products } = req.body;
+  const portfolioId = req.params.id;
+  try {
+    const now = new Date().toISOString();
+    await run(
+      `UPDATE vuttik_portfolios SET products = ?, updated_at = ? WHERE id = ?`,
+      [JSON.stringify(products || []), now, portfolioId]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/portfolios/:id', async (req, res) => {
+  const portfolioId = req.params.id;
+  const userId = req.query.userId as string;
+  try {
+    await run(`DELETE FROM vuttik_portfolios WHERE id = ? AND user_id = ?`, [portfolioId, userId]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+

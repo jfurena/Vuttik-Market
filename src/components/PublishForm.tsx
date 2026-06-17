@@ -3,6 +3,8 @@ import { Camera, DollarSign, CheckCircle2, Plus, Percent, Search, X, ImageIcon, 
 import { motion, AnimatePresence } from 'motion/react';
 import { trackMetric } from '../utils/metrics';
 import LocationInput from './LocationInput';
+import EanRecollector from './EanRecollector';
+import { WORLD_CURRENCIES } from '../constants/currencies';
 import PhoneInput from './PhoneInput';
 import CameraModal from './CameraModal';
 import { api } from '../lib/api';
@@ -50,7 +52,7 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [showEanModal, setShowEanModal] = useState(false);
   const [hasEan, setHasEan] = useState(true);
-  const currencies = ['DOP', 'USD', 'EUR', 'BTC', 'ETH', 'GBP', 'CAD'];
+  const currencies = WORLD_CURRENCIES;
 
   // Image upload state
   const [selectedImages, setSelectedImages] = useState<string[]>([]); // base64 previews

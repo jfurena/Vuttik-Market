@@ -589,6 +589,20 @@ export async function initDB() {
     )
   `);
 
+  // Portfolios Table
+  await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_portfolios (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      is_public BOOLEAN DEFAULT 0,
+      products TEXT DEFAULT '[]', -- JSON string of products and quantities
+      created_at TEXT,
+      updated_at TEXT,
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid)
+    )
+  `);
+
   // Indices for performance
   await run('CREATE INDEX IF NOT EXISTS idx_comments_post ON vuttik_comments(post_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_verifications_post ON vuttik_post_verifications(post_id)');
