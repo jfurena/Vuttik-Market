@@ -252,6 +252,10 @@ export default function App() {
         userRole={userProfile?.role || 'user'}
         userPlan={userPlan}
         onPublishClick={() => setShowPublishSelection(true)}
+        onMarketClick={() => {
+          setMarketCategory(null);
+          navigate('/');
+        }}
       />
       
       <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -261,7 +265,7 @@ export default function App() {
           userProfile={userProfile}
         />
         
-        <main className="flex-1 overflow-y-auto no-scrollbar pt-6 pb-24 md:pb-10">
+        <main className="flex-1 overflow-y-auto no-scrollbar pt-20 md:pt-24 pb-24 md:pb-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -273,13 +277,18 @@ export default function App() {
             >
               <Routes location={location}>
                 <Route path="/" element={
-                  !marketCategory ? 
+                  (!marketCategory && !new URLSearchParams(location.search).get('q')) ? 
                     <CategoryExplorer onSelectCategory={handleCategorySelect} /> :
                     <P2PBoard 
-                      initialCategory={marketCategory} 
+                      initialCategory={marketCategory || 'GLOBAL'} 
                       initialType={marketType}
                       onViewDetails={(id) => setSelectedProductId(id)} 
-                      onBack={() => setMarketCategory(null)}
+                      onBack={() => {
+                        setMarketCategory(null);
+                        if (new URLSearchParams(location.search).get('q')) {
+                          navigate('/');
+                        }
+                      }}
                     />
                 } />
                 <Route path="/social" element={<SocialFeed onNavigateToProfile={(uid) => navigate('/perfil/' + uid)} />} />
@@ -305,7 +314,14 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        <BottomNav activeTab={activeTab} onPublishClick={() => setShowPublishSelection(true)} />
+        <BottomNav 
+          activeTab={activeTab} 
+          onPublishClick={() => setShowPublishSelection(true)} 
+          onMarketClick={() => {
+            setMarketCategory(null);
+            navigate('/');
+          }}
+        />
       </div>
 
       {/* Product Detail Modal */}

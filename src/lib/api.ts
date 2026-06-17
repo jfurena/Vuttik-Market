@@ -221,6 +221,81 @@ export const api = {
     request('/api/messages/read', { method: 'PATCH', body: JSON.stringify({ conversationId, userId }) }),
   getUnreadMessagesCount: (userId: string) => request(`/api/users/${userId}/unread-messages`),
 
+  // Mega Guardian Verification
+  verifyUser: (uid: string, isVerified: boolean, adminId: string) => request(`/api/users/${uid}/verify`, { method: 'PUT', body: JSON.stringify({ isVerified, adminId }) }),
+
+  // Portfolios (Mocked in localStorage for now)
+  getPortfolios: async (userId: string) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    return portfolios.filter((p: any) => p.userId === userId);
+  },
+  createPortfolio: async (userId: string, data: { name: string, isPublic: boolean }) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    const newPortfolio = { id: Date.now().toString(), userId, ...data, products: [] };
+    portfolios.push(newPortfolio);
+    localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+    return newPortfolio;
+  },
+  deletePortfolio: async (portfolioId: string, userId: string) => {
+    let portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    portfolios = portfolios.filter((p: any) => p.id !== portfolioId || p.userId !== userId);
+    localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+    return { success: true };
+  },
+  updatePortfolio: async (portfolioId: string, userId: string, data: { name?: string, isPublic?: boolean }) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    const index = portfolios.findIndex((p: any) => p.id === portfolioId && p.userId === userId);
+    if (index !== -1) {
+      portfolios[index] = { ...portfolios[index], ...data };
+      localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+    }
+    return { success: true };
+  },
+  updatePortfolioProducts: async (portfolioId: string, products: any[]) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    const index = portfolios.findIndex((p: any) => p.id === portfolioId);
+    if (index !== -1) {
+      portfolios[index].products = products;
+      localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+    }
+    return { success: true };
+  },
+  addProductToPortfolio: async (portfolioId: string, product: any, quantity: number) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    const index = portfolios.findIndex((p: any) => p.id === portfolioId);
+    if (index !== -1) {
+      const pIndex = portfolios[index].products.findIndex((p: any) => p.product.id === product.id);
+      if (pIndex !== -1) {
+        portfolios[index].products[pIndex].quantity += quantity;
+      } else {
+        portfolios[index].products.push({ product, quantity });
+      }
+      localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+    }
+    return { success: true };
+  },
+  updateProductInPortfolio: async (portfolioId: string, productId: string, quantity: number) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    const index = portfolios.findIndex((p: any) => p.id === portfolioId);
+    if (index !== -1) {
+      const pIndex = portfolios[index].products.findIndex((p: any) => p.product.id === productId);
+      if (pIndex !== -1) {
+        portfolios[index].products[pIndex].quantity = quantity;
+        localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+      }
+    }
+    return { success: true };
+  },
+  removeProductFromPortfolio: async (portfolioId: string, productId: string) => {
+    const portfolios = JSON.parse(localStorage.getItem('vuttik_portfolios') || '[]');
+    const index = portfolios.findIndex((p: any) => p.id === portfolioId);
+    if (index !== -1) {
+      portfolios[index].products = portfolios[index].products.filter((p: any) => p.product.id !== productId);
+      localStorage.setItem('vuttik_portfolios', JSON.stringify(portfolios));
+    }
+    return { success: true };
+  },
+
   // Web3 Auth
   getWalletNonce: (address: string) => request(`/api/auth/wallet/nonce/${address}`),
   verifyWalletSignature: (address: string, signature: string) => request('/api/auth/wallet/verify', {
@@ -240,6 +315,9 @@ export const api = {
   getBusinessStats: (userId: string) => request(`/api/stats/business/${userId}`),
   getUserAnalytics: (uid: string) => request(`/api/users/${uid}/analytics`),
   getAuditLog: () => request('/api/admin/audit-log'),
+  rateUser: async (userId: string, rating: number, raterId: string) => {
+    return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+  },
 
   // Comments & Verification
   getComments: (postId: string) => request(`/api/posts/${postId}/comments`),

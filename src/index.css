@@ -5,6 +5,86 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
 
+  /* Typography extensions based on DESIGN.md */
+  --font-body-lg: "Inter", sans-serif;
+  --font-label-sm: "Inter", sans-serif;
+  --font-display-lg: "Outfit", sans-serif;
+  --font-headline-md: "Outfit", sans-serif;
+  --font-headline-lg: "Outfit", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-display-lg-mobile: "Outfit", sans-serif;
+  --font-body-md: "Inter", sans-serif;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--letter-spacing: 0.01em;
+  --text-display-lg-mobile: 36px;
+  --text-display-lg-mobile--line-height: 42px;
+  --text-display-lg-mobile--letter-spacing: -0.02em;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+
+  /* Colors from DESIGN.md */
+  --color-surface: #f7f9fb;
+  --color-surface-dim: #d8dadc;
+  --color-surface-bright: #f7f9fb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #46464c;
+  --color-inverse-surface: #2d3133;
+  --color-inverse-on-surface: #eff1f3;
+  --color-outline: #76777d;
+  --color-outline-variant: #c6c6cc;
+  --color-surface-tint: #595e6f;
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #161b2a;
+  --color-on-primary-container: #7e8396;
+  --color-inverse-primary: #c1c6da;
+  --color-secondary: #004ad2;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #1d61fe;
+  --color-on-secondary-container: #f4f3ff;
+  --color-tertiary: #000000;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #001e2c;
+  --color-on-tertiary-container: #008ebf;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #dde2f6;
+  --color-primary-fixed-dim: #c1c6da;
+  --color-on-primary-fixed: #161b2a;
+  --color-on-primary-fixed-variant: #414657;
+  --color-secondary-fixed: #dce1ff;
+  --color-secondary-fixed-dim: #b5c4ff;
+  --color-on-secondary-fixed: #00164e;
+  --color-on-secondary-fixed-variant: #003cae;
+  --color-tertiary-fixed: #c4e7ff;
+  --color-tertiary-fixed-dim: #7bd0ff;
+  --color-on-tertiary-fixed: #001e2c;
+  --color-on-tertiary-fixed-variant: #004c69;
+  --color-background: #f7f9fb;
+  --color-on-background: #191c1e;
+  --color-surface-variant: #e0e3e5;
+
+  /* Legacy / Theme Vuttik specific */
   --color-vuttik-navy: #060B19;
   --color-vuttik-deep: #020D1A;
   --color-vuttik-blue: #1E62FF;
@@ -12,14 +92,9 @@
   --color-vuttik-cyan: #22D3EE;
   --color-vuttik-gray: #F8FAFC;
   --color-vuttik-text-muted: #7e8396;
-  
   --color-sky-accent: #38BDF8;
   --color-success: #10B981;
   --color-alert: #EF4444;
-  --color-surface: #f7f9fb;
-  --color-surface-dim: #d8dadc;
-  --color-on-surface: #191c1e;
-  --color-on-surface-variant: #46464c;
 
   --radius-vuttik: 22px;
   
@@ -48,7 +123,7 @@
   }
 
   .bottom-nav {
-    @apply md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-gray-100 px-6 pt-3 flex justify-between items-center z-50;
+    @apply md:hidden fixed bottom-0 left-0 right-0 bg-surface/80 backdrop-blur-2xl border-t border-outline-variant/20 px-6 pt-3 flex justify-between items-center z-50;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 1rem));
   }
 
@@ -57,7 +132,7 @@
   }
 
   .sidebar-link.active {
-    @apply bg-vuttik-blue text-white shadow-lg shadow-vuttik-blue/30 translate-x-1;
+    @apply text-vuttik-blue bg-vuttik-blue/10 font-black translate-x-1;
   }
 
   .nav-item {

@@ -330,27 +330,27 @@ export default function Layout() {
   };
 
   return (
-    <div className={cn("bg-gray-50 flex flex-col font-sans", location.pathname === '/pos' ? "h-screen overflow-hidden" : "min-h-screen")}>
+    <div className={cn("bg-surface flex flex-col font-sans", location.pathname === '/pos' ? "h-screen overflow-hidden" : "min-h-screen")}>
       <LocationPromptModal isOpen={showLocationPrompt} businessId={profile?.business_id || ''} onComplete={() => setShowLocationPrompt(false)} />
       {isPractice && (
-        <div className="bg-gradient-to-r from-amber-600 via-amber-550 to-amber-700 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 shadow-md shrink-0 z-50 border-b border-amber-500/30 flex-col sm:flex-row text-center sm:text-left">
+        <div className="bg-gradient-to-r from-amber-600 via-amber-550 to-amber-700 text-white px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 shadow-pro shrink-0 z-50 border-b border-amber-500/30 flex-col sm:flex-row text-center sm:text-left">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-2 w-2 rounded-full bg-white animate-pulse shrink-0" />
-            <p className="text-[11px] sm:text-xs font-black uppercase tracking-wide">
+            <span className="flex h-2 w-2 rounded-full bg-surface-container-lowest animate-pulse shrink-0" />
+            <p className="text-[11px] sm:font-label-md font-black uppercase tracking-wide">
               🛠️ MODO DE PRÁCTICA ACTIVO — <span className="font-semibold text-amber-100 normal-case text-[11px] sm:text-[11.5px]">Estás operando en el simulador seguro para entrenamiento de personal. Nada de lo que hagas aquí afectará los datos reales de la tienda.</span>
             </p>
           </div>
           <button
             onClick={handleExitPractice}
-            className="px-4 py-1.5 bg-white hover:bg-amber-50 active:scale-95 text-amber-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition-all border-0 shadow-sm cursor-pointer shrink-0 mt-2 sm:mt-0"
+            className="px-4 py-1.5 bg-surface-container-lowest hover:bg-amber-50 active:scale-95 text-amber-950 font-black text-[10px] uppercase tracking-wider rounded-2xl transition-all border-0 shadow-sm cursor-pointer shrink-0 mt-2 sm:mt-0"
           >
             Salir de Práctica
           </button>
         </div>
       )}
-      <div className={cn("flex-1 flex bg-gray-50 min-h-0", location.pathname === '/pos' && "overflow-hidden")}>
+      <div className={cn("flex-1 flex bg-surface min-h-0", location.pathname === '/pos' && "overflow-hidden")}>
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex w-72 flex-col bg-white border-r border-gray-200 sticky top-0 h-screen overflow-y-auto shrink-0">
+      <aside className="hidden md:flex w-72 flex-col bg-surface-container-lowest border-r border-outline-variant/20 sticky top-0 h-screen overflow-y-auto shrink-0">
         <div className="p-8">
           <div className="flex flex-col gap-1 mb-8">
             <div className="flex items-center gap-3">
@@ -358,7 +358,7 @@ export default function Layout() {
                 <ShoppingCart className="text-white h-7 w-7" />
               </div>
               <div>
-                <span className="font-black text-xl tracking-tighter text-gray-950 uppercase leading-none block truncate max-w-[140px]">{profile?.business_nombre || 'Mi Negocio'}</span>
+                <span className="font-black text-xl tracking-tighter text-vuttik-navy uppercase leading-none block truncate max-w-[140px]">{profile?.business_nombre || 'Mi Negocio'}</span>
                 <span className="text-[10px] font-black text-emerald-600 tracking-widest uppercase font-mono">{profile?.business_codigo || ''}</span>
               </div>
             </div>
@@ -374,7 +374,7 @@ export default function Layout() {
 
             {/* SYNC INDICATOR DESKTOP */}
             <div className={cn(
-              "flex items-center gap-2 mt-4 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors",
+              "flex items-center gap-2 mt-4 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-colors",
               syncStatus === 'synced' ? "bg-emerald-50 text-emerald-700" :
               syncStatus === 'syncing' ? "bg-blue-50 text-blue-700" :
               "bg-orange-50 text-orange-700"
@@ -402,10 +402,10 @@ export default function Layout() {
                           key={item.href}
                           to={item.href}
                           className={cn(
-                            "flex items-start gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all",
+                            "flex items-start gap-4 px-4 py-3 rounded-3xl font-body-md font-bold transition-all",
                             isActive 
-                              ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.02]" 
-                              : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                              ? "bg-vuttik-blue text-white shadow-pro-hover shadow-blue-100 scale-[1.02]" 
+                              : "text-on-surface-variant hover:bg-surface hover:text-vuttik-navy"
                           )}
                         >
                           <item.icon className={cn("h-5 w-5 mt-1 flex-shrink-0", isActive ? "text-white" : "text-gray-400")} />
@@ -436,7 +436,7 @@ export default function Layout() {
         <div className="mt-auto p-6 space-y-4">
           <button 
             onClick={() => setShowTour(true)}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-[1.25rem] text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] text-white transition-all shadow-md shadow-amber-500/10 cursor-pointer text-left border-0 outline-none"
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-[1.25rem] font-label-md font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] text-white transition-all shadow-pro shadow-amber-500/10 cursor-pointer text-left border-0 outline-none"
           >
             <div className="flex items-center gap-2.5">
               <BookOpen className="h-5 w-5 shrink-0 text-white" />
@@ -458,24 +458,24 @@ export default function Layout() {
               </p>
               <button
                 onClick={handleExitPractice}
-                className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.97] text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all border-0 shadow-sm cursor-pointer"
+                className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-[0.97] text-white font-black text-[9px] uppercase tracking-wider rounded-2xl transition-all border-0 shadow-sm cursor-pointer"
               >
                 Salir de Práctica
               </button>
             </div>
           )}
 
-          <div className="p-4 bg-gray-50 rounded-3xl border border-gray-100">
+          <div className="p-4 bg-surface rounded-3xl border border-gray-100">
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
-                <Users className="h-5 w-5 text-blue-600" />
+              <div className="h-10 w-10 rounded-3xl bg-surface-container-lowest border border-gray-100 flex items-center justify-center shadow-sm">
+                <Users className="h-5 w-5 text-vuttik-blue" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-gray-900 truncate leading-tight">{profile?.nombre}</p>
+                <p className="text-sm font-black text-vuttik-navy truncate leading-tight">{profile?.nombre}</p>
                 <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">{profile?.rol}</p>
               </div>
             </div>
-            <div className="flex flex-col gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl">
+            <div className="flex flex-col gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-2xl">
               <div className="flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-wider">Turno Activo</span>
@@ -501,7 +501,7 @@ export default function Layout() {
                 navigate('/login');
               }
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all group"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-3xl font-body-md font-bold text-red-500 hover:bg-red-50 transition-all group"
           >
             <LogOut className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             Cerrar Sesión
@@ -512,7 +512,7 @@ export default function Layout() {
       {/* Main Content Area */}
       <div className={cn("flex-1 flex flex-col min-w-0 overflow-hidden relative", location.pathname === '/pos' && "h-screen")}>
         {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+        <header className="md:hidden glass-nav-pro border-b border-outline-variant/20 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
               <ShoppingCart className="h-5 w-5" />
@@ -529,7 +529,7 @@ export default function Layout() {
             {criticalStockCount > 0 && (
               <Link 
                 to="/inventory" 
-                className="p-2 bg-amber-500/10 text-amber-600 rounded-xl relative hover:scale-105 active:scale-95 transition-all"
+                className="p-2 bg-amber-500/10 text-amber-600 rounded-2xl relative hover:scale-105 active:scale-95 transition-all"
                 title={`${criticalStockCount} productos bajo stock mínimo`}
               >
                 <Bell className="h-5 w-5 animate-pulse" />
@@ -538,7 +538,7 @@ export default function Layout() {
                 </span>
               </Link>
             )}
-            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-gray-900 bg-gray-100 rounded-xl">
+            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-vuttik-navy bg-gray-100 rounded-2xl">
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
@@ -547,16 +547,16 @@ export default function Layout() {
         {/* Mobile Sidebar Overlay */}
         {isOpen && (
           <div className="fixed inset-0 bg-black/50 z-50 md:hidden" onClick={() => setIsOpen(false)}>
-            <div className="absolute right-0 top-0 bottom-0 w-64 bg-white p-6 shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="absolute right-0 top-0 bottom-0 w-64 bg-surface-container-lowest p-6 shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-10">
-                <span className="font-black text-xl tracking-tighter uppercase text-blue-600">MENÚ</span>
+                <span className="font-black text-xl tracking-tighter uppercase text-vuttik-blue">MENÚ</span>
                 <button onClick={() => setIsOpen(false)} className="p-2 text-gray-400">
                   <X />
                 </button>
               </div>
 
               {isPractice && (
-                <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-200 space-y-2">
+                <div className="mb-6 p-4 bg-amber-50 rounded-3xl border border-amber-200 space-y-2">
                   <div className="flex items-center gap-1.5">
                     <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-wider text-amber-800">Práctica Activa</span>
@@ -566,7 +566,7 @@ export default function Layout() {
                       setIsOpen(false);
                       handleExitPractice();
                     }}
-                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all border-0 shadow-sm cursor-pointer"
+                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-[9px] uppercase tracking-wider rounded-2xl transition-all border-0 shadow-sm cursor-pointer"
                   >
                     Salir de Práctica
                   </button>
@@ -585,11 +585,11 @@ export default function Layout() {
                               key={item.href}
                               to={item.href}
                               onClick={() => setIsOpen(false)}
-                              className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-650 hover:bg-gray-50"
+                              className="flex items-start gap-3 px-4 py-3 rounded-2xl font-body-md font-bold text-gray-650 hover:bg-surface"
                           >
                             <item.icon className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
                             <div className="flex flex-col text-left">
-                              <span className="text-sm text-gray-900 leading-tight">{item.name}</span>
+                              <span className="text-sm text-vuttik-navy leading-tight">{item.name}</span>
                               <span className="text-[9px] font-normal text-gray-400 leading-normal">{item.description}</span>
                             </div>
                           </Link>
@@ -605,7 +605,7 @@ export default function Layout() {
                     setIsOpen(false);
                     setShowTour(true);
                   }}
-                  className="flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-2xl text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/10 cursor-pointer text-left border-0"
+                  className="flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-3xl text-white font-black text-xs uppercase tracking-wider transition-all shadow-pro shadow-amber-500/10 cursor-pointer text-left border-0"
                 >
                   <BookOpen className="h-4.5 w-4.5 text-white shrink-0" />
                   Entrenar Personal
@@ -629,7 +629,7 @@ export default function Layout() {
         <TrainingTour isOpen={showTour} onClose={() => setShowTour(false)} />
 
         {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around p-3 z-40 pb-safe">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-nav-pro border-t border-outline-variant/20 flex justify-around p-3 z-40 pb-safe">
           {mobileNav.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -637,8 +637,8 @@ export default function Layout() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex flex-col items-center p-2 rounded-xl transition-all",
-                  isActive ? "text-blue-600 scale-110" : "text-gray-400"
+                  "flex flex-col items-center p-2 rounded-2xl transition-all",
+                  isActive ? "text-vuttik-blue scale-110" : "text-gray-400"
                 )}
               >
                 <item.icon className="h-6 w-6" />

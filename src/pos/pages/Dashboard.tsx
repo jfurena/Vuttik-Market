@@ -520,7 +520,7 @@ export default function Dashboard() {
       value: formatCurrency(stats?.profitStats?.totalGastos || 0), 
       icon: Wallet, 
       color: 'text-gray-600', 
-      bg: 'bg-gray-50', 
+      bg: 'bg-surface', 
       description: 'Luz, renta, wifi, sueldos, compras registradas',
       borderColor: 'border-gray-200'
     },
@@ -530,15 +530,15 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Resumen de mi Negocio</h1>
-          <p className="text-gray-500 font-medium">Aquí puedes ver cuánto dinero has cobrado, tus gastos, y la ganancia real que te queda libre.</p>
+          <h1 className="text-3xl font-black text-vuttik-navy tracking-tight">Resumen de mi Negocio</h1>
+          <p className="text-on-surface-variant font-medium">Aquí puedes ver cuánto dinero has cobrado, tus gastos, y la ganancia real que te queda libre.</p>
         </div>
         
         <div className="relative">
-          <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 bg-surface-container-lowest p-2 rounded-3xl border border-gray-100 shadow-sm">
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-xs font-black text-gray-700 rounded-xl transition-all"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-surface font-label-md font-black text-gray-700 rounded-2xl transition-all"
             >
               <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
               <span>
@@ -568,7 +568,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 15, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-[540px] max-w-[92vw] sm:max-w-none bg-white border border-gray-155 rounded-[2rem] shadow-2xl p-5 z-[110] flex flex-col md:flex-row gap-5 font-sans divide-y md:divide-y-0 md:divide-x divide-gray-100"
+                  className="absolute right-0 top-full mt-2 w-[540px] max-w-[92vw] sm:max-w-none bg-surface-container-lowest border border-gray-155 rounded-[2rem] shadow-2xl p-5 z-[110] flex flex-col md:flex-row gap-5 font-sans divide-y md:divide-y-0 md:divide-x divide-gray-100"
                 >
                   {/* Presets Sidebar List */}
                   <div className="w-full md:w-44 shrink-0 flex flex-col gap-1 pb-4 md:pb-0 md:pr-4">
@@ -591,14 +591,14 @@ export default function Dashboard() {
                           }
                         }}
                         className={cn(
-                          "w-full text-left py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between font-sans",
+                          "w-full text-left py-2 px-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-between font-sans",
                           filterDate === p.id 
                             ? "bg-blue-50 text-blue-700" 
-                            : "text-gray-600 hover:bg-gray-50"
+                            : "text-gray-600 hover:bg-surface"
                         )}
                       >
                         <span>{p.label}</span>
-                        {filterDate === p.id && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                        {filterDate === p.id && <span className="h-1.5 w-1.5 rounded-full bg-vuttik-blue" />}
                       </button>
                     ))}
                   </div>
@@ -608,18 +608,18 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between font-sans">
                       <button
                         onClick={handlePrevMonth}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-all animate-none"
+                        className="p-1.5 hover:bg-gray-100 rounded-lg text-on-surface-variant hover:text-vuttik-navy transition-all animate-none"
                       >
                         <ChevronLeft className="h-4.5 w-4.5" />
                       </button>
                       
-                      <span className="text-xs font-black text-gray-800 uppercase tracking-wider font-sans">
+                      <span className="font-label-md font-black text-gray-800 uppercase tracking-wider font-sans">
                         {format(currentMonthView, 'MMMM yyyy', { locale: es })}
                       </span>
 
                       <button
                         onClick={handleNextMonth}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-all animate-none"
+                        className="p-1.5 hover:bg-gray-100 rounded-lg text-on-surface-variant hover:text-vuttik-navy transition-all animate-none"
                       >
                         <ChevronRight className="h-4.5 w-4.5" />
                       </button>
@@ -649,8 +649,8 @@ export default function Dashboard() {
                               "h-8 text-center text-xs font-bold transition-all relative flex items-center justify-center rounded-lg font-sans",
                               !isCurrentMonth ? "text-gray-200 pointer-events-none" : "text-gray-700",
                               isInRange && "bg-blue-50/70 text-blue-800 rounded-none",
-                              isSelectedStart && "bg-blue-600 text-white rounded-l-lg hover:bg-blue-700 z-10 font-black shadow-md shadow-blue-500/10",
-                              isSelectedEnd && "bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 z-10 font-black shadow-md shadow-blue-500/10",
+                              isSelectedStart && "bg-vuttik-blue text-white rounded-l-lg hover:bg-blue-700 z-10 font-black shadow-pro shadow-blue-500/10",
+                              isSelectedEnd && "bg-vuttik-blue text-white rounded-r-lg hover:bg-blue-700 z-10 font-black shadow-pro shadow-blue-500/10",
                               !isSelectedStart && !isSelectedEnd && !isInRange && isCurrentMonth && "hover:bg-gray-100"
                             )}
                           >
@@ -691,7 +691,7 @@ export default function Dashboard() {
                             }
                             setIsCalendarOpen(false);
                           }}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-lg text-[9px] uppercase tracking-wider shadow-sm transition-all font-sans"
+                          className="px-3 py-1.5 bg-vuttik-blue hover:bg-blue-700 text-white font-black rounded-lg text-[9px] uppercase tracking-wider shadow-sm transition-all font-sans"
                         >
                           Aplicar
                         </button>
@@ -714,12 +714,12 @@ export default function Dashboard() {
             key={i} 
             onClick={() => setActiveModal(card.id)}
             className={cn(
-              "bg-white p-8 rounded-[2.5rem] shadow-sm border flex flex-col gap-4 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer",
+              "bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm border flex flex-col gap-4 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer",
               card.borderColor
             )}
           >
             <div className="flex justify-between items-start">
-              <div className={cn("p-4 rounded-2xl transition-transform group-hover:rotate-12", card.bg)}>
+              <div className={cn("p-4 rounded-3xl transition-transform group-hover:rotate-12", card.bg)}>
                 <card.icon className={cn("h-7 w-7", card.color)} />
               </div>
             </div>
@@ -736,16 +736,16 @@ export default function Dashboard() {
 
       {/* Quick Actions - The "Intuitive" part */}
       <div id="admin-accesos-rapidos" className="space-y-4">
-        <h3 className="text-lg font-black text-gray-900 tracking-tight ml-2 uppercase text-xs text-gray-400 tracking-widest">Accesos Rápidos</h3>
+        <h3 className="text-lg font-black text-vuttik-navy tracking-tight ml-2 uppercase text-xs text-gray-400 tracking-widest">Accesos Rápidos</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link 
             to="/pos" 
-            className="flex flex-col items-center justify-center p-8 bg-blue-600 text-white rounded-[2.5rem] shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all group"
+            className="flex flex-col items-center justify-center p-8 bg-vuttik-blue text-white rounded-[2.5rem] shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all group"
           >
-            <div className="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div className="h-16 w-16 bg-surface-container-lowest/20 rounded-3xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <ShoppingBag className="h-8 w-8" />
             </div>
-            <span className="text-xl font-black">VENDER ALGO</span>
+            <span className="font-headline-md font-black">VENDER ALGO</span>
             <span className="text-blue-100 text-xs font-medium mt-1">Hacer un cobro ahora</span>
           </Link>
 
@@ -753,10 +753,10 @@ export default function Dashboard() {
             to="/shifts" 
             className="flex flex-col items-center justify-center p-8 bg-amber-500 text-white rounded-[2.5rem] shadow-xl shadow-amber-200 hover:bg-amber-600 transition-all group"
           >
-            <div className="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div className="h-16 w-16 bg-surface-container-lowest/20 rounded-3xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <History className="h-8 w-8" />
             </div>
-            <span className="text-xl font-black">CONTROL CAJA</span>
+            <span className="font-headline-md font-black">CONTROL CAJA</span>
             <span className="text-amber-50 text-xs font-medium mt-1">Ver billetes y cuadres</span>
           </Link>
 
@@ -764,30 +764,30 @@ export default function Dashboard() {
             to="/expenses" 
             className="flex flex-col items-center justify-center p-8 bg-red-500 text-white rounded-[2.5rem] shadow-xl shadow-red-200 hover:bg-red-600 transition-all group"
           >
-            <div className="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div className="h-16 w-16 bg-surface-container-lowest/20 rounded-3xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <DollarSign className="h-8 w-8" />
             </div>
-            <span className="text-xl font-black">ANOTAR GASTO</span>
+            <span className="font-headline-md font-black">ANOTAR GASTO</span>
             <span className="text-red-50 text-xs font-medium mt-1">Luz, renta, salarios</span>
           </Link>
         </div>
       </div>
 
       {/* Estado de los Fondos */}
-      <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border border-gray-100 shadow-sm">
+      <div className="bg-surface-container-lowest p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border border-gray-100 shadow-sm">
         <div className="mb-8">
-          <h3 className="text-2xl font-black text-gray-900 tracking-tight">Estado de los Fondos</h3>
-          <p className="text-gray-500 font-medium">Historial completo del dinero invertido y disponible.</p>
+          <h3 className="text-2xl font-black text-vuttik-navy tracking-tight">Estado de los Fondos</h3>
+          <p className="text-on-surface-variant font-medium">Historial completo del dinero invertido y disponible.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div 
             onClick={() => setActiveModal('caja')}
-            className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-3xl cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-3xl cursor-pointer hover:shadow-pro-hover hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="h-12 w-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center mb-4">
+            <div className="h-12 w-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center mb-4">
               <DollarSign className="h-6 w-6" />
             </div>
-            <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">Estimado en Caja</p>
+            <p className="font-label-md font-black text-emerald-600 uppercase tracking-widest">Estimado en Caja</p>
             <p className="text-sm text-emerald-800 font-medium mb-3">Ventas cobradas menos gastos de caja</p>
             <div className="text-3xl font-black text-emerald-900 font-mono">
               {formatCurrency(stats?.financieroStats?.dineroEstimadoCaja || 0)}
@@ -796,12 +796,12 @@ export default function Dashboard() {
           
           <div 
             onClick={() => setActiveModal('banco')}
-            className="p-6 bg-blue-50/50 border border-blue-100 rounded-3xl cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            className="p-6 bg-blue-50/50 border border-blue-100 rounded-3xl cursor-pointer hover:shadow-pro-hover hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="h-12 w-12 bg-blue-600 text-white rounded-xl flex items-center justify-center mb-4">
+            <div className="h-12 w-12 bg-vuttik-blue text-white rounded-2xl flex items-center justify-center mb-4">
               <Wallet className="h-6 w-6" />
             </div>
-            <p className="text-xs font-black text-blue-600 uppercase tracking-widest">Ido al Banco (Guardado)</p>
+            <p className="font-label-md font-black text-vuttik-blue uppercase tracking-widest">Ido al Banco (Guardado)</p>
             <p className="text-sm text-blue-800 font-medium mb-3">Dinero enviado de la caja al banco para guardarlo</p>
             <div className="text-3xl font-black text-blue-900 font-mono">
               {formatCurrency(stats?.financieroStats?.totalIdoBanco || 0)}
@@ -810,12 +810,12 @@ export default function Dashboard() {
 
           <div 
             onClick={() => setActiveModal('inversion')}
-            className="p-6 bg-purple-50/50 border border-purple-100 rounded-3xl cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            className="p-6 bg-purple-50/50 border border-purple-100 rounded-3xl cursor-pointer hover:shadow-pro-hover hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="h-12 w-12 bg-purple-600 text-white rounded-xl flex items-center justify-center mb-4">
+            <div className="h-12 w-12 bg-purple-600 text-white rounded-2xl flex items-center justify-center mb-4">
               <TrendingUp className="h-6 w-6" />
             </div>
-            <p className="text-xs font-black text-purple-600 uppercase tracking-widest">Inversión Externa</p>
+            <p className="font-label-md font-black text-purple-600 uppercase tracking-widest">Inversión Externa</p>
             <p className="text-sm text-purple-800 font-medium mb-3">Dinero inyectado de tu propio bolsillo</p>
             <div className="text-3xl font-black text-purple-900 font-mono">
               {formatCurrency(stats?.financieroStats?.totalInversionExterna || 0)}
@@ -825,13 +825,13 @@ export default function Dashboard() {
       </div>
 
       {/* Improved Profit Breakdown */}
-      <div id="admin-profit-breakdown" className="bg-white p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border border-gray-100 shadow-sm">
+      <div id="admin-profit-breakdown" className="bg-surface-container-lowest p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border border-gray-100 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+            <h3 className="text-2xl font-black text-vuttik-navy tracking-tight">
               ¿Cuánto gané en {filterDate === 'mes' ? 'este mes' : filterDate === 'hoy' ? 'hoy' : filterDate === 'ayer' ? 'ayer' : 'este período'}?
             </h3>
-            <p className="text-gray-500 font-medium">Aquí te explicamos la cuenta paso a paso.</p>
+            <p className="text-on-surface-variant font-medium">Aquí te explicamos la cuenta paso a paso.</p>
           </div>
           <div className="px-6 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-black uppercase tracking-widest">
             Resultado Final
@@ -841,11 +841,11 @@ export default function Dashboard() {
         <div className="space-y-6">
           {/* Step 1: Sales (cobradas only) */}
           <div className="flex items-center gap-6 p-6 bg-blue-50/50 rounded-3xl border border-blue-100">
-            <div className="h-14 w-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100">
-              <span className="text-xl font-black">1</span>
+            <div className="h-14 w-14 bg-vuttik-blue text-white rounded-3xl flex items-center justify-center shadow-pro-hover shadow-blue-100">
+              <span className="font-headline-md font-black">1</span>
             </div>
             <div className="flex-1">
-              <p className="text-xs font-black text-blue-600 uppercase tracking-widest">Ventas Cobradas</p>
+              <p className="font-label-md font-black text-vuttik-blue uppercase tracking-widest">Ventas Cobradas</p>
               <p className="text-sm text-blue-800 font-medium">Dinero que realmente te pagaron (efectivo, tarjeta, transferencia)</p>
             </div>
             <div className="text-2xl font-black text-blue-900 font-mono">
@@ -856,11 +856,11 @@ export default function Dashboard() {
           {/* Fiao block — informational, NOT subtracted from profit */}
           {(stats.fiadoStats?.totalFiado || 0) > 0 && (
             <div className="flex items-center gap-6 p-5 bg-amber-50/60 rounded-3xl border-2 border-dashed border-amber-300">
-              <div className="h-14 w-14 bg-amber-400 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-100">
+              <div className="h-14 w-14 bg-amber-400 text-white rounded-3xl flex items-center justify-center shadow-pro-hover shadow-amber-100">
                 <CreditCard className="h-7 w-7" />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-black text-amber-700 uppercase tracking-widest">Lo Fiado (pendiente de cobro)</p>
+                <p className="font-label-md font-black text-amber-700 uppercase tracking-widest">Lo Fiado (pendiente de cobro)</p>
                 <p className="text-sm text-amber-800 font-medium">{stats.fiadoStats?.count || 0} ventas a crédito — aún no es dinero tuyo hasta que paguen</p>
               </div>
               <div className="text-right">
@@ -878,11 +878,11 @@ export default function Dashboard() {
 
           {/* Step 2: Cost */}
           <div className="flex items-center gap-6 p-6 bg-orange-50/50 rounded-3xl border border-orange-100">
-            <div className="h-14 w-14 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-100">
-              <span className="text-xl font-black">2</span>
+            <div className="h-14 w-14 bg-orange-500 text-white rounded-3xl flex items-center justify-center shadow-pro-hover shadow-orange-100">
+              <span className="font-headline-md font-black">2</span>
             </div>
             <div className="flex-1">
-              <p className="text-xs font-black text-orange-600 uppercase tracking-widest">Inversión en Productos</p>
+              <p className="font-label-md font-black text-orange-600 uppercase tracking-widest">Inversión en Productos</p>
               <p className="text-sm text-orange-800 font-medium">Dinero gastado comprando mercancía este mes</p>
             </div>
             <div className="text-2xl font-black text-orange-900 font-mono">
@@ -898,11 +898,11 @@ export default function Dashboard() {
 
           {/* Step 3: Expenses */}
           <div className="flex items-center gap-6 p-6 bg-red-50/50 rounded-3xl border border-red-100">
-            <div className="h-14 w-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-red-100">
-              <span className="text-xl font-black">3</span>
+            <div className="h-14 w-14 bg-red-500 text-white rounded-3xl flex items-center justify-center shadow-pro-hover shadow-red-100">
+              <span className="font-headline-md font-black">3</span>
             </div>
             <div className="flex-1">
-              <p className="text-xs font-black text-red-600 uppercase tracking-widest">Otros Gastos</p>
+              <p className="font-label-md font-black text-red-600 uppercase tracking-widest">Otros Gastos</p>
               <p className="text-sm text-red-800 font-medium">Luz, renta, salarios y otros pagos</p>
             </div>
             <div className="text-2xl font-black text-red-900 font-mono">
@@ -913,11 +913,11 @@ export default function Dashboard() {
           <div className="pt-8 border-t-4 border-dashed border-gray-100">
             <div className="bg-emerald-600 p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-200 flex flex-col md:flex-row justify-between items-center text-white">
               <div className="flex items-center gap-6">
-                <div className="h-16 w-16 bg-white text-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <div className="h-16 w-16 bg-surface-container-lowest text-emerald-600 rounded-3xl flex items-center justify-center shadow-xl">
                   <CheckCircle2 className="h-10 w-10" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-emerald-200 uppercase tracking-widest">Tu Ganancia Limpia</p>
+                  <p className="font-label-md font-black text-emerald-200 uppercase tracking-widest">Tu Ganancia Limpia</p>
                   <p className="text-2xl font-black tracking-tight">DINERO LIBRE PARA TI</p>
                 </div>
               </div>
@@ -930,14 +930,14 @@ export default function Dashboard() {
       </div>
 
       {/* Detailed Breakdown Section */}
-      <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden" id="movimientos-seccion">
+      <div className="bg-surface-container-lowest rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden" id="movimientos-seccion">
         <div className="p-6 sm:p-8 md:p-10 border-b border-gray-50 flex flex-col space-y-6">
           <div className="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-6">
             <div>
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Detalle de Movimientos</h3>
-              <p className="text-gray-500 font-medium">Revisa registro por registro lo que pasó en {filterDate === 'mes' ? 'este mes' : filterDate === 'hoy' ? 'hoy' : filterDate === 'ayer' ? 'ayer' : 'este período'}.</p>
+              <h3 className="text-2xl font-black text-vuttik-navy tracking-tight">Detalle de Movimientos</h3>
+              <p className="text-on-surface-variant font-medium">Revisa registro por registro lo que pasó en {filterDate === 'mes' ? 'este mes' : filterDate === 'hoy' ? 'hoy' : filterDate === 'ayer' ? 'ayer' : 'este período'}.</p>
             </div>
-            <div className="flex flex-wrap gap-1.5 p-1 bg-gray-50 rounded-2xl shrink-0 max-w-full">
+            <div className="flex flex-wrap gap-1.5 p-1 bg-surface rounded-3xl shrink-0 max-w-full">
               {[
                 { id: 'ventas', label: 'Ventas', icon: Receipt },
                 { id: 'fiado', label: 'Fiao', icon: CreditCard },
@@ -954,9 +954,9 @@ export default function Dashboard() {
                     setSearchQuery(''); // Clear search query when changing tabs for instant ease of use
                   }}
                   className={cn(
-                    "flex items-center gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black transition-all uppercase tracking-wider sm:tracking-widest shrink-0 whitespace-nowrap",
+                    "flex items-center gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black transition-all uppercase tracking-wider sm:tracking-widest shrink-0 whitespace-nowrap",
                     activeTab === tab.id 
-                      ? "bg-white text-blue-600 shadow-sm" 
+                      ? "bg-surface-container-lowest text-vuttik-blue shadow-sm" 
                       : "text-gray-400 hover:text-gray-600"
                   )}
                 >
@@ -979,7 +979,7 @@ export default function Dashboard() {
                   activeTab === 'inversiones' ? "Buscar inversión por nombre de mercancía..." :
                   "Buscar cuadres por cajero o estado (ej: abierto, cerrado, aprobado)..."
                 }
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold text-sm transition-all"
+                className="w-full pl-12 pr-4 py-4 bg-surface border-2 border-gray-100 rounded-3xl focus:border-blue-500 focus:bg-surface-container-lowest outline-none font-bold text-sm transition-all"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -996,21 +996,21 @@ export default function Dashboard() {
             {/* Global outstanding summary */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <div className="flex-1 bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 flex items-center gap-5">
-                <div className="h-14 w-14 bg-amber-400 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="h-14 w-14 bg-amber-400 text-white rounded-3xl flex items-center justify-center shadow-pro-hover">
                   <CreditCard className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-amber-700 uppercase tracking-widest">Total Fiado (período)</p>
+                  <p className="font-label-md font-black text-amber-700 uppercase tracking-widest">Total Fiado (período)</p>
                   <p className="text-3xl font-black text-amber-900 font-mono">{formatCurrency(stats.fiadoStats?.totalFiado || 0)}</p>
                   <p className="text-xs text-amber-600 font-medium mt-0.5">{stats.fiadoStats?.count || 0} ventas a crédito en este período</p>
                 </div>
               </div>
               <div className="flex-1 bg-red-50 border-2 border-red-200 rounded-3xl p-6 flex items-center gap-5">
-                <div className="h-14 w-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="h-14 w-14 bg-red-500 text-white rounded-3xl flex items-center justify-center shadow-pro-hover">
                   <AlertCircle className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-red-700 uppercase tracking-widest">Deuda Total Pendiente</p>
+                  <p className="font-label-md font-black text-red-700 uppercase tracking-widest">Deuda Total Pendiente</p>
                   <p className="text-3xl font-black text-red-900 font-mono">{formatCurrency(stats.fiadoStats?.totalPendienteGlobal || 0)}</p>
                   <p className="text-xs text-red-600 font-medium mt-0.5">Total que te deben todos los clientes ahora mismo</p>
                 </div>
@@ -1018,7 +1018,7 @@ export default function Dashboard() {
             </div>
 
             {/* Fiao history */}
-            <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-4">Historial de Créditos ({stats.fiadoStats?.history?.length || 0})</h4>
+            <h4 className="text-sm font-black text-on-surface-variant uppercase tracking-widest mb-4">Historial de Créditos ({stats.fiadoStats?.history?.length || 0})</h4>
             {(stats.fiadoStats?.history?.length || 0) === 0 ? (
               <div className="text-center py-20">
                 <div className="h-20 w-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1030,27 +1030,27 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-3">
                 {(stats.fiadoStats?.history || []).map((fiao: any) => (
-                  <div key={fiao.id} className="bg-amber-50/60 border border-amber-200 rounded-2xl overflow-hidden">
+                  <div key={fiao.id} className="bg-amber-50/60 border border-amber-200 rounded-3xl overflow-hidden">
                     <button
                       className="w-full flex items-center gap-4 p-5 text-left hover:bg-amber-100/50 transition-colors"
                       onClick={() => setExpandedFiadoId(expandedFiadoId === fiao.id ? null : fiao.id)}
                     >
-                      <div className="h-10 w-10 bg-amber-400 text-white rounded-xl flex items-center justify-center shrink-0">
+                      <div className="h-10 w-10 bg-amber-400 text-white rounded-2xl flex items-center justify-center shrink-0">
                         <CreditCard className="h-5 w-5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-black text-gray-900 text-sm">{fiao.cliente_nombre}</span>
+                          <span className="font-black text-vuttik-navy text-sm">{fiao.cliente_nombre}</span>
                           <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-bold">#{fiao.codigo_recibo}</span>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                          <span className="text-xs text-on-surface-variant font-medium flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {new Date(fiao.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                             {' '}a las {new Date(fiao.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500">{fiao.items?.length || 0} producto(s)</span>
+                          <span className="text-xs text-on-surface-variant">{fiao.items?.length || 0} producto(s)</span>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
@@ -1061,10 +1061,10 @@ export default function Dashboard() {
                     </button>
                     {expandedFiadoId === fiao.id && (
                       <div className="px-5 pb-5 border-t border-amber-200/60">
-                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-4 mb-2">Productos en esta venta</p>
+                        <p className="font-label-md font-black text-gray-400 uppercase tracking-widest mt-4 mb-2">Productos en esta venta</p>
                         <div className="space-y-1.5">
                           {(fiao.items || []).map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border border-amber-100">
+                            <div key={idx} className="flex items-center justify-between bg-surface-container-lowest rounded-2xl px-4 py-2.5 border border-amber-100">
                               <div>
                                 <span className="font-bold text-sm text-gray-800">{item.nombre}</span>
                                 <span className="text-xs text-gray-400 ml-2">x{item.cantidad}</span>
@@ -1118,18 +1118,18 @@ export default function Dashboard() {
                 <tr 
                   key={sale.id} 
                   onClick={() => handleSelectSale(sale.id)}
-                  className="hover:bg-gray-50 transition-all cursor-pointer group"
+                  className="hover:bg-surface transition-all cursor-pointer group"
                   title="Haz clic para ver el cajero de turno, hora exacta y mercancías compradas"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-body-md font-bold text-on-surface-variant group-hover:text-vuttik-blue transition-colors">
                     <ClickableDate date={sale.fecha} />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div>
-                        <p className="text-sm font-black text-gray-950 flex items-center gap-2">
+                        <p className="text-sm font-black text-vuttik-navy flex items-center gap-2">
                           Venta a {sale.cliente}
-                          <span className="text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-blue-50 text-vuttik-blue px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                             Ver Ticket
                           </span>
                         </p>
@@ -1137,7 +1137,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-black text-blue-600 font-mono">
+                  <td className="px-6 py-4 text-right text-sm font-black text-vuttik-blue font-mono">
                     {formatCurrency(sale.total)}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -1146,7 +1146,7 @@ export default function Dashboard() {
                         <span className="text-sm font-black text-emerald-600">+{formatCurrency(sale.ganancia)}</span>
                         <span className="text-[10px] text-emerald-400 font-bold uppercase">Limpio</span>
                       </div>
-                      <div className="p-2 text-gray-400 group-hover:text-blue-600 group-hover:bg-blue-50 rounded-xl transition-all">
+                      <div className="p-2 text-gray-400 group-hover:text-vuttik-blue group-hover:bg-blue-50 rounded-2xl transition-all">
                         <Eye className="h-4 w-4" />
                       </div>
                     </div>
@@ -1155,12 +1155,12 @@ export default function Dashboard() {
               ))}
 
               {activeTab === 'gastos' && filteredExpenses.map((expense: any) => (
-                <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-500">
+                <tr key={expense.id} className="hover:bg-surface transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-body-md font-bold text-on-surface-variant">
                     <ClickableDate date={expense.fecha} />
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm font-black text-gray-900">{expense.descripcion}</p>
+                    <p className="text-sm font-black text-vuttik-navy">{expense.descripcion}</p>
                     <p className="text-[10px] text-gray-400 uppercase font-bold flex items-center gap-2">
                       {expense.categoria}
                       {expense.pagado_desde_caja && (
@@ -1177,15 +1177,15 @@ export default function Dashboard() {
               ))}
 
               {activeTab === 'inversiones' && filteredInvestments.map((inv: any, idx: number) => (
-                <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-500">
+                <tr key={idx} className="hover:bg-surface transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-body-md font-bold text-on-surface-variant">
                     <ClickableDate date={inv.fecha} />
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm font-black text-gray-900">{inv.producto_nombre}</p>
+                    <p className="text-sm font-black text-vuttik-navy">{inv.producto_nombre}</p>
                     <p className="text-[10px] text-gray-400 uppercase font-bold">Registro de Inventario</p>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-black text-gray-900">
+                  <td className="px-6 py-4 text-right text-sm font-black text-vuttik-navy">
                     <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded font-black text-[10px]">
                       +{inv.cantidad} UDS
                     </span>
@@ -1207,12 +1207,12 @@ export default function Dashboard() {
                   className="hover:bg-gray-55 transition-all cursor-pointer group"
                   title="Haz clic para abrir la auditoría con cronología y horas exactas"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-body-md font-bold text-on-surface-variant group-hover:text-vuttik-blue transition-colors">
                     <ClickableDate date={shift.fecha_apertura} />
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <p className="text-sm font-black text-gray-950 flex items-center gap-2">
+                      <p className="text-sm font-black text-vuttik-navy flex items-center gap-2">
                         Turno de {shift.usuario_nombre}
                         <span className="text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-600 px-2 py-0.2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                           Ver Cronología
@@ -1230,7 +1230,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-black text-gray-900 font-mono">
+                  <td className="px-6 py-4 text-right text-sm font-black text-vuttik-navy font-mono">
                     <span>
                       {shift.monto_contado !== undefined ? formatCurrency(shift.monto_contado) : 'Sin Cerrar/Abierto'}
                     </span>
@@ -1241,7 +1241,7 @@ export default function Dashboard() {
                         <span className={cn(
                           "text-sm font-black",
                           shift.diferencia === 0 ? "text-emerald-600" :
-                          (shift.diferencia && shift.diferencia < 0) ? "text-red-650 font-black" : "text-blue-600"
+                          (shift.diferencia && shift.diferencia < 0) ? "text-red-650 font-black" : "text-vuttik-blue"
                         )}>
                           {shift.diferencia === undefined ? 'Turno Abierto' : 
                           shift.diferencia === 0 ? 'Cuadre Perfecto' : 
@@ -1252,7 +1252,7 @@ export default function Dashboard() {
                           {shift.estado}
                         </span>
                       </div>
-                      <div className="p-2 text-gray-400 group-hover:text-blue-600 group-hover:bg-blue-50 rounded-xl transition-all">
+                      <div className="p-2 text-gray-400 group-hover:text-vuttik-blue group-hover:bg-blue-50 rounded-2xl transition-all">
                         <Eye className="h-4 w-4" />
                       </div>
                     </div>
@@ -1293,22 +1293,22 @@ export default function Dashboard() {
               initial={{ scale: 0.95, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
-              className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]"
+              className="relative bg-surface-container-lowest w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]"
             >
               {/* Header */}
               <div className="bg-slate-50 border-b border-gray-100 p-8 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
+                  <div className="h-12 w-12 bg-blue-100 text-vuttik-blue rounded-3xl flex items-center justify-center">
                     <Receipt className="h-6 w-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900 leading-none">Detalles del Ticket</h2>
-                    <p className="text-sm font-bold text-gray-400 mt-1">Código: <span className="text-gray-900 font-mono">#{selectedSaleDetail.codigo_recibo}</span></p>
+                    <h2 className="text-2xl font-black text-vuttik-navy leading-none">Detalles del Ticket</h2>
+                    <p className="font-body-md font-bold text-gray-400 mt-1">Código: <span className="text-vuttik-navy font-mono">#{selectedSaleDetail.codigo_recibo}</span></p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setSelectedSaleDetail(null)}
-                  className="p-3 bg-white hover:bg-gray-100 rounded-2xl border border-gray-100 transition-all text-gray-400 hover:text-gray-900 shadow-sm"
+                  className="p-3 bg-surface-container-lowest hover:bg-gray-100 rounded-3xl border border-gray-100 transition-all text-gray-400 hover:text-vuttik-navy shadow-sm"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -1319,24 +1319,24 @@ export default function Dashboard() {
                 {/* Info Cards (Who & When) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Cajero / Empleado */}
-                  <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 flex items-center gap-4">
-                    <div className="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                  <div className="p-5 bg-surface/50 rounded-3xl border border-gray-100 flex items-center gap-4">
+                    <div className="h-10 w-10 bg-blue-50 text-vuttik-blue rounded-2xl flex items-center justify-center shrink-0">
                       <User className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Cajero de turno</p>
-                      <p className="text-base font-black text-gray-900">{selectedSaleDetail.usuario_nombre || 'Desconocido'}</p>
+                      <p className="text-base font-black text-vuttik-navy">{selectedSaleDetail.usuario_nombre || 'Desconocido'}</p>
                     </div>
                   </div>
 
                   {/* Hora y Fecha */}
-                  <div className="p-5 bg-gray-50/50 rounded-2xl border border-gray-100 flex items-center gap-4">
-                    <div className="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                  <div className="p-5 bg-surface/50 rounded-3xl border border-gray-100 flex items-center gap-4">
+                    <div className="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
                       <Clock className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Fecha y Hora</p>
-                      <p className="text-sm font-black text-gray-900">
+                      <p className="text-sm font-black text-vuttik-navy">
                         {selectedSaleDetail.fecha ? format(new Date(selectedSaleDetail.fecha), "d 'de' MMMM, yyyy - h:mm a", { locale: es }) : '---'}
                       </p>
                     </div>
@@ -1345,7 +1345,7 @@ export default function Dashboard() {
 
                 {/* Status & Payment Method */}
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="px-4 py-2 bg-slate-50 border border-gray-100 rounded-xl flex items-center gap-2">
+                  <div className="px-4 py-2 bg-slate-50 border border-gray-100 rounded-2xl flex items-center gap-2">
                     <span className="text-xs font-bold text-gray-400">Estado:</span>
                     <span className={cn(
                       "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
@@ -1356,23 +1356,23 @@ export default function Dashboard() {
                     </span>
                   </div>
 
-                  <div className="px-4 py-2 bg-slate-50 border border-gray-100 rounded-xl flex items-center gap-2">
+                  <div className="px-4 py-2 bg-slate-50 border border-gray-100 rounded-2xl flex items-center gap-2">
                     <span className="text-xs font-bold text-gray-400">Método de pago:</span>
-                    <span className="text-xs font-black text-gray-900">{selectedSaleDetail.metodo_pago}</span>
+                    <span className="font-label-md font-black text-vuttik-navy">{selectedSaleDetail.metodo_pago}</span>
                   </div>
 
                   {selectedSaleDetail.turno_id && (
-                    <div className="px-4 py-2 bg-slate-50 border border-gray-100 rounded-xl flex items-center gap-2">
+                    <div className="px-4 py-2 bg-slate-50 border border-gray-100 rounded-2xl flex items-center gap-2">
                       <span className="text-xs font-bold text-gray-400">ID Turno Caja:</span>
-                      <span className="text-xs font-mono font-bold text-gray-900">{selectedSaleDetail.turno_id.replace('shift-', '#')}</span>
+                      <span className="text-xs font-mono font-bold text-vuttik-navy">{selectedSaleDetail.turno_id.replace('shift-', '#')}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Products Purchased List */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Artículos Comprados</h3>
-                  <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                  <h3 className="font-label-md font-black text-gray-400 uppercase tracking-widest">Artículos Comprados</h3>
+                  <div className="border border-gray-100 rounded-3xl overflow-hidden">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-gray-55 border-b border-gray-100">
@@ -1384,20 +1384,20 @@ export default function Dashboard() {
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {selectedSaleDetail.items?.map((item: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                          <tr key={idx} className="hover:bg-surface transition-colors">
                             <td className="px-6 py-4">
-                              <p className="text-sm font-black text-gray-900">{item.nombre || 'Producto Desconocido'}</p>
+                              <p className="text-sm font-black text-vuttik-navy">{item.nombre || 'Producto Desconocido'}</p>
                               {item.unidad_venta && (
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.unidad_venta}</p>
                               )}
                             </td>
-                            <td className="px-6 py-4 text-center text-sm font-black text-gray-900">
+                            <td className="px-6 py-4 text-center text-sm font-black text-vuttik-navy">
                               {item.cantidad}
                             </td>
-                            <td className="px-6 py-4 text-right text-sm font-bold text-gray-500 font-mono">
+                            <td className="px-6 py-4 text-right font-body-md font-bold text-on-surface-variant font-mono">
                               {formatCurrency(item.precio_unitario || item.precio_venta)}
                             </td>
-                            <td className="px-6 py-4 text-right text-sm font-black text-gray-900 font-mono">
+                            <td className="px-6 py-4 text-right text-sm font-black text-vuttik-navy font-mono">
                               {formatCurrency(item.total_linea || ((item.precio_unitario || item.precio_venta) * item.cantidad))}
                             </td>
                           </tr>
@@ -1408,37 +1408,37 @@ export default function Dashboard() {
                 </div>
 
                 {/* Financial Summary Breakdown */}
-                <div className="bg-gray-50/50 rounded-3xl p-6 border border-gray-100 space-y-3">
-                  <div className="flex justify-between text-sm font-bold text-gray-500">
+                <div className="bg-surface/50 rounded-3xl p-6 border border-gray-100 space-y-3">
+                  <div className="flex justify-between font-body-md font-bold text-on-surface-variant">
                     <span>Subtotal</span>
                     <span className="font-mono">{formatCurrency(selectedSaleDetail.subtotal)}</span>
                   </div>
                   {selectedSaleDetail.descuento > 0 && (
-                    <div className="flex justify-between text-sm font-bold text-red-500">
+                    <div className="flex justify-between font-body-md font-bold text-red-500">
                       <span>Descuento</span>
                       <span className="font-mono">-{formatCurrency(selectedSaleDetail.descuento)}</span>
                     </div>
                   )}
                   {selectedSaleDetail.impuesto > 0 && (
-                    <div className="flex justify-between text-sm font-bold text-gray-500">
+                    <div className="flex justify-between font-body-md font-bold text-on-surface-variant">
                       <span>Impuestos / ITBIS</span>
                       <span className="font-mono">{formatCurrency(selectedSaleDetail.impuesto)}</span>
                     </div>
                   )}
                   <div className="h-px bg-gray-100 my-2" />
                   <div className="flex justify-between items-center">
-                    <span className="text-base font-black text-gray-900">TOTAL COBRADO</span>
+                    <span className="text-base font-black text-vuttik-navy">TOTAL COBRADO</span>
                     <span className="text-2xl font-black text-emerald-600 font-mono">{formatCurrency(selectedSaleDetail.total)}</span>
                   </div>
 
                   {/* Received & Change Info */}
                   {selectedSaleDetail.monto_recibido !== undefined && (
                     <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
-                      <div className="p-3 bg-white rounded-xl border border-gray-100">
+                      <div className="p-3 bg-surface-container-lowest rounded-2xl border border-gray-100">
                         <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Efectivo Recibido</span>
                         <span className="text-sm font-black text-gray-800 font-mono">{formatCurrency(selectedSaleDetail.monto_recibido || selectedSaleDetail.total)}</span>
                       </div>
-                      <div className="p-3 bg-white rounded-xl border border-gray-100">
+                      <div className="p-3 bg-surface-container-lowest rounded-2xl border border-gray-100">
                         <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Cambio Devolución</span>
                         <span className="text-sm font-black text-emerald-600 font-mono">{formatCurrency(selectedSaleDetail.cambio || 0)}</span>
                       </div>
@@ -1453,7 +1453,7 @@ export default function Dashboard() {
                   onClick={() => {
                     printReceipt(selectedSaleDetail);
                   }}
-                  className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-4 bg-vuttik-blue hover:bg-blue-700 text-white rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-pro-hover shadow-blue-100 flex items-center justify-center gap-2"
                 >
                   <Printer className="h-5 w-5" />
                   Volver a imprimir ticket
@@ -1465,7 +1465,7 @@ export default function Dashboard() {
                       onClick={() => {
                         handleRefund(selectedSaleDetail.id);
                       }}
-                      className="px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2"
+                      className="px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-pro flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="h-5 w-5" />
                       Reembolsar
@@ -1476,7 +1476,7 @@ export default function Dashboard() {
                         onClick={() => {
                           handleCancel(selectedSaleDetail.id);
                         }}
-                        className="px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2"
+                        className="px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-pro flex items-center justify-center gap-2"
                       >
                         <Trash2 className="h-5 w-5" />
                         Anular
@@ -1497,7 +1497,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              className="bg-white p-8 rounded-[3rem] w-full max-w-4xl shadow-2xl my-8 flex flex-col max-h-[90vh]"
+              className="bg-surface-container-lowest p-8 rounded-[3rem] w-full max-w-4xl shadow-2xl my-8 flex flex-col max-h-[90vh]"
             >
               <div className="flex justify-between items-start mb-6 shrink-0 border-b border-gray-100 pb-6">
                 <div>
@@ -1510,10 +1510,10 @@ export default function Dashboard() {
                   )}>
                     Turno {selectedShift.estado}
                   </span>
-                  <h3 className="text-3xl font-black text-gray-900 tracking-tight leading-tight">
+                  <h3 className="text-3xl font-black text-vuttik-navy tracking-tight leading-tight">
                     Auditoría de Turno: {selectedShift.usuario_nombre}
                   </h3>
-                  <p className="text-gray-500 font-medium text-sm">
+                  <p className="text-on-surface-variant font-medium text-sm">
                     Apertura: {format(new Date(selectedShift.fecha_apertura), "PPP 'a las' p", { locale: es })}
                     {selectedShift.fecha_cierre && ` | Cierre: ${format(new Date(selectedShift.fecha_cierre), "p", { locale: es })}`}
                   </p>
@@ -1523,7 +1523,7 @@ export default function Dashboard() {
                     setSelectedShift(null);
                     setAuditSearchQuery('');
                   }} 
-                  className="p-3 bg-gray-50 hover:bg-gray-100 rounded-2xl border border-gray-100 transition-all text-gray-400 hover:text-gray-900 shadow-sm"
+                  className="p-3 bg-surface hover:bg-gray-100 rounded-3xl border border-gray-100 transition-all text-gray-400 hover:text-vuttik-navy shadow-sm"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -1531,27 +1531,27 @@ export default function Dashboard() {
 
               {loadingShiftDetails ? (
                 <div className="flex-1 py-10 flex flex-col items-center justify-center space-y-4">
-                  <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
-                  <p className="text-gray-500 font-black text-sm">Cargando cronología de operaciones...</p>
+                  <Loader2 className="h-10 w-10 text-vuttik-blue animate-spin" />
+                  <p className="text-on-surface-variant font-black text-sm">Cargando cronología de operaciones...</p>
                 </div>
               ) : (
                 <div className="flex-1 overflow-y-auto pr-2 space-y-8 min-h-0">
                   {/* Financial metrics summary */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-4 bg-surface rounded-3xl border border-gray-100">
                       <span className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Saldo Inicial (Cambio)</span>
-                      <span className="text-lg font-black text-gray-900 font-mono">{formatCurrency(selectedShift.monto_inicial)}</span>
+                      <span className="text-lg font-black text-vuttik-navy font-mono">{formatCurrency(selectedShift.monto_inicial)}</span>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-4 bg-surface rounded-3xl border border-gray-100">
                       <span className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Ventas Registradas</span>
-                      <span className="text-lg font-black text-blue-600 font-mono">{formatCurrency(selectedShift.total_ventas)}</span>
+                      <span className="text-lg font-black text-vuttik-blue font-mono">{formatCurrency(selectedShift.total_ventas)}</span>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-4 bg-surface rounded-3xl border border-gray-100">
                       <span className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Movimientos Caja (+/-)</span>
                       <span className="text-lg font-black text-purple-600 font-mono">{formatCurrency(selectedShift.total_entradas - selectedShift.total_salidas)}</span>
                     </div>
                     <div className={cn(
-                      "p-4 rounded-2xl border",
+                      "p-4 rounded-3xl border",
                       selectedShift.diferencia === 0 ? "bg-emerald-50 border-emerald-100" :
                       (selectedShift.diferencia && selectedShift.diferencia < 0) ? "bg-red-50 border-red-100" : "bg-blue-50 border-blue-100"
                     )}>
@@ -1570,7 +1570,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Expected Cash Box values */}
-                  <div className="bg-slate-900 p-6 rounded-2xl text-white grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-slate-900 p-6 rounded-3xl text-white grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dinero Esperado en Caja</p>
                       <p className="text-2xl font-black font-mono text-slate-200">{formatCurrency(selectedShift.monto_esperado)}</p>
@@ -1583,7 +1583,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Información de Diferencia</p>
-                          <p className="text-sm font-bold text-slate-300">
+                          <p className="font-body-md font-bold text-slate-300">
                             {selectedShift.motivo_diferencia || 'Fórmula: Inicial + Ventas Efectivo + Entradas - Salidas. Sin novedades.'}
                           </p>
                         </div>
@@ -1594,23 +1594,23 @@ export default function Dashboard() {
                   {/* Cash breakdown denominations reported */}
                   {selectedShift.desglose_denominaciones && (
                     <div className="space-y-3">
-                      <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Desglose Físico de Efectivo Reportado</h4>
+                      <h4 className="font-label-md font-black text-gray-400 uppercase tracking-widest">Desglose Físico de Efectivo Reportado</h4>
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         {DENOMINATIONS.map(d => {
                           const qty = selectedShift.desglose_denominaciones?.[d.key as any] || 0;
                           if (qty === 0) return null;
                           return (
-                            <div key={d.key} className="p-3 bg-gray-50 border border-gray-100 rounded-xl text-center">
+                            <div key={d.key} className="p-3 bg-surface border border-gray-100 rounded-2xl text-center">
                               <span className="block text-[10px] text-gray-400 font-bold uppercase">{d.label}</span>
-                              <span className="text-base font-black text-gray-900">{qty} uds</span>
+                              <span className="text-base font-black text-vuttik-navy">{qty} uds</span>
                               <span className="block text-[9px] text-gray-400 font-mono font-semibold">({formatCurrency(qty * d.value)})</span>
                             </div>
                           );
                         })}
                         {selectedShift.desglose_denominaciones?.otros > 0 && (
-                          <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl text-center col-span-2 sm:col-span-1">
+                          <div className="p-3 bg-surface border border-gray-100 rounded-2xl text-center col-span-2 sm:col-span-1">
                             <span className="block text-[10px] text-gray-400 font-bold uppercase">Otros Centavos</span>
-                            <span className="text-base font-black text-gray-950">{formatCurrency(selectedShift.desglose_denominaciones.otros)}</span>
+                            <span className="text-base font-black text-vuttik-navy">{formatCurrency(selectedShift.desglose_denominaciones.otros)}</span>
                           </div>
                         )}
                       </div>
@@ -1621,7 +1621,7 @@ export default function Dashboard() {
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
-                        <h4 className="text-lg font-black text-gray-900 tracking-tight">Línea de Tiempo de Operaciones (Auditoría de Caja)</h4>
+                        <h4 className="text-lg font-black text-vuttik-navy tracking-tight">Línea de Tiempo de Operaciones (Auditoría de Caja)</h4>
                         <p className="text-xs text-gray-400 font-medium">Cronología paso a paso con hora exacta, ideal para buscar grabaciones de cámaras de seguridad.</p>
                       </div>
 
@@ -1633,7 +1633,7 @@ export default function Dashboard() {
                           placeholder="Buscar ticket, cliente o motivo..."
                           value={auditSearchQuery}
                           onChange={(e) => setAuditSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 border border-gray-200 bg-gray-50 rounded-xl focus:bg-white outline-none font-bold text-xs transition-all"
+                          className="w-full pl-9 pr-4 py-2 border border-gray-200 bg-surface rounded-2xl focus:bg-surface-container-lowest outline-none font-bold text-xs transition-all"
                         />
                       </div>
                     </div>
@@ -1651,7 +1651,7 @@ export default function Dashboard() {
                           montoStr: formatCurrency(selectedShift.monto_inicial),
                           tipo: 'apertura',
                           cajero: selectedShift.usuario_nombre,
-                          color: 'bg-blue-50 border-2 border-blue-500 text-blue-600',
+                          color: 'bg-blue-50 border-2 border-blue-500 text-vuttik-blue',
                           icon: Wallet
                         });
 
@@ -1745,18 +1745,18 @@ export default function Dashboard() {
                               <div>
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <h5 className="font-black text-gray-900 text-sm leading-tight">{ev.titulo}</h5>
+                                    <h5 className="font-black text-vuttik-navy text-sm leading-tight">{ev.titulo}</h5>
                                     {ev.subt && (
                                       <span className="px-2 py-0.5 bg-yellow-50 border border-yellow-105 text-yellow-800 rounded font-black text-[9px] uppercase tracking-wider">
                                         {ev.subt}
                                       </span>
                                     )}
                                   </div>
-                                  <span className="text-xs font-mono font-black text-gray-900 shrink-0 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
+                                  <span className="text-xs font-mono font-black text-vuttik-navy shrink-0 bg-surface px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
                                     {ev.montoStr}
                                   </span>
                                 </div>
-                                <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-3xl">{ev.descripcion}</p>
+                                <p className="text-xs text-on-surface-variant font-medium leading-relaxed max-w-3xl">{ev.descripcion}</p>
                                 <div className="flex items-center gap-3 mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
@@ -1784,7 +1784,7 @@ export default function Dashboard() {
                     setSelectedShift(null);
                     setAuditSearchQuery('');
                   }}
-                  className="px-8 py-4 bg-gray-900 hover:bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg"
+                  className="px-8 py-4 bg-gray-900 hover:bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-pro-hover"
                 >
                   Entendido / Cerrar Auditoría
                 </button>
@@ -1797,9 +1797,9 @@ export default function Dashboard() {
       {/* Loading Sale Detail overlay */}
       {loadingSale && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 backdrop-blur-[2px]">
-          <div className="bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-4">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-            <span className="font-black text-gray-900 text-sm">Cargando detalles de venta...</span>
+          <div className="bg-surface-container-lowest p-6 rounded-3xl shadow-2xl border border-gray-100 flex items-center gap-4">
+            <Loader2 className="h-6 w-6 animate-spin text-vuttik-blue" />
+            <span className="font-black text-vuttik-navy text-sm">Cargando detalles de venta...</span>
           </div>
         </div>
       )}
@@ -1808,7 +1808,7 @@ export default function Dashboard() {
       {lowStockProductsList.length > 0 && (
         <div className="bg-gradient-to-r from-amber-500/10 via-amber-600/15 to-orange-500/10 border border-amber-500/25 p-6 rounded-[2rem] shadow-xl flex flex-col md:flex-row items-center justify-between gap-5 animate-pulse mb-8">
           <div className="flex items-center gap-4 text-left">
-            <div className="bg-amber-500/20 p-3.5 rounded-2xl text-amber-500 border border-amber-500/20 shrink-0">
+            <div className="bg-amber-500/20 p-3.5 rounded-3xl text-amber-500 border border-amber-500/20 shrink-0">
               <AlertCircle className="h-7 w-7" />
             </div>
             <div>
@@ -1820,7 +1820,7 @@ export default function Dashboard() {
           </div>
           <Link 
             to="/inventory"
-            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-950/20 shrink-0 hover:-translate-y-0.5"
+            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-3xl transition-all shadow-pro-hover shadow-amber-950/20 shrink-0 hover:-translate-y-0.5"
           >
             Reabastecer Ahora
           </Link>
@@ -1831,10 +1831,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         
         {/* SVG Line Chart: Ventas del Mes */}
-        <div className="bg-white p-8 rounded-[2rem] shadow-md border border-gray-150 flex flex-col justify-between">
+        <div className="bg-surface-container-lowest p-8 rounded-[2rem] shadow-pro border border-gray-150 flex flex-col justify-between">
           <div>
-            <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+            <h3 className="font-headline-md font-black text-vuttik-navy tracking-tight flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-vuttik-blue" />
               Tendencia de Ventas (Rango Seleccionado)
             </h3>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Evolución de las ventas totales registradas en el periodo</p>
@@ -1842,7 +1842,7 @@ export default function Dashboard() {
           
           <div className="my-6">
             {chartData.length === 0 ? (
-              <div className="h-48 flex items-center justify-center text-slate-400 font-bold italic border border-dashed border-gray-100 rounded-2xl bg-slate-50/50">
+              <div className="h-48 flex items-center justify-center text-slate-400 font-bold italic border border-dashed border-gray-100 rounded-3xl bg-slate-50/50">
                 Sin datos de ventas en este periodo
               </div>
             ) : (() => {
@@ -1910,9 +1910,9 @@ export default function Dashboard() {
         </div>
 
         {/* Top Products and Expenses vs Sales circular Gauge */}
-        <div className="bg-white p-8 rounded-[2rem] shadow-md border border-gray-150 flex flex-col justify-between">
+        <div className="bg-surface-container-lowest p-8 rounded-[2rem] shadow-pro border border-gray-150 flex flex-col justify-between">
           <div>
-            <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <h3 className="font-headline-md font-black text-vuttik-navy tracking-tight flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-emerald-600" />
               Líderes de Venta y Balance Mensual
             </h3>
@@ -1994,7 +1994,7 @@ export default function Dashboard() {
       <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-8 rounded-[2.5rem] border border-white/10 shadow-2xl text-left text-white">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h3 className="text-xl font-black text-white flex items-center gap-2">
+            <h3 className="font-headline-md font-black text-white flex items-center gap-2">
               <ShieldCheck className="h-6 w-6 text-emerald-400" />
               Seguridad y Copias de Seguridad (Respaldos)
             </h3>
@@ -2007,7 +2007,7 @@ export default function Dashboard() {
             {/* JSON Download */}
             <button
               onClick={handleDownloadJSONBackup}
-              className="flex-1 md:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider px-6 py-4 rounded-2xl transition-all shadow-lg shadow-emerald-950/40 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              className="flex-1 md:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-label-md font-black uppercase tracking-wider px-6 py-4 rounded-3xl transition-all shadow-pro-hover shadow-emerald-950/40 hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
               RESPALDO BASE DATOS (JSON)
@@ -2016,7 +2016,7 @@ export default function Dashboard() {
             {/* CSV Sales */}
             <button
               onClick={handleExportSalesCSV}
-              className="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-700 text-white text-xs font-black uppercase tracking-wider px-5 py-4 rounded-2xl transition-all border border-white/5 flex items-center justify-center gap-2"
+              className="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-700 text-white font-label-md font-black uppercase tracking-wider px-5 py-4 rounded-3xl transition-all border border-white/5 flex items-center justify-center gap-2"
             >
               <FileText className="h-4 w-4 text-blue-400" />
               EXPORTAR VENTAS (CSV)
@@ -2025,7 +2025,7 @@ export default function Dashboard() {
             {/* CSV Inventory */}
             <button
               onClick={handleExportInventoryCSV}
-              className="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-700 text-white text-xs font-black uppercase tracking-wider px-5 py-4 rounded-2xl transition-all border border-white/5 flex items-center justify-center gap-2"
+              className="flex-1 md:flex-initial bg-slate-800 hover:bg-slate-700 text-white font-label-md font-black uppercase tracking-wider px-5 py-4 rounded-3xl transition-all border border-white/5 flex items-center justify-center gap-2"
             >
               <Package className="h-4 w-4 text-amber-400" />
               EXPORTAR INVENTARIO (CSV)
@@ -2049,10 +2049,10 @@ export default function Dashboard() {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="pointer-events-auto w-full max-w-2xl max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                className="pointer-events-auto w-full max-w-2xl max-h-[85vh] bg-surface-container-lowest rounded-3xl shadow-2xl overflow-hidden flex flex-col"
               >
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
-                  <h3 className="text-xl font-black tracking-tight text-gray-900">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-surface">
+                  <h3 className="font-headline-md font-black tracking-tight text-vuttik-navy">
                     Desglose: {
                       activeModal === 'caja' ? 'Estimado en Caja' :
                       activeModal === 'banco' ? 'Ido al Banco (Guardado)' :
@@ -2081,8 +2081,8 @@ export default function Dashboard() {
                           </thead>
                           <tbody>
                             {stats?.details?.todaySalesData?.map((sale: any) => (
-                              <tr key={sale.id} className="border-b border-gray-50 hover:bg-gray-50">
-                                <td className="py-3 text-gray-500">{new Date(sale.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute:'2-digit' })}</td>
+                              <tr key={sale.id} className="border-b border-gray-50 hover:bg-surface">
+                                <td className="py-3 text-on-surface-variant">{new Date(sale.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute:'2-digit' })}</td>
                                 <td className="py-3 font-bold text-gray-700">{sale.cliente}</td>
                                 <td className="py-3">
                                   <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] rounded-full font-bold uppercase">{sale.metodo_pago}</span>
@@ -2098,8 +2098,8 @@ export default function Dashboard() {
 
                   {activeModal === 'ganancia' && (
                     <div className="space-y-4">
-                      <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 mb-6">
-                        <p className="text-sm font-bold text-emerald-800 mb-2">Fórmula de Cálculo:</p>
+                      <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 mb-6">
+                        <p className="font-body-md font-bold text-emerald-800 mb-2">Fórmula de Cálculo:</p>
                         <p className="text-xs text-emerald-600 leading-relaxed">
                           Ingresos de Ventas Cobradas (reales) - Costo Total de la Mercancía Vendida - Gastos Operativos (Luz, agua, sueldos, etc). <br/><br/>
                           <i>No se toma en cuenta el fiado pendiente porque no es dinero real hasta que lo paguen.</i>
@@ -2107,7 +2107,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex justify-between items-center py-3 border-b border-gray-100">
                         <span className="text-gray-600 font-bold">Ingresos (Ventas cobradas)</span>
-                        <span className="font-black text-gray-900 font-mono">{formatCurrency(stats?.profitStats?.totalVendido || 0)}</span>
+                        <span className="font-black text-vuttik-navy font-mono">{formatCurrency(stats?.profitStats?.totalVendido || 0)}</span>
                       </div>
                       <div className="flex justify-between items-center py-3 border-b border-gray-100">
                         <span className="text-gray-600 font-bold">Costo de Mercancía Comprada</span>
@@ -2139,10 +2139,10 @@ export default function Dashboard() {
                           </thead>
                           <tbody>
                             {stats?.details?.lowStockData?.map((prod: any) => (
-                              <tr key={prod.id} className="border-b border-gray-50 hover:bg-gray-50">
+                              <tr key={prod.id} className="border-b border-gray-50 hover:bg-surface">
                                 <td className="py-3 font-bold text-gray-800">{prod.nombre}</td>
                                 <td className="py-3 text-center font-black text-red-500">{prod.cantidad}</td>
-                                <td className="py-3 text-center text-gray-500 font-bold">{prod.minimo}</td>
+                                <td className="py-3 text-center text-on-surface-variant font-bold">{prod.minimo}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -2167,10 +2167,10 @@ export default function Dashboard() {
                           </thead>
                           <tbody>
                             {stats?.details?.expenses?.map((exp: any) => (
-                              <tr key={exp.id} className="border-b border-gray-50 hover:bg-gray-50">
-                                <td className="py-3 text-gray-500">{new Date(exp.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</td>
+                              <tr key={exp.id} className="border-b border-gray-50 hover:bg-surface">
+                                <td className="py-3 text-on-surface-variant">{new Date(exp.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}</td>
                                 <td className="py-3 font-bold text-gray-700">{exp.descripcion}</td>
-                                <td className="py-3 text-gray-500 text-xs">{exp.categoria}</td>
+                                <td className="py-3 text-on-surface-variant text-xs">{exp.categoria}</td>
                                 <td className="py-3 text-right font-black text-red-500 font-mono">{formatCurrency(exp.monto)}</td>
                               </tr>
                             ))}
@@ -2182,8 +2182,8 @@ export default function Dashboard() {
 
                   {activeModal === 'caja' && (
                     <div className="space-y-4">
-                      <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 mb-6">
-                        <p className="text-sm font-bold text-emerald-800 mb-2">Estimado en Caja:</p>
+                      <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 mb-6">
+                        <p className="font-body-md font-bold text-emerald-800 mb-2">Estimado en Caja:</p>
                         <p className="text-xs text-emerald-600 leading-relaxed">
                           Es el dinero que debería haber físicamente en la gaveta o caja registradora en este momento. Refleja el monto esperado del turno abierto actual.
                         </p>
@@ -2197,17 +2197,17 @@ export default function Dashboard() {
 
                   {activeModal === 'banco' && (
                     <div className="space-y-4">
-                      <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 mb-6">
-                        <p className="text-sm font-bold text-blue-800 mb-2">Fórmula de Cálculo:</p>
-                        <p className="text-xs text-blue-600 leading-relaxed">
+                      <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 mb-6">
+                        <p className="font-body-md font-bold text-blue-800 mb-2">Fórmula de Cálculo:</p>
+                        <p className="text-xs text-vuttik-blue leading-relaxed">
                           Suma del dinero que has transferido desde tu Caja hacia tu Banco + las Ventas pagadas directamente con Tarjeta o Transferencia - cualquier gasto pagado desde el Banco.
                         </p>
                       </div>
 
                       <details className="group border-b border-gray-100 py-3">
                         <summary className="flex justify-between items-center cursor-pointer list-none select-none">
-                          <span className="text-gray-600 font-bold group-open:text-blue-600 transition-colors hover:underline">Transferido desde la Caja ▼</span>
-                          <span className="font-black text-gray-900 font-mono">{formatCurrency(stats?.financieroStats?.bancoDetails?.bancoEntradas || 0)}</span>
+                          <span className="text-gray-600 font-bold group-open:text-vuttik-blue transition-colors hover:underline">Transferido desde la Caja ▼</span>
+                          <span className="font-black text-vuttik-navy font-mono">{formatCurrency(stats?.financieroStats?.bancoDetails?.bancoEntradas || 0)}</span>
                         </summary>
                         <div className="pt-3 pb-1 pl-4 space-y-2 border-l-2 border-blue-100 ml-2 mt-2">
                           {stats?.financieroStats?.bancoDetails?.bancoEntradasItems?.length === 0 ? (
@@ -2215,7 +2215,7 @@ export default function Dashboard() {
                           ) : (
                             stats?.financieroStats?.bancoDetails?.bancoEntradasItems?.map((t: any) => (
                               <div key={t.id} className="flex justify-between items-center text-xs">
-                                <span className="text-gray-500 flex items-center gap-2"><ClickableDate date={t.fecha} /> <span className="text-[9px] uppercase tracking-wider font-bold">Transferencia</span></span>
+                                <span className="text-on-surface-variant flex items-center gap-2"><ClickableDate date={t.fecha} /> <span className="text-[9px] uppercase tracking-wider font-bold">Transferencia</span></span>
                                 <span className="font-mono text-gray-700 font-bold">{formatCurrency(t.monto)}</span>
                               </div>
                             ))
@@ -2225,8 +2225,8 @@ export default function Dashboard() {
 
                       <details className="group border-b border-gray-100 py-3">
                         <summary className="flex justify-between items-center cursor-pointer list-none select-none">
-                          <span className="text-gray-600 font-bold group-open:text-blue-600 transition-colors hover:underline">Ventas por Tarjeta / Transferencia ▼</span>
-                          <span className="font-black text-gray-900 font-mono">+ {formatCurrency(stats?.financieroStats?.bancoDetails?.ventasBanco || 0)}</span>
+                          <span className="text-gray-600 font-bold group-open:text-vuttik-blue transition-colors hover:underline">Ventas por Tarjeta / Transferencia ▼</span>
+                          <span className="font-black text-vuttik-navy font-mono">+ {formatCurrency(stats?.financieroStats?.bancoDetails?.ventasBanco || 0)}</span>
                         </summary>
                         <div className="pt-3 pb-1 pl-4 space-y-2 border-l-2 border-blue-100 ml-2 mt-2">
                           {stats?.financieroStats?.bancoDetails?.ventasBancoItems?.length === 0 ? (
@@ -2234,7 +2234,7 @@ export default function Dashboard() {
                           ) : (
                             stats?.financieroStats?.bancoDetails?.ventasBancoItems?.map((s: any) => (
                               <div key={s.id} className="flex justify-between items-center text-xs">
-                                <span className="text-gray-500 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                <span className="text-on-surface-variant flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                   <ClickableDate date={s.fecha} /> 
                                   <span className="text-[9px] uppercase tracking-wider font-bold text-blue-500">
                                     Venta #{s.id.slice(0, 5)} - {s.metodo_pago}
@@ -2258,7 +2258,7 @@ export default function Dashboard() {
                           ) : (
                             stats?.financieroStats?.bancoDetails?.bancoSalidasGastosItems?.map((e: any) => (
                               <div key={e.id} className="flex justify-between items-center text-xs">
-                                <span className="text-gray-500 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                <span className="text-on-surface-variant flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                   <ClickableDate date={e.fecha} /> 
                                   <span className="text-[9px] uppercase tracking-wider font-bold text-red-400 truncate max-w-[150px] sm:max-w-[200px]">
                                     {e.descripcion}
@@ -2272,16 +2272,16 @@ export default function Dashboard() {
                       </details>
 
                       <div className="flex justify-between items-center pt-4 mt-2">
-                        <span className="text-lg font-black text-blue-600">Total Acumulado en Banco</span>
-                        <span className="text-2xl font-black text-blue-600 font-mono">{formatCurrency(stats?.financieroStats?.totalIdoBanco || 0)}</span>
+                        <span className="text-lg font-black text-vuttik-blue">Total Acumulado en Banco</span>
+                        <span className="text-2xl font-black text-vuttik-blue font-mono">{formatCurrency(stats?.financieroStats?.totalIdoBanco || 0)}</span>
                       </div>
                     </div>
                   )}
 
                   {activeModal === 'inversion' && (
                     <div className="space-y-4">
-                      <div className="bg-purple-50 p-6 rounded-2xl border border-purple-100 mb-6">
-                        <p className="text-sm font-bold text-purple-800 mb-2">Inversión Externa:</p>
+                      <div className="bg-purple-50 p-6 rounded-3xl border border-purple-100 mb-6">
+                        <p className="font-body-md font-bold text-purple-800 mb-2">Inversión Externa:</p>
                         <p className="text-xs text-purple-600 leading-relaxed">
                           Es el dinero sacado de tu bolsillo (externo al negocio) para inyectar capital, comprar mercancía o cubrir gastos del negocio.
                         </p>
@@ -2290,7 +2290,7 @@ export default function Dashboard() {
                       <details className="group border-b border-gray-100 py-3">
                         <summary className="flex justify-between items-center cursor-pointer list-none select-none">
                           <span className="text-gray-600 font-bold group-open:text-purple-600 transition-colors hover:underline">Capital Inyectado a Caja/Banco ▼</span>
-                          <span className="font-black text-gray-900 font-mono">{formatCurrency(stats?.financieroStats?.inversionDetails?.transferenciasDesdeInversion || 0)}</span>
+                          <span className="font-black text-vuttik-navy font-mono">{formatCurrency(stats?.financieroStats?.inversionDetails?.transferenciasDesdeInversion || 0)}</span>
                         </summary>
                         <div className="pt-3 pb-1 pl-4 space-y-2 border-l-2 border-purple-100 ml-2 mt-2">
                           {stats?.financieroStats?.inversionDetails?.transferenciasDesdeInversionItems?.length === 0 ? (
@@ -2298,7 +2298,7 @@ export default function Dashboard() {
                           ) : (
                             stats?.financieroStats?.inversionDetails?.transferenciasDesdeInversionItems?.map((t: any) => (
                               <div key={t.id} className="flex justify-between items-center text-xs">
-                                <span className="text-gray-500 flex items-center gap-2"><ClickableDate date={t.fecha} /> <span className="text-[9px] uppercase tracking-wider font-bold">Inyección</span></span>
+                                <span className="text-on-surface-variant flex items-center gap-2"><ClickableDate date={t.fecha} /> <span className="text-[9px] uppercase tracking-wider font-bold">Inyección</span></span>
                                 <span className="font-mono text-gray-700 font-bold">{formatCurrency(t.monto)}</span>
                               </div>
                             ))
@@ -2309,7 +2309,7 @@ export default function Dashboard() {
                       <details className="group border-b border-gray-100 py-3">
                         <summary className="flex justify-between items-center cursor-pointer list-none select-none">
                           <span className="text-gray-600 font-bold group-open:text-purple-600 transition-colors hover:underline">Gastos pagados con tu bolsillo ▼</span>
-                          <span className="font-black text-gray-900 font-mono">+ {formatCurrency(stats?.financieroStats?.inversionDetails?.comprasInversion || 0)}</span>
+                          <span className="font-black text-vuttik-navy font-mono">+ {formatCurrency(stats?.financieroStats?.inversionDetails?.comprasInversion || 0)}</span>
                         </summary>
                         <div className="pt-3 pb-1 pl-4 space-y-2 border-l-2 border-purple-100 ml-2 mt-2">
                           {stats?.financieroStats?.inversionDetails?.comprasInversionItems?.length === 0 ? (
@@ -2317,7 +2317,7 @@ export default function Dashboard() {
                           ) : (
                             stats?.financieroStats?.inversionDetails?.comprasInversionItems?.map((e: any) => (
                               <div key={e.id} className="flex justify-between items-center text-xs">
-                                <span className="text-gray-500 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                <span className="text-on-surface-variant flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                   <ClickableDate date={e.fecha} /> 
                                   <span className="text-[9px] uppercase tracking-wider font-bold text-purple-400 truncate max-w-[150px] sm:max-w-[200px]">
                                     {e.descripcion}

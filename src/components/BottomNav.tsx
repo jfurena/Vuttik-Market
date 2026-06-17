@@ -1,17 +1,20 @@
-import { Home, Search, PlusCircle, User, MessageSquare, Globe } from 'lucide-react';
+import { Home, Search, PlusCircle, User, MessageSquare, Globe, ShoppingBag } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface BottomNavProps {
   activeTab: string;
   onPublishClick: () => void;
+  onMarketClick?: () => void;
 }
 
-export default function BottomNav({ activeTab, onPublishClick }: BottomNavProps) {
+export default function BottomNav({ activeTab, onPublishClick, onMarketClick }: BottomNavProps) {
   const navigate = useNavigate();
+  const { unreadMessagesCount } = useAuth();
 
   const tabs = [
-    { id: 'market', path: '/', icon: Search, label: 'Mercado' },
+    { id: 'market', action: onMarketClick || (() => navigate('/')), icon: ShoppingBag, label: 'Mercado' },
     { id: 'social', path: '/social', icon: Globe, label: 'Social' },
     { id: 'publish', action: onPublishClick, icon: PlusCircle, label: 'Publicar', isCenter: true },
     { id: 'messages', path: '/mensajes', icon: MessageSquare, label: 'Mensajes' },
@@ -29,7 +32,7 @@ export default function BottomNav({ activeTab, onPublishClick }: BottomNavProps)
   const profileEmoji = getProfileIcon();
 
   return (
-    <nav className="bottom-nav px-4 sm:px-8">
+    <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-white/80 dark:bg-vuttik-navy/80 backdrop-blur-lg shadow-[0_-8px_32px_0_rgba(6,11,25,0.04)] border-t border-outline-variant/20">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id || 
@@ -40,14 +43,11 @@ export default function BottomNav({ activeTab, onPublishClick }: BottomNavProps)
             <button
               key={tab.id}
               onClick={() => tab.action ? tab.action() : navigate(tab.path)}
-              className="relative flex-1 flex flex-col items-center py-1"
+              className="relative flex-1 flex flex-col items-center justify-center active:scale-95 transition-all duration-200"
             >
-              <div className="relative w-12 h-12 bg-vuttik-blue text-white rounded-xl flex items-center justify-center shadow-lg shadow-vuttik-blue/30 hover:scale-110 active:scale-90 transition-all">
-                <Icon size={24} strokeWidth={2.5} />
+              <div className="relative flex items-center justify-center text-vuttik-blue">
+                <Icon size={40} strokeWidth={2} />
               </div>
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter sm:tracking-wider mt-0.5 text-vuttik-blue">
-                {tab.label}
-              </span>
             </button>
           );
         }
@@ -55,24 +55,27 @@ export default function BottomNav({ activeTab, onPublishClick }: BottomNavProps)
         return (
           <button
             key={tab.id}
-            onClick={() => navigate(tab.path)}
-            className={`nav-item flex-1 py-1 ${isActive ? 'active' : ''}`}
+            onClick={() => tab.action ? tab.action() : tab.path && navigate(tab.path)}
+            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${isActive ? 'text-vuttik-blue dark:text-sky-accent font-bold' : 'text-on-surface-variant dark:text-outline-variant hover:text-vuttik-blue'}`}
           >
             <motion.div
               whileTap={{ scale: 0.8 }}
               className="relative flex flex-col items-center"
             >
-              <div className={`p-2 rounded-xl transition-all ${isActive ? 'bg-vuttik-blue/10' : ''}`}>
-                {tab.id === 'profile' && profileEmoji ? (
-                  <div className="relative">
-                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-vuttik-blue' : 'text-on-surface-variant'} />
-                    <span className="absolute -top-2 -right-2 text-xs">{profileEmoji}</span>
-                  </div>
-                ) : (
-                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-vuttik-blue' : 'text-on-surface-variant'} />
-                )}
-              </div>
-              <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter sm:tracking-wider mt-0.5 ${isActive ? 'text-vuttik-blue' : 'text-on-surface-variant'}`}>
+              {tab.id === 'profile' && profileEmoji ? (
+                <div className="relative mb-1">
+                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="absolute -top-2 -right-2 text-xs">{profileEmoji}</span>
+                </div>
+              ) : tab.id === 'messages' && unreadMessagesCount > 0 ? (
+                <div className="relative mb-1">
+                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">{unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}</span>
+                </div>
+              ) : (
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} className="mb-1" />
+              )}
+              <span className="font-label-sm text-[10px] uppercase">
                 {tab.label}
               </span>
             </motion.div>

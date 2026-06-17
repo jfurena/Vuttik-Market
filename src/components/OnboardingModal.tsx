@@ -4,6 +4,7 @@ import { CheckCircle2, ArrowRight, User, Briefcase, Store, Shield, Activity, Sta
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import LemonSqueezyMockCheckout from './LemonSqueezyMockCheckout';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface OnboardingModalProps {
   onComplete: () => void;
@@ -24,6 +25,8 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('free');
+
+  useEscapeKey(onComplete);
   
   // Extra data fields
   const [age, setAge] = useState('');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Camera, RefreshCw, AlertCircle } from 'lucide-react';
+import { X, Camera as CameraIcon, RefreshCw, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface CameraModalProps {
   onCapture: (imageBase64: string) => void;
@@ -14,6 +15,8 @@ export default function CameraModal({ onCapture, onClose }: CameraModalProps) {
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEscapeKey(onClose);
 
   useEffect(() => {
     startCamera();

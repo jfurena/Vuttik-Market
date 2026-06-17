@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import PromotionModal from './PromotionModal';
 import UserAvatar from './UserAvatar';
 import ProductCard from './ProductCard';
@@ -62,6 +63,8 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
   const [editingContent, setEditingContent] = useState('');
   const [newPostImage, setNewPostImage] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEscapeKey(() => setSelectedImage(null), !!selectedImage);
 
   const { user: currentUser, isBusinessModeActive } = useAuth();
   const dialog = useDialog();
@@ -356,12 +359,7 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
   };
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 pb-32 px-4 md:px-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h2 className="text-3xl md:text-4xl font-display font-black text-on-surface">Social</h2>
-        <p className="text-base md:text-lg text-on-surface-variant">Conéctate con la comunidad.</p>
-      </div>
+    <div className="feed-container space-y-6 pb-32 px-4 md:px-6 w-full">
 
       {/* Tabs */}
       <div className="flex gap-2 p-1.5 bg-surface-container rounded-3xl">
@@ -569,124 +567,57 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="bg-white border border-gray-100 rounded-[32px] md:rounded-[40px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500"
+                      className="bg-white rounded-lg shadow-[0_8px_32px_0_rgba(6,11,25,0.04)] overflow-hidden mb-6"
                     >
                       {/* Header */}
-                      <div className="p-5 md:p-8 flex items-center justify-between gap-3">
-                        <button
-                          onClick={() => onNavigateToProfile(post.author_id)}
-                          className="flex items-center gap-3 md:gap-4 text-left min-w-0"
-                        >
-                          <div className="w-10 h-10 md:w-14 md:h-14 rounded-3xl md:rounded-[20px] bg-surface-container/50 text-on-surface shadow-sm shrink-0 overflow-hidden">
-                            <UserAvatar src={post.author_avatar} alt={post.author_name} />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 md:gap-2">
-                              <h4 className="text-sm md:text-lg font-display font-black text-on-surface truncate">{post.author_name}</h4>
-                              {post.is_verified && <ShieldCheck size={14} className="text-vuttik-blue md:size-[18px] shrink-0" />}
+                      <div className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => onNavigateToProfile(post.author_id)} className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-surface-variant/30">
+                              <UserAvatar src={post.author_avatar} alt={post.author_name} />
                             </div>
-                            <p className="text-[10px] md:text-xs text-on-surface-variant font-bold truncate">
-                              {post.location} · {formatDate(post.created_at)}
-                            </p>
-                          </div>
-                        </button>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Follow button — shown for other users */}
+                            <div className="text-left">
+                              <div className="flex items-center gap-1">
+                                <span className="font-label-md text-on-surface">{post.author_name}</span>
+                                {post.is_verified && <ShieldCheck size={18} className="text-vuttik-blue" />}
+                              </div>
+                              <span className="text-label-sm text-on-surface-variant">{formatDate(post.created_at)} • {post.location}</span>
+                            </div>
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
                           {!isOwn && (
                             <button
                               onClick={() => handleFollow(post.author_id)}
                               disabled={isFollowLoading}
-                              title={isFollowing ? 'Dejar de seguir' : 'Seguir'}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-3xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                                 isFollowing
-                                  ? 'border-vuttik-blue/30 text-vuttik-blue bg-vuttik-blue/5 hover:bg-red-50 hover:text-red-500 hover:border-red-200'
-                                  : 'border-vuttik-navy/20 text-on-surface bg-white hover:bg-vuttik-navy hover:text-white'
+                                  ? 'border border-vuttik-blue/30 text-vuttik-blue bg-vuttik-blue/5 hover:bg-red-50 hover:text-red-500'
+                                  : 'bg-surface-container-low text-on-surface hover:bg-surface-container'
                               } ${isFollowLoading ? 'opacity-50' : ''}`}
                             >
-                              {isFollowing ? <UserCheck size={12} /> : <UserPlus size={12} />}
                               {isFollowing ? 'Siguiendo' : 'Seguir'}
                             </button>
                           )}
-                          <button
-                            onClick={() => { setPromoTargetId(post.id); setShowPromoModal(true); }}
-                            className="p-2 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-3xl transition-colors"
-                            title="Promocionar"
-                          >
-                            <Megaphone size={16} className="md:size-5" />
-                          </button>
                           <div className="relative">
                             <button 
                               onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-                              className="p-2 text-on-surface-variant hover:bg-surface-container rounded-3xl transition-colors"
+                              className="p-2 text-outline hover:text-on-surface transition-colors rounded-full"
                             >
-                              <MoreHorizontal size={18} className="md:size-5" />
+                              <MoreHorizontal size={20} />
                             </button>
                             {activeMenu === post.id && (
                               <>
                                 <div className="fixed inset-0 z-40" onClick={() => setActiveMenu(null)} />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-3xl shadow-xl border border-gray-100 py-2 z-50">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-surface-container-low py-2 z-50">
                                   {isOwn ? (
                                     <>
-                                      <button 
-                                        onClick={() => {
-                                          setEditingPostId(post.id);
-                                          setEditingContent(post.content);
-                                          setActiveMenu(null);
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-sm font-bold text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
-                                      >
-                                        Editar publicación
-                                      </button>
-                                      <button 
-                                        onClick={() => handleDeletePost(post.id)}
-                                        className="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
-                                      >
-                                        Eliminar publicación
-                                      </button>
+                                      <button onClick={() => { setEditingPostId(post.id); setEditingContent(post.content); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors">Editar publicación</button>
+                                      <button onClick={() => handleDeletePost(post.id)} className="w-full px-4 py-2 text-left text-sm text-error hover:bg-error-container transition-colors">Eliminar publicación</button>
                                     </>
                                   ) : (
-                                    <>
-                                      <button 
-                                        onClick={() => { setActiveMenu(null); handleReportPost(post); }}
-                                        className="w-full px-4 py-2 text-left text-sm font-bold text-on-surface hover:bg-surface-container transition-colors"
-                                      >
-                                        Reportar
-                                      </button>
-                                      {currentUser?.role === 'mega_guardian' && (
-                                        <>
-                                          <div className="h-px bg-gray-100 my-1 w-full" />
-                                          <button 
-                                            onClick={async () => {
-                                              setActiveMenu(null);
-                                              if (await dialog.confirm('¿Eliminar publicación de este usuario? (Mega Guardian)')) {
-                                                try {
-                                                  await api.deletePost(post.id, currentUser.uid);
-                                                  setPosts(posts.filter(p => p.id !== post.id));
-                                                } catch(err) { dialog.alert('Error eliminando publicación'); }
-                                              }
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
-                                          >
-                                            <Trash2 size={14} /> Eliminar (Mod)
-                                          </button>
-                                          <button 
-                                            onClick={async () => {
-                                              setActiveMenu(null);
-                                              if (await dialog.confirm('¿Suspender (banear) a este usuario? (Mega Guardian)')) {
-                                                try {
-                                                  await api.banUser(post.author_id, currentUser.uid);
-                                                  dialog.alert('Usuario suspendido.');
-                                                } catch(err) { dialog.alert('Error suspendiendo al usuario'); }
-                                              }
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
-                                          >
-                                            <Ban size={14} /> Suspender Usuario
-                                          </button>
-                                        </>
-                                      )}
-                                    </>
+                                    <button onClick={() => { setActiveMenu(null); handleReportPost(post); }} className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors">Reportar</button>
                                   )}
                                 </div>
                               </>
@@ -695,93 +626,53 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                         </div>
                       </div>
 
-                      {/* Content */}
-                      <div className="px-5 md:px-8 pb-4">
+                      {/* Content Text */}
+                      <div className="px-4 pb-4">
                         {editingPostId === post.id ? (
                           <div className="flex flex-col gap-2">
                             <textarea
                               value={editingContent}
                               onChange={(e) => setEditingContent(e.target.value)}
-                              className="w-full bg-surface-container/50 border border-gray-100 rounded-3xl p-4 text-sm md:text-lg text-on-surface outline-none resize-none focus:ring-2 focus:ring-vuttik-blue/20"
+                              className="w-full bg-surface-container-low rounded-lg p-3 text-body-md text-on-surface outline-none resize-none focus:ring-2 focus:ring-vuttik-blue"
                               rows={3}
                             />
                             <div className="flex justify-end gap-2 mt-2">
-                              <button 
-                                onClick={() => setEditingPostId(null)}
-                                className="px-4 py-2 text-xs md:text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors"
-                              >
-                                Cancelar
-                              </button>
-                              <button 
-                                onClick={() => handleEditPost(post.id)}
-                                disabled={!editingContent.trim() || editingContent === post.content}
-                                className="px-4 py-2 text-xs md:text-sm font-black bg-vuttik-blue text-white rounded-3xl shadow-lg shadow-vuttik-blue/20 disabled:opacity-50"
-                              >
-                                Guardar
-                              </button>
+                              <button onClick={() => setEditingPostId(null)} className="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface">Cancelar</button>
+                              <button onClick={() => handleEditPost(post.id)} disabled={!editingContent.trim() || editingContent === post.content} className="px-4 py-2 text-sm bg-vuttik-blue text-white rounded-full">Guardar</button>
                             </div>
                           </div>
                         ) : (
-                          <p className="text-on-surface text-sm md:text-lg leading-relaxed">{post.content}</p>
+                          <p className="text-body-md text-on-surface">{post.content}</p>
                         )}
                       </div>
 
-                      {/* Image */}
+                      {/* Post Image */}
                       {post.image_url && (
-                        <div className="px-5 md:px-8 pb-6">
-                          <button 
-                            onClick={() => setSelectedImage(post.image_url!)}
-                            className="w-full aspect-square overflow-hidden bg-surface-container/50 cursor-zoom-in hover:opacity-95 transition-opacity border border-gray-100/50"
-                          >
+                        <div className="relative w-full aspect-square md:aspect-video">
+                          <button onClick={() => setSelectedImage(post.image_url!)} className="w-full h-full cursor-zoom-in">
                             <img src={post.image_url} alt="Post" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </button>
                         </div>
                       )}
 
-                      {/* Premium Actions Bar */}
-                      <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between border-t border-gray-50">
-                        {/* Engagement Actions */}
-                        <div className="flex items-center gap-1 md:gap-4">
-                          <button 
-                            onClick={() => handleLike(post.id)}
-                            className="flex items-center gap-1.5 md:gap-2 text-on-surface-variant hover:text-red-500 transition-all group"
-                          >
-                            <div className="p-2 md:p-2.5 rounded-full group-hover:bg-red-50 transition-colors">
-                              <Heart size={18} className={`md:size-[22px] ${post.likes?.includes(currentUser?.uid || '') ? 'fill-red-500 text-red-500' : ''}`} />
-                            </div>
-                            <span className="text-xs md:text-sm font-black">{post.likes?.length || 0}</span>
+                      {/* Action Buttons */}
+                      <div className="p-4 flex items-center justify-between border-t border-surface-variant/30">
+                        <div className="flex items-center gap-6">
+                          <button onClick={() => handleLike(post.id)} className="flex items-center gap-2 text-on-surface-variant hover:text-alert transition-all group">
+                            <Heart size={20} className={`group-active:scale-125 transition-transform ${post.likes?.includes(currentUser?.uid || '') ? 'fill-alert text-alert' : ''}`} />
+                            <span className="font-label-sm">{post.likes?.length || 0}</span>
                           </button>
-
-                          <button 
-                            onClick={() => handleOpenComments(post)}
-                            className="flex items-center gap-1.5 md:gap-2 text-on-surface-variant hover:text-vuttik-blue transition-all group"
-                          >
-                            <div className="p-2 md:p-2.5 rounded-full group-hover:bg-vuttik-blue/10 transition-colors">
-                              <MessageCircle size={18} className="md:size-[22px]" />
-                            </div>
-                            <span className="text-xs md:text-sm font-black">{post.comments}</span>
+                          <button onClick={() => handleOpenComments(post)} className="flex items-center gap-2 text-on-surface-variant hover:text-vuttik-blue transition-all">
+                            <MessageCircle size={20} />
+                            <span className="font-label-sm">{post.comments}</span>
                           </button>
-
-                          <button 
-                            onClick={() => handleRepost(post)}
-                            className="flex items-center gap-1.5 md:gap-2 text-on-surface-variant hover:text-green-500 transition-all group"
-                          >
-                            <div className="p-2 md:p-2.5 rounded-full group-hover:bg-green-50 transition-colors">
-                              <Repeat size={18} className="md:size-[22px]" />
-                            </div>
+                          <button onClick={() => handleRepost(post)} className="flex items-center gap-2 text-on-surface-variant hover:text-success transition-all">
+                            <Repeat size={20} />
                           </button>
                         </div>
-
-                        {/* Veracity and Share */}
-                        <div className="flex items-center gap-2 md:gap-4">
-
-                          <button 
-                            onClick={() => handleShare(post)}
-                            className="p-2 md:p-2.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-all"
-                          >
-                            <Share2 size={18} className="md:size-[22px]" />
-                          </button>
-                        </div>
+                        <button onClick={() => handleShare(post)} className="text-on-surface-variant hover:text-vuttik-blue transition-colors">
+                          <Share2 size={20} />
+                        </button>
                       </div>
                     </motion.div>
                   );

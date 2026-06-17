@@ -41,7 +41,7 @@ interface PublishFormProps {
 }
 
 export default function PublishForm({ onComplete, onCancel, editProductId }: PublishFormProps) {
-  const { user } = useAuth();
+  const { user, isBusinessModeActive } = useAuth();
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<{id: string, label: string}[]>([]);
@@ -326,7 +326,8 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
           categoryId: formData.category,
           typeId: formData.type,
           authorId: user.uid,
-          authorName: user.displayName || 'Usuario',
+          authorName: isBusinessModeActive && user.businessName ? user.businessName : (user.displayName || 'Usuario'),
+          authorAvatar: isBusinessModeActive && user.businessLogo ? user.businessLogo : (user.photoURL || ''),
           location: formData.location,
           province: formData.province,
           country: formData.country,

@@ -1,5 +1,6 @@
 import { ShoppingBag, Globe, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface PublishSelectionProps {
   onSelect: (type: 'product' | 'social') => void;
@@ -7,6 +8,8 @@ interface PublishSelectionProps {
 }
 
 export default function PublishSelection({ onSelect, onClose }: PublishSelectionProps) {
+  useEscapeKey(onClose, true);
+
   return (
     <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4">
       <motion.div 

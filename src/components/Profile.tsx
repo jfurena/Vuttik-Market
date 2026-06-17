@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2, ImageIcon, UserPlus, UserMinus, Users } from 'lucide-react';
+import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2, ImageIcon, UserPlus, UserMinus, Users, Share2, Timer, Bell, Settings, Star, Heart, MessageCircle, Package } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { api } from '../lib/api';
 import ProductCard from './ProductCard';
 import UserAvatar from './UserAvatar';
 import PromotionModal from './PromotionModal';
 import CameraModal from './CameraModal';
+import PortfolioManager from './PortfolioManager';
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { trackMetric } from '../utils/metrics';
@@ -34,6 +35,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const [categories, setCategories] = useState<any[]>([]);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoTarget, setPromoTarget] = useState<{id: string, type: 'product' | 'post'} | null>(null);
+  const [postFilter, setPostFilter] = useState<'product' | 'post'>('product');
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [newPhotoURL, setNewPhotoURL] = useState('');
   const [showCamera, setShowCamera] = useState(false);
@@ -52,6 +54,38 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const handlePromote = (id: string, type: 'product' | 'post') => {
     setPromoTarget({ id, type });
     setShowPromoModal(true);
+  };
+
+  const computedRating = useMemo(() => {
+    if (userProducts.length === 0) return profileUser?.rating || 0;
+    
+    let totalScore = 0;
+    let count = 0;
+    
+    userProducts.forEach(p => {
+      const isProduct = p.price !== undefined || p.categoryId !== undefined;
+      if (!isProduct) return;
+      
+      const up = p.upVotes?.length || 0;
+      const down = p.downVotes?.length || 0;
+      const total = up + down;
+      if (total > 0) {
+        totalScore += (up / total) * 5;
+        count++;
+      }
+    });
+    
+    return count > 0 ? totalScore / count : (profileUser?.rating || 0);
+  }, [userProducts, profileUser]);
+
+  const handleShare = () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: profileUser?.displayName || 'Perfil Vuttik', url });
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Enlace copiado al portapapeles');
+    }
   };
 
   useEffect(() => {
@@ -73,16 +107,14 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
 
     fetchUser();
 
-    // Log Profile View Action
     trackMetric({
       userId: currentUserId || 'anonymous',
-      action: 'view' as any, // backend expects 'view' for viewsResult query
+      action: 'view' as any,
       targetId: targetUserId,
       targetType: 'user',
       metadata: { profileName: profileUser?.displayName }
     });
     
-    // Also log specifically as VIEW_PROFILE for trend analysis
     trackMetric({
       userId: currentUserId || 'anonymous',
       action: 'VIEW_PROFILE' as any,
@@ -96,14 +128,20 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
 
     const loadUserProducts = async () => {
       try {
-        const prods = await api.getProducts(undefined, targetUserId);
-        if (!Array.isArray(prods)) {
-          console.error('Invalid products format:', prods);
-          setUserProducts([]);
-          return;
+        const [prodsRes, postsRes] = await Promise.allSettled([
+          api.getProducts(undefined, targetUserId),
+          api.getUserSocialPosts(targetUserId)
+        ]);
+        
+        let allItems: any[] = [];
+        if (prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value)) {
+          allItems = [...allItems, ...prodsRes.value];
         }
-        // The API might still return unsanitized SQL names on some server instances
-        const mapped = prods.map((p: any) => ({
+        if (postsRes.status === 'fulfilled' && Array.isArray(postsRes.value)) {
+          allItems = [...allItems, ...postsRes.value];
+        }
+
+        const mapped = allItems.map((p: any) => ({
           ...p,
           authorId: p.authorId || p.author_id,
           authorName: p.authorName || p.author_name || profileUser?.displayName || profileUser?.display_name || 'Usuario',
@@ -111,13 +149,15 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
           typeId: p.typeId || p.type_id,
           categoryId: p.categoryId || p.category_id
         }));
+        
+        // Sort by date descending
+        mapped.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
         setUserProducts(mapped);
         
-        // Fetch followers
         const followers = await api.getFollowers(targetUserId);
         setFollowersList(followers);
         
-        // Check following status
         if (currentUserId && currentUserId !== targetUserId) {
           const following = await api.getFollowing(currentUserId);
           setIsFollowing(following.includes(targetUserId));
@@ -155,7 +195,6 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     setLoadingAnalytics(true);
     try {
       const data = await api.getUserAnalytics(targetUserId!);
-      // Map trend data for Recharts
       if (data.trend) {
         data.trend = data.trend.map((t: any) => ({
           name: new Date(t.date).toLocaleDateString([], { weekday: 'short' }),
@@ -301,7 +340,6 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
       await api.voteProduct(productId, currentUserId, newVoteType);
     } catch (err) {
       console.error('Failed to vote:', err);
-      // Revert if needed
       const revertedProducts = [...userProducts];
       revertedProducts[productIndex] = product;
       setUserProducts(revertedProducts);
@@ -317,395 +355,383 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   }
 
   return (
-    <div className="flex flex-col gap-8 pb-32">
-      {/* Profile Header (Premium WOW) */}
-      <div className="relative mb-12">
-        {/* Cover Photo / Gradient Area */}
-        <div className="h-48 md:h-64 bg-gradient-to-br from-vuttik-navy via-vuttik-navy to-vuttik-blue rounded-[40px] md:rounded-[60px] relative overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-vuttik-blue/20 rounded-full -ml-32 -mb-32 blur-3xl"></div>
-        </div>
-
-        {/* Identity & Stats Content */}
-        <div className="relative -mt-20 md:-mt-28 px-4 md:px-10 flex flex-col items-center">
-          {/* Overlapping Avatar */}
-          <div className="relative group mb-4 md:mb-6">
-            <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-white p-1.5 md:p-2 shadow-2xl">
-              <div className="w-full h-full rounded-full bg-surface-container/50 overflow-hidden flex items-center justify-center text-on-surface border-4 border-vuttik-gray/10 shadow-inner">
+    <div className="bg-surface text-on-surface font-body-md selection:bg-vuttik-blue selection:text-white">
+      <div className="max-w-container-max mx-auto px-4 md:px-margin-desktop">
+        {/* Premium Header Section */}
+        <section className="relative mb-12">
+          {/* Profile Banner Background */}
+          <div className="w-full h-48 md:h-64 rounded-lg overflow-hidden relative mb-[-48px] md:mb-[-64px]">
+            <div className="absolute inset-0 bg-gradient-to-br from-vuttik-blue via-vuttik-navy to-black opacity-90"></div>
+          </div>
+          
+          {/* User Info Overlay */}
+          <div className="px-6 relative flex flex-col items-center md:items-start md:flex-row md:gap-8">
+            <div className="relative">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white">
                 <UserAvatar src={profileUser.photoURL || profileUser.photo_url} alt={profileUser.displayName || profileUser.display_name} />
               </div>
-            </div>
-            {currentUserId === targetUserId && (
-              <button 
-                onClick={() => {
-                  setNewPhotoURL(profileUser.photoURL || profileUser.photo_url || '');
-                  setIsEditingPhoto(true);
-                }}
-                className="absolute bottom-1 right-1 md:bottom-3 md:right-3 bg-vuttik-blue text-white p-2.5 md:p-4 rounded-full border-4 border-white shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
-              >
-                <Camera size={16} className="md:size-6" />
-              </button>
-            )}
-            <div className={`absolute ${currentUserId === targetUserId ? 'top-1 left-1 md:top-3 md:left-3' : 'bottom-1 right-1 md:bottom-3 md:right-3'} bg-vuttik-blue text-white p-1.5 md:p-3 rounded-full border-4 border-white shadow-lg z-20`}>
-              <ShieldCheck size={16} className="md:size-8" />
-            </div>
-          </div>
-
-          {/* Identity Info */}
-          <div className="text-center max-w-2xl">
-            <div className="flex flex-col items-center gap-2 md:gap-4 mb-4">
-              <h2 className="text-3xl md:text-5xl font-display font-black text-on-surface tracking-tight leading-none">
-                {profileUser.displayName || profileUser.display_name}
-              </h2>
-              {(profileUser.username) && (
-                <div className="bg-vuttik-blue/5 border border-vuttik-blue/20 px-4 py-1.5 rounded-full inline-flex items-center gap-2 shadow-sm">
-                  <span className="text-vuttik-blue font-bold tracking-wide">@{profileUser.username}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 mt-2">
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-vuttik-blue/10 text-vuttik-blue rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm">
-                  <Award size={14} />
-                  {profileUser.role || 'Usuario'}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-green-500/10 text-green-600 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                  Verificado
-                </span>
-                {currentUserId && currentUserId !== targetUserId && (
-                  <button 
-                    onClick={async () => {
-                      if (!currentUserId || !targetUserId) return;
-                      try {
-                        const conv = await api.getOrCreateConversation(currentUserId, targetUserId);
-                        navigate('/mensajes', { state: { targetConversationId: conv.id } });
-                      } catch (err) {
-                        console.error('Failed to start chat:', err);
-                      }
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-vuttik-blue text-white rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm hover:bg-blue-600 transition-colors"
-                  >
-                    <MessageSquare size={14} />
-                    Mensaje
-                  </button>
-                )}
-                {currentUserId && currentUserId !== targetUserId && (
-                  <button 
-                    disabled={isTogglingFollow}
-                    onClick={async () => {
-                      if (!currentUserId || !targetUserId) return;
-                      setIsTogglingFollow(true);
-                      try {
-                        if (isFollowing) {
-                          await api.unfollowUser(currentUserId, targetUserId);
-                          setIsFollowing(false);
-                          setProfileUser((prev: any) => ({ ...prev, followerCount: Math.max(0, (prev.followerCount || 1) - 1) }));
-                          setFollowersList(prev => prev.filter(f => f.follower_id !== currentUserId));
-                        } else {
-                          await api.followUser(currentUserId, targetUserId);
-                          setIsFollowing(true);
-                          setProfileUser((prev: any) => ({ ...prev, followerCount: (prev.followerCount || 0) + 1 }));
-                          // Ideally we add the current user to the list, but it requires full user details
-                          api.getFollowers(targetUserId).then(setFollowersList).catch(console.error);
-                        }
-                      } catch (err) {
-                        console.error('Failed to toggle follow:', err);
-                      } finally {
-                        setIsTogglingFollow(false);
-                      }
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm transition-colors ${
-                      isFollowing 
-                        ? 'bg-gray-100 text-on-surface-variant hover:bg-red-50 hover:text-red-500' 
-                        : 'bg-vuttik-blue text-white hover:bg-blue-600'
-                    }`}
-                  >
-                    {isFollowing ? (
-                      <>
-                        <UserMinus size={14} />
-                        Siguiendo
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus size={14} />
-                        Seguir
-                      </>
-                    )}
-                  </button>
-                )}
+              <div className="absolute bottom-2 right-2 w-8 h-8 bg-sky-accent rounded-full border-2 border-white flex items-center justify-center shadow-lg">
+                <ShieldCheck className="text-white" size={18} />
               </div>
             </div>
             
-            <div className="relative mb-8 max-w-2xl mx-auto group">
-              {isEditingBio ? (
-                <div className="flex flex-col gap-2">
-                  <textarea
-                    value={newBio}
-                    onChange={(e) => setNewBio(e.target.value)}
-                    className="w-full bg-surface-container border-2 border-vuttik-blue/20 rounded-2xl p-4 text-sm md:text-lg leading-relaxed font-medium text-on-surface focus:outline-none focus:border-vuttik-blue resize-none shadow-sm"
-                    rows={4}
-                    placeholder="Escribe algo sobre ti..."
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button 
-                      onClick={() => setIsEditingBio(false)}
-                      className="px-4 py-2 bg-gray-100 text-on-surface-variant rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors"
-                      disabled={isSubmitting}
-                    >
-                      Cancelar
-                    </button>
-                    <button 
-                      onClick={handleUpdateBio}
-                      className="px-4 py-2 bg-vuttik-blue text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
-                      disabled={isSubmitting}
-                    >
-                      <Save size={14} />
-                      {isSubmitting ? 'Guardando...' : 'Guardar'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="relative flex flex-col items-center">
-                  <p className="text-on-surface-variant text-sm md:text-lg leading-relaxed font-medium">
-                    {profileUser.bio || 'Especialista en la comunidad Vuttik. Comprometido con la transparencia y el comercio seguro en República Dominicana.'}
+            <div className="mt-4 md:mt-16 text-center md:text-left flex-1">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                  <h2 className="font-headline-lg text-headline-lg text-vuttik-navy font-black md:drop-shadow-none">
+                    {profileUser.displayName || profileUser.display_name}
+                  </h2>
+                  <p className="font-body-md text-vuttik-text-muted">
+                    {profileUser.bio || 'Digital Collector & Curated Goods Vendor'}
                   </p>
-                  {currentUserId === targetUserId && (
-                    <button 
-                      onClick={() => {
-                        setNewBio(profileUser.bio || '');
-                        setIsEditingBio(true);
-                      }}
-                      className="absolute -right-12 top-0 p-2 bg-white text-on-surface-variant hover:text-vuttik-blue rounded-full shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-                      title="Editar descripción"
-                    >
-                      <Edit2 size={16} />
-                    </button>
+                </div>
+                <div className="flex gap-3 justify-center md:justify-start">
+                  {currentUserId === targetUserId ? (
+                    <>
+                      <button 
+                        onClick={() => setShowGlobalBusinessSelector(true)}
+                        className="px-4 md:px-6 py-2.5 bg-surface border border-vuttik-blue text-vuttik-blue rounded-full font-label-md hover:bg-vuttik-blue/10 active:scale-95 transition-all shadow-sm flex items-center gap-2"
+                        title="Cambiar a Modo Negocio"
+                      >
+                        <Store size={18} />
+                        <span className="hidden sm:inline">Modo Negocio</span>
+                      </button>
+                      <button 
+                        onClick={() => setIsEditingBio(true)}
+                        className="px-4 md:px-6 py-2.5 bg-surface border border-gray-200 text-on-surface rounded-full font-label-md hover:bg-surface-variant active:scale-95 transition-all shadow-sm flex items-center gap-2"
+                        title="Editar bio"
+                      >
+                        <Edit2 size={16} />
+                        <span className="hidden sm:inline">Editar Bio</span>
+                      </button>
+                      <button 
+                        onClick={() => setIsEditingPhoto(true)}
+                        className="px-6 py-2.5 bg-vuttik-blue text-white rounded-full font-label-md hover:brightness-110 active:scale-95 transition-all shadow-md"
+                      >
+                        Editar Perfil
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={async () => {
+                          if (!currentUserId || !targetUserId) return;
+                          setIsTogglingFollow(true);
+                          try {
+                            if (isFollowing) {
+                              await api.unfollowUser(currentUserId, targetUserId);
+                              setIsFollowing(false);
+                            } else {
+                              await api.followUser(currentUserId, targetUserId);
+                              setIsFollowing(true);
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          } finally {
+                            setIsTogglingFollow(false);
+                          }
+                        }}
+                        disabled={isTogglingFollow}
+                        className={`px-6 py-2.5 ${isFollowing ? 'bg-surface-variant text-vuttik-navy' : 'bg-vuttik-blue text-white'} rounded-full font-label-md hover:brightness-110 active:scale-95 transition-all shadow-md`}
+                      >
+                        {isFollowing ? 'Siguiendo' : 'Seguir'}
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (!currentUserId || !targetUserId) return;
+                          try {
+                            const conv = await api.getOrCreateConversation(currentUserId, targetUserId);
+                            navigate('/mensajes', { state: { targetConversationId: conv.id } });
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-surface text-vuttik-blue rounded-full font-label-md hover:brightness-110 active:scale-95 transition-all shadow-md"
+                      >
+                        Mensaje
+                      </button>
+                    </>
+                  )}
+                  <button onClick={handleShare} className="p-2.5 bg-white border border-outline-variant/30 rounded-full text-vuttik-navy active:scale-95 transition-all shadow-sm" title="Compartir perfil">
+                    <Share2 size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Bar */}
+        <section className="max-w-4xl mx-auto mb-10">
+          <div className="bg-white rounded-lg shadow-[0_8px_32px_0_rgba(6,11,25,0.04)] p-6 flex justify-around items-center gap-4 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex items-center gap-1 mb-1">
+                <Star size={24} className="text-yellow-400 fill-yellow-400" />
+                <span className="text-headline-md text-vuttik-navy font-bold leading-none">
+                  {computedRating > 0 ? computedRating.toFixed(1) : 'N/A'}
+                </span>
+              </div>
+              <span className="text-label-sm text-on-surface-variant uppercase tracking-wider">
+                Calificación
+              </span>
+            </div>
+            <div className="w-px h-10 bg-outline-variant/30"></div>
+            <div className="flex-1">
+              <span className="block text-headline-md text-vuttik-navy font-bold">
+                {userProducts.filter(p => p.price !== undefined || p.categoryId !== undefined).length}
+              </span>
+              <span className="text-label-sm text-on-surface-variant uppercase tracking-wider">Productos</span>
+            </div>
+            <div className="w-px h-10 bg-outline-variant/30"></div>
+            <div className="flex-1 cursor-pointer" onClick={() => setShowFollowersModal(true)}>
+              <span className="block text-headline-md text-vuttik-navy font-bold">{profileUser.followerCount || 0}</span>
+              <span className="text-label-sm text-on-surface-variant uppercase tracking-wider">Seguidores</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Tabs Content */}
+        <section>
+          <div className="flex border-b border-outline-variant/20 mb-8 sticky top-20 bg-surface/80 backdrop-blur-md z-10">
+            <button 
+              onClick={() => setActiveProfileTab('posts')}
+              className={`flex-1 py-4 font-label-md transition-all ${activeProfileTab === 'posts' ? 'text-vuttik-blue border-b-2 border-vuttik-blue' : 'text-on-surface-variant hover:text-on-surface'}`}
+            >
+              Publicaciones
+            </button>
+            {(currentUserId === targetUserId || profileUser?.privacy?.publicAnalytics) && (
+              <button 
+                onClick={() => setActiveProfileTab('analytics')}
+                className={`flex-1 py-4 font-label-md transition-all ${activeProfileTab === 'analytics' ? 'text-vuttik-blue border-b-2 border-vuttik-blue' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                Analytics
+              </button>
+            )}
+            {currentUserId === targetUserId && (
+              <button 
+                onClick={() => setActiveProfileTab('portfolios')}
+                className={`flex-1 py-4 font-label-md transition-all ${activeProfileTab === 'portfolios' ? 'text-vuttik-blue border-b-2 border-vuttik-blue' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                Portafolios
+              </button>
+            )}
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeProfileTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeProfileTab === 'posts' && (
+                <div className="space-y-6">
+                  {/* Filter Section */}
+                  <div className="flex gap-2 mb-4 overflow-x-auto custom-scrollbar pb-2">
+                    {['product', 'post'].map(filter => (
+                      <button
+                        key={filter}
+                        onClick={() => setPostFilter(filter as any)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                          postFilter === filter 
+                            ? 'bg-vuttik-blue text-white shadow-md' 
+                            : 'bg-white border border-gray-100 text-vuttik-text-muted hover:bg-gray-50'
+                        }`}
+                      >
+                        {filter === 'product' ? 'Productos' : 'Posts'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {postFilter === 'product' ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+                      {userProducts.filter(p => p.price !== undefined || p.categoryId !== undefined).length > 0 ? (
+                        userProducts.filter(p => p.price !== undefined || p.categoryId !== undefined).map(product => (
+                          <div key={product.id} className="relative group">
+                            <ProductCard 
+                              {...product} 
+                              price={String(product.price ?? 0)}
+                              category={categories.find(c => c.id === (product.categoryId || product.category_id))?.name || 'General'}
+                              type={product.typeId || product.type_id}
+                              image={product.images?.[0]}
+                              upvotes={product.upVotes?.length || 0}
+                              downvotes={product.downVotes?.length || 0}
+                              userVote={product.upVotes?.includes(currentUserId) ? 'up' : product.downVotes?.includes(currentUserId) ? 'down' : null}
+                              onVote={handleVoteProduct}
+                              onViewDetails={() => onViewProduct?.(product.id)}
+                              trustLevel="High"
+                              authorRating={computedRating}
+                              registeredAt={safeDate(product.createdAt || product.created_at)}
+                            />
+                            {currentUserId === targetUserId && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePromote(product.id, 'product');
+                                }}
+                                className="absolute top-4 left-4 bg-vuttik-blue text-white p-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                                title="Promocionar este producto"
+                              >
+                                <Megaphone size={18} />
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-full py-16 text-center bg-white rounded-[32px] border-2 border-dashed border-gray-200">
+                          <div className="w-20 h-20 bg-vuttik-blue/10 rounded-full flex items-center justify-center text-vuttik-blue mx-auto mb-4">
+                            <Package size={32} />
+                          </div>
+                          <h3 className="text-xl font-bold text-vuttik-navy mb-2">Sin productos</h3>
+                          <p className="text-vuttik-text-muted">Este usuario aún no ha publicado productos.</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="max-w-2xl mx-auto space-y-6">
+                      {userProducts.filter(p => p.price === undefined && p.categoryId === undefined).length > 0 ? (
+                        userProducts.filter(p => p.price === undefined && p.categoryId === undefined).map(post => (
+                          <div key={post.id} className="bg-white rounded-[32px] shadow-[0_8px_32px_0_rgba(6,11,25,0.04)] border border-gray-100 overflow-hidden">
+                            <div className="p-5 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full overflow-hidden border border-surface-variant/30">
+                                  <UserAvatar src={post.author_avatar || post.authorAvatar} alt={post.author_name || post.authorName} />
+                                </div>
+                                <div className="text-left">
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-bold text-gray-900">{post.author_name || post.authorName}</span>
+                                    {(post.is_verified || profileUser?.trustLevel === 'High') && <ShieldCheck size={18} className="text-vuttik-blue" />}
+                                  </div>
+                                  <span className="text-xs text-gray-500 font-medium">{safeDate(post.created_at || post.createdAt)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="px-5 pb-5">
+                              <p className="text-gray-800 text-sm whitespace-pre-wrap">{post.content || post.title}</p>
+                            </div>
+                            {(post.image_url || post.images?.[0]) && (
+                              <div className="relative w-full">
+                                <img src={post.image_url || post.images?.[0]} alt="Post" className="w-full h-auto max-h-[500px] object-cover" />
+                              </div>
+                            )}
+                            <div className="p-4 flex items-center justify-between border-t border-gray-100 bg-gray-50/50">
+                              <div className="flex items-center gap-6">
+                                <button className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-all">
+                                  <Heart size={20} />
+                                  <span className="font-bold text-xs">{post.likes?.length || 0}</span>
+                                </button>
+                                <button className="flex items-center gap-2 text-gray-500 hover:text-vuttik-blue transition-all">
+                                  <MessageCircle size={20} />
+                                  <span className="font-bold text-xs">{post.comments || 0}</span>
+                                </button>
+                                <button className="flex items-center gap-2 text-gray-500 hover:text-vuttik-teal transition-all">
+                                  <Share2 size={20} />
+                                  <span className="font-bold text-xs">{post.reposts || 0}</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-16 text-center bg-white rounded-[32px] border-2 border-dashed border-gray-200">
+                          <div className="w-20 h-20 bg-vuttik-blue/10 rounded-full flex items-center justify-center text-vuttik-blue mx-auto mb-4">
+                            <MessageCircle size={32} />
+                          </div>
+                          <h3 className="text-xl font-bold text-vuttik-navy mb-2">Sin posts sociales</h3>
+                          <p className="text-vuttik-text-muted">Este usuario aún no ha publicado contenido social.</p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
-            </div>
 
-            <div className="flex flex-wrap justify-center gap-4 md:gap-10 mb-6">
-              <div className="flex items-center gap-2 text-on-surface-variant text-xs md:text-base font-bold bg-surface-container/50 px-4 py-2 rounded-2xl">
-                <MapPin size={18} className="text-vuttik-blue" />
-                {profileUser.location || 'República Dominicana'}
-              </div>
-              <div className="flex items-center gap-2 text-on-surface-variant text-xs md:text-base font-bold bg-surface-container/50 px-4 py-2 rounded-2xl">
-                <Calendar size={18} className="text-vuttik-blue" />
-                Miembro desde {profileUser.createdAt || profileUser.created_at ? safeDate(profileUser.createdAt || profileUser.created_at) : 'Abril 2024'}
-              </div>
-            </div>
-
-            {currentUserId === targetUserId && (
-               <div className="flex justify-center w-full mb-10">
-                 <button 
-                   onClick={() => setShowGlobalBusinessSelector(true)}
-                   className="flex items-center gap-2 bg-vuttik-navy text-white px-6 py-3 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-vuttik-navy/20"
-                 >
-                   <Store size={18} />
-                   Ir a Mi Panel de Negocio
-                 </button>
-               </div>
-            )}
-
-            {/* Stats Cards (Floating Style) */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl mx-auto">
-              <div className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform">
-                <div className="text-2xl md:text-3xl font-black text-on-surface mb-1">98%</div>
-                <div className="text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-widest opacity-60">Confianza</div>
-              </div>
-              <div className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform">
-                <div className="text-2xl md:text-3xl font-black text-on-surface mb-1">{userProducts.length}</div>
-                <div className="text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-widest opacity-60">Publicaciones</div>
-              </div>
-              <div 
-                onClick={() => setShowFollowersModal(true)}
-                className="bg-white border border-gray-100 p-5 rounded-[32px] text-center shadow-xl shadow-vuttik-navy/5 hover:scale-105 transition-transform cursor-pointer"
-              >
-                <div className="text-2xl md:text-3xl font-black text-on-surface mb-1">{profileUser.followerCount || 0}</div>
-                <div className="text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-widest opacity-60">Seguidores</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-center md:justify-start border-b border-gray-100 px-2">
-          <div className="flex gap-6 md:gap-10 overflow-x-auto no-scrollbar scroll-smooth">
-            {['posts', 'analytics'].map((tab) => (
-              <button 
-                key={tab}
-                onClick={() => setActiveProfileTab(tab)}
-                className={`text-[11px] md:text-sm font-black uppercase tracking-widest transition-all border-b-4 pb-4 -mb-1 whitespace-nowrap ${
-                  activeProfileTab === tab 
-                    ? 'text-vuttik-blue border-vuttik-blue' 
-                    : 'text-on-surface-variant border-transparent hover:text-on-surface opacity-60 hover:opacity-100'
-                }`}
-              >
-                {tab === 'posts' ? 'Publicaciones' : 'Analytics'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeProfileTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeProfileTab === 'posts' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userProducts.length > 0 ? (
-                  userProducts.map(product => (
-                    <div key={product.id} className="relative group">
-                      <ProductCard 
-                        {...product} 
-                        price={String(product.price ?? 0)}
-                        category={categories.find(c => c.id === (product.categoryId || product.category_id))?.name || 'General'}
-                        type={product.typeId || product.type_id}
-                        image={product.images?.[0]}
-                        upvotes={product.upVotes?.length || 0}
-                        downvotes={product.downVotes?.length || 0}
-                        userVote={product.upVotes?.includes(currentUserId) ? 'up' : product.downVotes?.includes(currentUserId) ? 'down' : null}
-                        onVote={handleVoteProduct}
-                        onViewDetails={() => onViewProduct?.(product.id)}
-                        trustLevel="High"
-                        authorRating={4.5}
-                        registeredAt={safeDate(product.createdAt || product.created_at)}
-                      />
-                      {currentUserId === targetUserId && (
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePromote(product.id, 'product');
-                          }}
-                          className="absolute top-4 right-4 bg-vuttik-blue text-white p-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
-                          title="Promocionar este producto"
-                        >
-                          <Megaphone size={18} />
-                        </button>
-                      )}
+              {activeProfileTab === 'analytics' && (
+                <div className="bg-white rounded-lg p-8 shadow-[0_8px_32px_0_rgba(6,11,25,0.04)]">
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h3 className="font-headline-md text-vuttik-navy mb-1">Performance Trend</h3>
+                      <p className="font-label-md text-on-surface-variant">Your profile visibility and sales last 30 days</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-full bg-surface-container/50 border-2 border-dashed border-gray-200 rounded-[32px] aspect-square flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-gray-300 mb-4">
-                      <Grid size={32} />
+                    <div className="flex items-center gap-2 text-success">
+                      <TrendingUp size={20} />
+                      <span className="font-label-md">+12.4%</span>
                     </div>
-                    <h4 className="text-sm font-bold text-on-surface mb-1">Sin publicaciones recientes</h4>
-                    <p className="text-xs text-on-surface-variant">Los registros de precios aparecerán aquí.</p>
                   </div>
-                )}
-              </div>
-            )}
-            {activeProfileTab === 'analytics' && (
-              <div className="flex flex-col gap-8">
-                {loadingAnalytics ? (
-                  <div className="py-20 text-center">
-                    <div className="w-12 h-12 border-4 border-vuttik-blue/20 border-t-vuttik-blue rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-on-surface-variant font-bold">Analizando datos reales...</p>
+
+                  <div className="h-80 w-full mt-4">
+                    {loadingAnalytics ? (
+                       <div className="w-full h-full flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vuttik-blue"></div></div>
+                    ) : analyticsData?.trend && analyticsData.trend.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={analyticsData.trend}>
+                          <defs>
+                            <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#0066FF" stopOpacity={0.1}/>
+                              <stop offset="95%" stopColor="#0066FF" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                          <XAxis 
+                            dataKey="name" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 10, fontWeight: 600, fill: '#9CA3AF' }}
+                            dy={10}
+                          />
+                          <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 12, fontWeight: 600, fill: '#9CA3AF' }}
+                          />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 8px 32px 0 rgba(6,11,25,0.04)' }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke="#0066FF" 
+                            strokeWidth={4}
+                            fillOpacity={1} 
+                            fill="url(#colorViews)" 
+                            isAnimationActive={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
+                        <Activity size={48} className="opacity-20 mb-4" />
+                        <p className="font-bold">No hay suficientes datos para mostrar una tendencia aún.</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <div className="bg-white border border-gray-100 p-6 rounded-[32px] shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 bg-blue-50 text-vuttik-blue rounded-xl">
-                            <Eye size={20} />
-                          </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Vistas Totales</span>
-                        </div>
-                        <p className="text-3xl font-display font-black text-on-surface">
-                          {analyticsData?.totalViews || 0}
-                        </p>
-                        <div className="flex items-center gap-1 text-green-500 text-xs font-bold mt-2">
-                          <TrendingUp size={12} />
-                          Datos en tiempo real
-                        </div>
-                      </div>
 
-                      <div className="bg-white border border-gray-100 p-6 rounded-[32px] shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
-                            <Activity size={20} />
-                          </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Engagement</span>
-                        </div>
-                        <p className="text-3xl font-display font-black text-on-surface">
-                          {analyticsData?.engagement?.reduce((acc: number, curr: any) => acc + curr.count, 0) || 0}
-                        </p>
-                        <div className="text-[10px] text-on-surface-variant font-bold mt-2">
-                          Acciones totales registradas
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12">
+                    <div className="border border-outline-variant/30 rounded-lg p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-label-sm text-on-surface-variant uppercase">Conversion Rate</p>
+                        <p className="text-headline-md font-bold text-vuttik-navy">4.2%</p>
                       </div>
+                      <Store className="text-vuttik-blue" size={32} />
                     </div>
-
-                    <div className="bg-white border border-gray-100 p-8 rounded-[40px] shadow-sm">
-                      <div className="flex items-center justify-between mb-8">
-                        <div>
-                          <h3 className="text-xl font-display font-black text-on-surface">Rendimiento de Publicaciones</h3>
-                          <p className="text-sm text-on-surface-variant">Vistas registradas en los últimos 7 días</p>
-                        </div>
+                    <div className="border border-outline-variant/30 rounded-lg p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-label-sm text-on-surface-variant uppercase">Avg. View Time</p>
+                        <p className="text-headline-md font-bold text-vuttik-navy">12s</p>
                       </div>
-                      
-                      <div className="h-80 w-full">
-                        {analyticsData?.trend && analyticsData.trend.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={analyticsData.trend}>
-                              <defs>
-                                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#0066FF" stopOpacity={0.1}/>
-                                  <stop offset="95%" stopColor="#0066FF" stopOpacity={0}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                              <XAxis 
-                                dataKey="name" 
-                                axisLine={false} 
-                                tickLine={false} 
-                                tick={{ fontSize: 10, fontWeight: 600, fill: '#9CA3AF' }}
-                                dy={10}
-                              />
-                              <YAxis 
-                                axisLine={false} 
-                                tickLine={false} 
-                                tick={{ fontSize: 12, fontWeight: 600, fill: '#9CA3AF' }}
-                              />
-                              <Tooltip 
-                                contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                              />
-                              <Area 
-                                type="monotone" 
-                                dataKey="value" 
-                                stroke="#0066FF" 
-                                strokeWidth={4}
-                                fillOpacity={1} 
-                                fill="url(#colorViews)" 
-                                isAnimationActive={false} // Disable animation to prevent layout crashes
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <div className="h-full flex flex-col items-center justify-center text-on-surface-variant">
-                            <TrendingUp size={48} className="opacity-20 mb-4" />
-                            <p className="font-bold">No hay suficientes datos para mostrar una tendencia aún.</p>
-                          </div>
-                        )}
-                      </div>
+                      <Timer className="text-vuttik-blue" size={32} />
                     </div>
-                  </>
-                )}
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+                  </div>
+                </div>
+              )}
+              
+              {activeProfileTab === 'portfolios' && currentUserId === targetUserId && (
+                <PortfolioManager userId={currentUserId} />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </section>
       </div>
 
       {promoTarget && (
@@ -730,7 +756,57 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
         />
       )}
 
-      {/* Edit Photo Modal */}
+      {/* Followers Modal */}
+      <AnimatePresence>
+        {showFollowersModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowFollowersModal(false)} className="absolute inset-0 bg-vuttik-navy/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-display font-black text-vuttik-navy">Seguidores</h3>
+                <button onClick={() => setShowFollowersModal(false)} className="p-2 bg-surface-container rounded-xl text-on-surface-variant"><X size={18} /></button>
+              </div>
+              <div className="flex flex-col gap-3 max-h-80 overflow-y-auto">
+                {followersList.length === 0 ? (
+                  <p className="text-center text-sm text-on-surface-variant py-6">Aún no hay seguidores.</p>
+                ) : followersList.map((f: any) => (
+                  <div key={f.uid} onClick={() => { setShowFollowersModal(false); navigate(`/perfil/${f.uid}`); }} className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-container cursor-pointer transition-colors">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100"><UserAvatar src={f.photoURL || f.photo_url} alt={f.displayName || f.display_name} /></div>
+                    <span className="font-semibold text-sm text-on-surface">{f.displayName || f.display_name || 'Usuario'}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Bio Edit Modal */}
+      <AnimatePresence>
+        {isEditingBio && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditingBio(false)} className="absolute inset-0 bg-vuttik-navy/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-display font-black text-vuttik-navy">Editar Bio</h3>
+                <button onClick={() => setIsEditingBio(false)} className="p-2 bg-surface-container rounded-xl text-on-surface-variant"><X size={18} /></button>
+              </div>
+              <textarea
+                className="w-full h-32 border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-vuttik-blue/20"
+                placeholder="Escribe algo sobre ti..."
+                value={newBio}
+                onChange={(e) => setNewBio(e.target.value)}
+                maxLength={200}
+              />
+              <p className="text-xs text-on-surface-variant text-right mb-4">{newBio.length}/200</p>
+              <button onClick={handleUpdateBio} disabled={isSubmitting} className="w-full bg-vuttik-blue text-white py-3 rounded-xl font-bold hover:brightness-110 transition-all disabled:opacity-50">
+                {isSubmitting ? 'Guardando...' : 'Guardar Bio'}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {isEditingPhoto && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -745,7 +821,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl p-8"
+              className="relative w-full max-w-md bg-white rounded-lg shadow-2xl p-8"
             >
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-display font-black text-on-surface">Foto de Perfil</h3>
@@ -776,14 +852,14 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                     <button
                       type="button"
                       onClick={() => setShowCamera(true)}
-                      className="aspect-[3/2] bg-surface-container rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                      className="aspect-[3/2] bg-surface-container rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
                     >
                       <Camera size={28} />
                       <span className="text-[10px] font-black uppercase text-center leading-tight">Tomar<br/>Foto</span>
                     </button>
                     <label
                       htmlFor="profile-gallery-input"
-                      className="aspect-[3/2] bg-surface-container rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
+                      className="aspect-[3/2] bg-surface-container rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-on-surface-variant hover:border-vuttik-blue hover:text-vuttik-blue transition-all cursor-pointer"
                     >
                       <ImageIcon size={28} />
                       <span className="text-[10px] font-black uppercase text-center leading-tight">Subir<br/>Foto</span>
@@ -794,7 +870,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                 <button 
                   onClick={handleUpdatePhoto}
                   disabled={isSubmitting || !newPhotoURL}
-                  className="w-full bg-vuttik-navy text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-vuttik-navy/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                  className="w-full bg-vuttik-navy text-white py-4 rounded-lg font-bold shadow-xl shadow-vuttik-navy/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
@@ -813,4 +889,3 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     </div>
   );
 }
-

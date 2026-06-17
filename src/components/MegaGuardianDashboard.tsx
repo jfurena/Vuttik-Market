@@ -443,6 +443,19 @@ export default function MegaGuardianDashboard() {
     }
   };
 
+  const handleToggleVerify = async (userId: string, currentStatus: boolean) => {
+    try {
+      await api.verifyUser(userId, !currentStatus, 'mega_guardian');
+      setUsers(users.map(u => u.id === userId ? { ...u, isVerified: !currentStatus } : u));
+      setNotification({ message: !currentStatus ? 'Usuario verificado exitosamente.' : 'Verificación removida exitosamente.', type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error toggling verification:', error);
+      setNotification({ message: 'Error al cambiar la verificación del usuario.', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
   const handleResetPassword = async (email: string) => {
     try {
       alert(`Simulando envío de correo de restablecimiento a ${email} en entorno local.`);
@@ -501,6 +514,7 @@ export default function MegaGuardianDashboard() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="text-base md:text-lg font-black text-vuttik-navy truncate">{u.displayName || 'Sin nombre'}</h4>
+                    {u.isVerified && <ShieldCheck size={16} className="text-vuttik-blue" title="Verificado por Mega Guardian" />}
                     {u.isBanned && <span className="bg-red-500 text-white text-[7px] md:text-[8px] font-black px-1.5 md:px-2 py-0.5 rounded-md uppercase tracking-widest">Baneado</span>}
                   </div>
                   <p className="text-[10px] md:text-xs text-vuttik-text-muted font-bold truncate">{u.email}</p>
@@ -532,6 +546,13 @@ export default function MegaGuardianDashboard() {
 
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0">
                   <button 
+                    onClick={() => handleToggleVerify(u.id, !!u.isVerified)}
+                    className={`p-2.5 md:p-3 hover:bg-vuttik-blue/10 rounded-xl transition-all ${u.isVerified ? 'text-vuttik-blue' : 'text-gray-400'}`}
+                    title={u.isVerified ? "Quitar Verificación" : "Verificar Usuario"}
+                  >
+                    <ShieldCheck size={18} />
+                  </button>
+                  <button 
                     onClick={() => handleResetPassword(u.email)}
                     className="p-2.5 md:p-3 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-xl transition-all"
                     title="Resetear Contraseña"
@@ -540,10 +561,10 @@ export default function MegaGuardianDashboard() {
                   </button>
                   <button 
                     onClick={() => handleToggleBan(u.id, !!u.isBanned)}
-                    className={`p-2.5 md:p-3 rounded-xl transition-all ${u.isBanned ? 'text-green-500 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'}`}
-                    title={u.isBanned ? 'Desbanear' : 'Banear'}
+                    className={`p-2.5 md:p-3 rounded-xl transition-all ${u.isBanned ? 'bg-red-100 text-red-500 hover:bg-red-200' : 'text-red-400 hover:bg-red-50'}`}
+                    title={u.isBanned ? 'Desbanear Usuario' : 'Banear Usuario'}
                   >
-                    {u.isBanned ? <Unlock size={18} /> : <Ban size={18} />}
+                    <Ban size={18} />
                   </button>
                 </div>
               </div>

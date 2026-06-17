@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, SlidersHorizontal, User as UserIcon, Globe, DollarSign, Tag, ChevronDown, Bell, MapPin, Building2, ArrowLeft, Map as MapIcon, LayoutGrid, List, X, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ProductCard, { ProductCardProps } from './ProductCard';
 import OfferMap from './OfferMap';
+import CountryDropdown from './CountryDropdown';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { trackMetric } from '../utils/metrics';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Category {
   id: string;
@@ -39,13 +40,27 @@ export default function P2PBoard({
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [p2pType, setP2pType] = useState<string>(initialType);
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<{ id: string; label: string }[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '');
+  
+  useEffect(() => {
+    const q = new URLSearchParams(location.search).get('q');
+    if (q !== null) {
+      setSearchQuery(q);
+    }
+  }, [location.search]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isBusinessModeActive, setIsBusinessModeActive] = useState(false);
+  const [marketLocation, setMarketLocation] = useState('GLOBAL');
+
+  const containerRef = useRef<HTMLDivElement>(null);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
@@ -266,7 +281,12 @@ export default function P2PBoard({
                          (p.storeName || p.store_name || '').toLowerCase().includes(chainFilter.toLowerCase()) ||
                          (p.authorName || p.author_name || '').toLowerCase().includes(chainFilter.toLowerCase());
 
-    return matchesType && matchesCategory && matchesSearch && matchesCountry && matchesProvince && matchesMinPrice && matchesMaxPrice && matchesCurrency && matchesIsOffer && matchesChain;
+    const matchesMarketLocation = marketLocation === 'GLOBAL' || 
+                                  (p.country || '').toUpperCase() === marketLocation || 
+                                  locStr.toUpperCase().includes(marketLocation) ||
+                                  (p.location || '').toUpperCase().includes(marketLocation);
+
+    return matchesType && matchesCategory && matchesSearch && matchesCountry && matchesProvince && matchesMinPrice && matchesMaxPrice && matchesCurrency && matchesIsOffer && matchesChain && matchesMarketLocation;
   });
 
   const allCategories = [
@@ -284,17 +304,13 @@ export default function P2PBoard({
               onClick={onBack}
               className="p-2 md:p-3 bg-vuttik-gray/50 rounded-2xl text-vuttik-navy hover:bg-vuttik-blue hover:text-white transition-all hover:-translate-x-1"
             >
-              <ArrowLeft size={20} className="md:size-5" />
-            </button>
-          )}
-          <h2 className="text-3xl md:text-4xl font-display font-black text-vuttik-navy tracking-tight">Mercado</h2>
-          <div className="flex items-center gap-1.5 md:gap-2 bg-vuttik-gray/50 px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-gray-100">
-            <Globe size={14} className="text-vuttik-blue md:size-[16px]" />
-            <span className="text-[11px] md:text-xs font-black text-vuttik-navy">RD</span>
-            <ChevronDown size={14} className="text-gray-400 md:size-[16px]" />
-          </div>
-        </div>
-        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+            <ArrowLeft size={20} className="md:size-5" />
+          </button>
+        )}
+        <h2 className="text-3xl md:text-4xl font-display font-black text-vuttik-navy tracking-tight">Mercado</h2>
+        <CountryDropdown value={marketLocation} onChange={setMarketLocation} />
+      </div>
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
           <div className="flex bg-vuttik-gray/50 rounded-xl md:rounded-2xl p-1 border border-gray-100">
             <button
               onClick={() => setViewMode('grid')}
@@ -334,10 +350,10 @@ export default function P2PBoard({
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`shrink-0 px-5 md:px-6 py-2 md:py-2.5 rounded-[16px] text-[11px] md:text-sm font-black transition-all tracking-wide ${
+                className={`shrink-0 px-4 py-2 rounded-full text-[11px] md:text-sm font-medium transition-all tracking-wide border ${
                   activeCategory === cat.id 
-                    ? 'bg-vuttik-blue text-white shadow-md shadow-vuttik-blue/20 scale-105' 
-                    : 'bg-white border border-gray-100/80 text-gray-500 hover:border-vuttik-blue hover:text-vuttik-blue hover:-translate-y-0.5 shadow-sm'
+                    ? 'border-vuttik-blue bg-vuttik-blue/5 text-vuttik-blue shadow-sm' 
+                    : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-vuttik-navy'
                 }`}
               >
                 {cat.name}
@@ -366,10 +382,10 @@ export default function P2PBoard({
                 <button
                   key={type.id}
                   onClick={() => setP2pType(type.id)}
-                  className={`shrink-0 px-4 md:px-8 py-2 md:py-3 rounded-[16px] md:rounded-[20px] text-[10px] md:text-sm font-black transition-all tracking-widest ${
+                  className={`shrink-0 px-5 md:px-8 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-bold transition-all tracking-wide border ${
                     p2pType === type.id 
-                      ? 'bg-vuttik-navy text-white shadow-md shadow-vuttik-navy/20 scale-105' 
-                      : 'bg-white border border-gray-100/80 text-gray-400 hover:border-vuttik-navy hover:text-vuttik-navy shadow-sm'
+                      ? 'border-vuttik-navy bg-vuttik-navy text-white shadow-md' 
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-900'
                   }`}
                 >
                   {type.label.toUpperCase()}
@@ -529,19 +545,7 @@ export default function P2PBoard({
         </motion.div>
       )}
 
-      {/* Search Bar */}
-      <div className="px-4 sm:px-6 md:px-8 mt-1 md:mt-2">
-        <div className="relative">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input 
-            type="text" 
-            placeholder={`Buscar en ${activeCategory === 'GLOBAL' ? 'todo el mercado' : activeCategory}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-gray-100/80 rounded-[24px] px-14 py-4 md:py-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] focus:shadow-[0_8px_30px_rgba(59,130,246,0.1)] focus:border-vuttik-blue/30 transition-all outline-none text-sm md:text-base font-medium placeholder:text-gray-400"
-          />
-        </div>
-      </div>
+      {/* Search Bar Removed (now handled globally in TopNav) */}
 
       {/* Products Grid */}
       <div className={`px-4 sm:px-6 md:px-8 mt-4 ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8' : 'flex flex-col gap-4 md:gap-6'}`}>

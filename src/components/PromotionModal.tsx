@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Megaphone, Target, Users, CreditCard, DollarSign, Package, Globe, X, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Calendar, Clock, BarChart3 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import LemonSqueezyMockCheckout from './LemonSqueezyMockCheckout';
 
 interface PromotionModalProps {
@@ -18,6 +19,8 @@ export default function PromotionModal({ isOpen, onClose, initialTargetId = '', 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoType, setPromoType] = useState<'post' | 'product'>(initialTargetType);
   const [promoTargetId, setPromoTargetId] = useState(initialTargetId);
+  
+  useEscapeKey(onClose, isOpen);
   
   // Segmentation
   const [promoAudience, setPromoAudience] = useState<'global' | 'segmented'>('global');

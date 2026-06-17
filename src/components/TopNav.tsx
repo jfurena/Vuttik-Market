@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, User, Search, X, CheckCheck, Menu, Settings, Briefcase, Shield, ShieldAlert, LogOut, Store, LayoutGrid, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 
 interface TopNavProps {
@@ -23,9 +23,42 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function TopNav({ userRole = 'user', userPlan, userProfile }: TopNavProps) {
   const { user, logout, switchProfileMode, unreadMessagesCount, setGlobalInviteData, setShowGlobalBusinessSelector, isBusinessModeActive } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [searchText, setSearchText] = useState('');
+  
+  useEffect(() => {
+    const q = new URLSearchParams(location.search).get('q');
+    if (q && searchText === '') setSearchText(q);
+  }, [location.search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentQ = new URLSearchParams(location.search).get('q') || '';
+      if (searchText !== currentQ) {
+        if (searchText.trim()) {
+          navigate(`/?q=${encodeURIComponent(searchText.trim())}`);
+        } else if (currentQ !== '') {
+          navigate(`/`);
+        }
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchText, navigate]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (searchText.trim()) {
+        navigate(`/?q=${encodeURIComponent(searchText.trim())}`);
+      } else {
+        navigate('/');
+      }
+    }
+  };
 
   useEffect(() => {
     if (user?.uid) {
@@ -43,8 +76,6 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length + unreadMessagesCount;
-
-  const navigate = useNavigate();
 
   const menuItems = [
     { id: 'profile', path: '/perfil', label: 'Mi Perfil', icon: User, role: ['user', 'business', 'negocio', 'guardian', 'mega_guardian', 'admin'], feature: 'profile' },
@@ -70,23 +101,48 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
   });
 
   return (
-    <header className="glass-nav-pro sticky top-0 left-0 right-0 z-40 px-6 md:px-10 py-4 md:py-5 flex justify-between items-center md:bg-white/80 backdrop-blur-2xl md:backdrop-blur-2xl md:border-b border-gray-100/50">
-      <div 
-        className="flex items-center gap-2.5 md:gap-3 md:hidden shrink-0 cursor-pointer"
-        onClick={() => navigate('/')}
-      >
-        <div className="w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl shadow-sm bg-white border border-gray-50">
-          <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain p-1" referrerPolicy="no-referrer" />
+    <header className="fixed top-0 left-0 w-full md:left-[240px] md:w-[calc(100%-240px)] z-40 bg-white/80 dark:bg-vuttik-navy/80 backdrop-blur-md shadow-sm border-b border-gray-100/50 transition-all px-4 md:px-8 py-3">
+      <div className="flex items-center justify-between">
+        <div 
+          className={`flex items-center gap-2.5 md:hidden shrink-0 cursor-pointer ${showMobileSearch ? 'hidden' : 'flex'}`}
+          onClick={() => navigate('/')}
+        >
+          <div className="w-10 h-10 flex items-center justify-center overflow-hidden rounded-xl shadow-sm bg-white border border-gray-50">
+            <img src="/favicon.png" alt="Vuttik Logo" className="w-full h-full object-contain p-1" referrerPolicy="no-referrer" />
+          </div>
+          <h1 className="text-lg tracking-tight font-display font-black text-on-surface">Vuttik <span className="text-vuttik-blue">Market</span></h1>
         </div>
-        <h1 className="text-xl tracking-tight font-display font-black text-on-surface">Vuttik <span className="text-vuttik-blue">Market</span></h1>
+      
+        <div className={`flex-1 w-full md:w-auto md:flex md:max-w-lg mx-auto relative group ${showMobileSearch ? 'flex' : 'hidden md:flex'}`}>
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+          <Search className="text-gray-400 group-focus-within:text-vuttik-blue transition-colors" size={18} />
+        </div>
+        <input 
+          autoFocus={showMobileSearch}
+          type="text" 
+          placeholder="Buscar artículos, servicios, negocios..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          className="w-full h-11 pl-11 pr-10 bg-surface-container-low border border-gray-100 rounded-full focus:bg-white focus:ring-2 focus:ring-vuttik-blue/20 focus:border-vuttik-blue outline-none text-sm font-medium placeholder-gray-400 transition-all shadow-sm"
+        />
+        {showMobileSearch && (
+          <button 
+            onClick={() => setShowMobileSearch(false)}
+            className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 md:hidden"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
       
-      <div className="hidden md:block">
-        <h2 className="text-3xl font-display font-black text-on-surface tracking-tight">Panel de Control</h2>
-        <p className="text-on-surface-variant/80 text-sm font-medium mt-1">Bienvenido de nuevo a Vuttik Market</p>
-      </div>
-      
-      <div className="flex items-center gap-3 md:gap-5 ml-auto relative">
+        <div className={`flex items-center gap-3 md:gap-5 ml-auto relative ${showMobileSearch ? 'hidden md:flex' : 'flex'}`}>
+          <button 
+            onClick={() => setShowMobileSearch(true)}
+            className="p-2 md:hidden text-on-surface-variant hover:text-vuttik-blue hover:bg-surface-variant/50 rounded-full transition-colors"
+          >
+            <Search size={22} />
+          </button>
         {isBusinessModeActive && (
           <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-vuttik-blue/10 border border-vuttik-blue/20 rounded-2xl shadow-sm transition-all" title="Estás interactuando como este negocio">
             <Store size={16} className="text-vuttik-blue" />
@@ -96,9 +152,9 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className={`relative p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showNotifications ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-on-surface/60 hover:text-vuttik-blue'} ${unreadCount > 0 ? 'border-red-200/50 bg-red-50/30' : 'border-gray-100/50'}`}
+            className={`relative p-2 rounded-full hover:bg-surface-variant/50 transition-colors flex items-center justify-center ${showNotifications ? 'bg-surface-variant/50 text-vuttik-blue' : 'text-on-surface-variant dark:text-outline-variant hover:text-vuttik-blue'} ${unreadCount > 0 ? 'text-red-500 bg-red-50/30' : ''}`}
           >
-            <Bell size={20} className={`md:size-5 transition-colors ${unreadCount > 0 && !showNotifications ? 'text-red-500' : ''}`} />
+            <Bell size={24} className={`transition-colors`} />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -215,9 +271,9 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
         <div className="relative">
           <button 
             onClick={() => setShowMenu(!showMenu)}
-            className={`p-3 bg-white border rounded-2xl transition-all duration-300 shadow-pro hover:shadow-pro-hover hover:-translate-y-0.5 ${showMenu ? 'text-vuttik-blue border-vuttik-blue/30 ring-4 ring-vuttik-blue/10' : 'text-on-surface/60 hover:text-vuttik-blue border-gray-100/50'}`}
+            className={`p-2 rounded-full hover:bg-surface-variant/50 transition-colors flex items-center justify-center ${showMenu ? 'bg-surface-variant/50 text-vuttik-blue' : 'text-on-surface-variant dark:text-outline-variant hover:text-vuttik-blue'}`}
           >
-            <Menu size={20} className="md:size-5" />
+            <Menu size={24} />
           </button>
 
           <AnimatePresence>
@@ -270,6 +326,7 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
           </AnimatePresence>
         </div>
         
+      </div>
       </div>
     </header>
   );

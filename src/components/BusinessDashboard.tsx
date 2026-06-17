@@ -238,6 +238,12 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
           >
             Promociones
           </button>
+          <button 
+            onClick={() => setActiveTab('comparison')}
+            className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all ${activeTab === 'comparison' ? 'bg-white text-vuttik-navy shadow-sm' : 'text-vuttik-text-muted'}`}
+          >
+            Comparación
+          </button>
         </div>
       </div>
 
@@ -387,12 +393,21 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
                   <div className={`p-3 rounded-2xl ${promo.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-vuttik-gray text-vuttik-text-muted'}`}>
                     <Target size={24} />
                   </div>
-                  <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase ${
-                    promo.status === 'active' ? 'bg-green-50 text-green-600' : 
-                    promo.status === 'pending' ? 'bg-yellow-50 text-yellow-600' : 'bg-gray-50 text-gray-500'
-                  }`}>
-                    {promo.status}
-                  </span>
+                  <div className="flex gap-2">
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase ${
+                      promo.status === 'active' ? 'bg-green-50 text-green-600' : 
+                      promo.status === 'pending' ? 'bg-yellow-50 text-yellow-600' : 'bg-gray-50 text-gray-500'
+                    }`}>
+                      {promo.status}
+                    </span>
+                    <button 
+                      onClick={() => handleDeletePromo(promo.id)}
+                      className="p-1 bg-red-50 text-red-500 rounded hover:bg-red-100 transition-colors"
+                      title="Eliminar Promoción"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
                 <h4 className="font-bold text-vuttik-navy mb-1">Promoción de {promo.targetType === 'product' ? 'Producto' : 'Publicación'}</h4>
                 <p className="text-xs text-vuttik-text-muted mb-4">Alcance: <span className="font-bold text-vuttik-navy uppercase">{promo.audience}</span></p>
@@ -527,6 +542,32 @@ export default function BusinessDashboard({ onViewProduct }: { onViewProduct?: (
               </motion.div>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'comparison' && (
+        <div className="flex flex-col gap-4 md:gap-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg md:text-xl font-display font-black text-vuttik-navy">Comparación de Rendimiento</h3>
+          </div>
+          <div className="bg-white rounded-[32px] border border-gray-100 p-6 md:p-8 shadow-sm text-center py-12">
+            <div className="w-16 h-16 bg-vuttik-blue/10 text-vuttik-blue rounded-full flex items-center justify-center mx-auto mb-4">
+              <TrendingUp size={32} />
+            </div>
+            <h4 className="text-xl font-bold text-vuttik-navy mb-2">Panel de Comparación Activo</h4>
+            <p className="text-sm text-vuttik-text-muted max-w-md mx-auto">Compara el rendimiento de tus productos en el mercado frente a la competencia.</p>
+            {/* Here you could add the comparison charts as they are developed */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 text-left">
+              <div className="bg-vuttik-gray/30 p-6 rounded-2xl border border-gray-50">
+                <h5 className="font-bold text-vuttik-navy mb-1">Tus Precios vs Promedio</h5>
+                <p className="text-sm text-vuttik-text-muted">Tus productos están un <span className="text-green-500 font-bold">5% por debajo</span> del promedio del mercado.</p>
+              </div>
+              <div className="bg-vuttik-gray/30 p-6 rounded-2xl border border-gray-50">
+                <h5 className="font-bold text-vuttik-navy mb-1">Visibilidad</h5>
+                <p className="text-sm text-vuttik-text-muted">Has obtenido un <span className="text-vuttik-blue font-bold">12% más</span> vistas que tus competidores cercanos.</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

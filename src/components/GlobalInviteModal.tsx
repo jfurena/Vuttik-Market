@@ -4,11 +4,14 @@ import { api } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Store, User, X, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 export default function GlobalInviteModal() {
   const { globalInviteData, setGlobalInviteData } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  useEscapeKey(() => setGlobalInviteData(null));
 
   if (!globalInviteData) return null;
 

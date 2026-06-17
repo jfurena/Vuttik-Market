@@ -5,11 +5,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 
 export default function Settings() {
-  const { user, login, token } = useAuth();
+  const { user, login, token, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [notifs, setNotifs] = useState({ push: true, email: false, market: true, messages: true });
-  const [privacy, setPrivacy] = useState({ publicProfile: true, showOnline: true, anyMessage: false });
+  const [privacy, setPrivacy] = useState({ publicProfile: true, showOnline: true, anyMessage: false, publicAnalytics: false });
   const [security, setSecurity] = useState({ tfa: false });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{type:'success'|'error', text:string}|null>(null);
 
   const [usernameInput, setUsernameInput] = useState(user?.username || '');
   const [usernameStatus, setUsernameStatus] = useState<'idle'|'loading'|'available'|'taken'>('idle');
@@ -89,13 +91,45 @@ export default function Settings() {
       const res = await api.saveUser(updateData);
       if (res.success) {
         setOthersMessage({ type: 'success', text: 'Tus datos se han guardado con éxito.' });
-        const updatedUser = { ...user, ...updateData };
+        const updatedUser = { 
+          ...user, 
+          ...updateData 
+        };
         login(token, updatedUser);
       }
     } catch (error: any) {
       setOthersMessage({ type: 'error', text: error.message || 'Error al guardar los datos.' });
     } finally {
       setSavingOthers(false);
+    }
+  };
+
+  const handleSaveNotifPrivacy = async (newNotifs = notifs, newPrivacy = privacy) => {
+    if (!user) return;
+    try {
+      await api.updateSettings({ userId: user.uid, notifications: newNotifs, privacy: newPrivacy });
+    } catch (e) {
+      console.error('Error saving settings:', e);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+    setChangingPassword(true);
+    setPasswordMsg(null);
+    try {
+      await api.requestPasswordReset(user.email);
+      setPasswordMsg({ type: 'success', text: 'Te enviamos un correo para restablecer tu contraseña.' });
+    } catch (e: any) {
+      setPasswordMsg({ type: 'error', text: e.message || 'Error al enviar el correo.' });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleLogoutAll = () => {
+    if (window.confirm('¿Seguro que deseas cerrar sesión en todos los dispositivos?')) {
+      logout();
     }
   };
 
@@ -300,25 +334,25 @@ export default function Settings() {
                       label="Notificaciones Push" 
                       description="Recibe alertas directamente en tu dispositivo."
                       enabled={notifs.push} 
-                      onChange={(v: boolean) => setNotifs({...notifs, push: v})} 
+                      onChange={(v: boolean) => { const n={...notifs, push: v}; setNotifs(n); handleSaveNotifPrivacy(n, privacy); }} 
                     />
                     <Toggle 
                       label="Correos Electrónicos" 
                       description="Resumen semanal e información importante por correo."
                       enabled={notifs.email} 
-                      onChange={(v: boolean) => setNotifs({...notifs, email: v})} 
+                      onChange={(v: boolean) => { const n={...notifs, email: v}; setNotifs(n); handleSaveNotifPrivacy(n, privacy); }} 
                     />
                     <Toggle 
                       label="Alertas de Mercado" 
                       description="Avisos cuando bajen de precio los productos que sigues."
                       enabled={notifs.market} 
-                      onChange={(v: boolean) => setNotifs({...notifs, market: v})} 
+                      onChange={(v: boolean) => { const n={...notifs, market: v}; setNotifs(n); handleSaveNotifPrivacy(n, privacy); }} 
                     />
                     <Toggle 
                       label="Mensajes Directos" 
                       description="Notificarme cuando reciba un mensaje nuevo."
                       enabled={notifs.messages} 
-                      onChange={(v: boolean) => setNotifs({...notifs, messages: v})} 
+                      onChange={(v: boolean) => { const n={...notifs, messages: v}; setNotifs(n); handleSaveNotifPrivacy(n, privacy); }} 
                     />
                   </div>
                 </div>
@@ -334,19 +368,25 @@ export default function Settings() {
                       label="Perfil Público" 
                       description="Permitir que cualquier usuario vea tus publicaciones."
                       enabled={privacy.publicProfile} 
-                      onChange={(v: boolean) => setPrivacy({...privacy, publicProfile: v})} 
+                      onChange={(v: boolean) => { const p={...privacy, publicProfile: v}; setPrivacy(p); handleSaveNotifPrivacy(notifs, p); }} 
                     />
                     <Toggle 
                       label="Mostrar Estado en Línea" 
                       description="Otros usuarios podrán ver cuándo estás conectado."
                       enabled={privacy.showOnline} 
-                      onChange={(v: boolean) => setPrivacy({...privacy, showOnline: v})} 
+                      onChange={(v: boolean) => { const p={...privacy, showOnline: v}; setPrivacy(p); handleSaveNotifPrivacy(notifs, p); }} 
                     />
                     <Toggle 
                       label="Mensajes de Desconocidos" 
                       description="Permitir mensajes de personas que no sigues."
                       enabled={privacy.anyMessage} 
-                      onChange={(v: boolean) => setPrivacy({...privacy, anyMessage: v})} 
+                      onChange={(v: boolean) => { const p={...privacy, anyMessage: v}; setPrivacy(p); handleSaveNotifPrivacy(notifs, p); }} 
+                    />
+                    <Toggle 
+                      label="Analíticas Públicas" 
+                      description="Permitir que cualquier usuario pueda ver la pestaña de Analytics en tu perfil."
+                      enabled={privacy.publicAnalytics} 
+                      onChange={(v: boolean) => { const p={...privacy, publicAnalytics: v}; setPrivacy(p); handleSaveNotifPrivacy(notifs, p); }} 
                     />
                   </div>
                 </div>
@@ -369,16 +409,19 @@ export default function Settings() {
                         <span className="text-sm font-bold text-vuttik-navy">Cambiar Contraseña</span>
                         <span className="text-xs text-vuttik-text-muted">Actualiza tu contraseña regularmente para mayor seguridad.</span>
                       </div>
-                      <button className="bg-white border border-gray-200 text-vuttik-navy px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:border-vuttik-blue hover:text-vuttik-blue transition-colors shrink-0">
-                        Cambiar
+                      <button onClick={handleChangePassword} disabled={changingPassword} className="bg-white border border-gray-200 text-vuttik-navy px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:border-vuttik-blue hover:text-vuttik-blue transition-colors shrink-0 disabled:opacity-50">
+                        {changingPassword ? 'Enviando...' : 'Cambiar'}
                       </button>
                     </div>
+                    {passwordMsg && (
+                      <p className={`text-xs px-2 ${passwordMsg.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>{passwordMsg.text}</p>
+                    )}
                     <div className="flex items-center justify-between p-4 bg-red-50/50 rounded-2xl border border-red-100 mt-4">
                       <div className="flex flex-col gap-1 pr-4">
                         <span className="text-sm font-bold text-red-500">Cerrar Sesión en todos los dispositivos</span>
                         <span className="text-xs text-red-400">Si notas actividad sospechosa, cierra las demás sesiones.</span>
                       </div>
-                      <button className="bg-red-500 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-colors shrink-0">
+                      <button onClick={handleLogoutAll} className="bg-red-500 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-colors shrink-0">
                         Cerrar Todo
                       </button>
                     </div>
