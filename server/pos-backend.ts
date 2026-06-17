@@ -1098,7 +1098,26 @@ async function startServer() {
   });
 
   app.post('/api/sales', requireBizAccess, (req, res) => {
-    const { sale, items } = req.body;
+    let { sale, items } = req.body;
+    
+    // Sanitize numerical fields to guarantee data reliability
+    sale.subtotal = Number(Number(sale.subtotal).toFixed(2)) || 0;
+    sale.descuento = Number(Number(sale.descuento).toFixed(2)) || 0;
+    sale.impuesto = Number(Number(sale.impuesto).toFixed(2)) || 0;
+    sale.total = Number(Number(sale.total).toFixed(2)) || 0;
+    sale.monto_recibido = Number(Number(sale.monto_recibido).toFixed(2)) || 0;
+    sale.cambio = Number(Number(sale.cambio).toFixed(2)) || 0;
+    
+    items = items.map((item: any) => ({
+      ...item,
+      cantidad: Number(Number(item.cantidad).toFixed(2)) || 0,
+      costo_unitario: Number(Number(item.costo_unitario).toFixed(2)) || 0,
+      precio_unitario: Number(Number(item.precio_unitario).toFixed(2)) || 0,
+      ganancia_unitaria: Number(Number(item.ganancia_unitaria).toFixed(2)) || 0,
+      ganancia_total: Number(Number(item.ganancia_total).toFixed(2)) || 0,
+      total_linea: Number(Number(item.total_linea).toFixed(2)) || 0
+    }));
+
     const s = req.session as any;
     const db = getDB();
     const biz = getBiz(db, s.business_id);

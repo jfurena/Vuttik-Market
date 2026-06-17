@@ -382,9 +382,9 @@ export default function POS() {
     setCart(current => current.filter(item => item.id !== id));
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0);
-  const itbis = aplicarItbis ? subtotal * 0.18 : 0;
-  const total = subtotal + itbis;
+  const subtotal = Number(cart.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0).toFixed(2));
+  const itbis = aplicarItbis ? Number((subtotal * 0.18).toFixed(2)) : 0;
+  const total = Number((subtotal + itbis).toFixed(2));
 
   const handleOpenShift = async () => {
     if (!profile) return;
@@ -453,11 +453,22 @@ export default function POS() {
     try {
       const codigo = generateReceiptCode();
       const activePayMethod = overridePayMethod || payMethod;
-      const finalMontoRecibido = activePayMethod === 'Efectivo' 
-        ? (parseFloat(montoRecibido) || total) 
-        : total;
+      let finalMontoRecibido = total;
+      
+      if (activePayMethod === 'Efectivo') {
+        const parsedMonto = parseFloat(montoRecibido);
+        if (!isNaN(parsedMonto)) {
+          if (parsedMonto < total) {
+            alert(`❌ El monto recibido (RD$ ${parsedMonto.toFixed(2)}) es menor al total de la factura (RD$ ${total.toFixed(2)}).`);
+            setProcessing(false);
+            return;
+          }
+          finalMontoRecibido = parsedMonto;
+        }
+      }
+
       const finalCambio = activePayMethod === 'Efectivo'
-        ? Math.max(0, finalMontoRecibido - total)
+        ? Number(Math.max(0, finalMontoRecibido - total).toFixed(2))
         : 0;
 
       const sale: any = {
@@ -487,12 +498,12 @@ export default function POS() {
         producto_id: item.id,
         nombre: item.nombre,
         unidad_venta: item.unidad_venta,
-        cantidad: item.quantity,
-        costo_unitario: item.costo_compra,
-        precio_unitario: item.precio_venta,
-        ganancia_unitaria: item.precio_venta - item.costo_compra,
-        ganancia_total: (item.precio_venta - item.costo_compra) * item.quantity,
-        total_linea: item.precio_venta * item.quantity,
+        cantidad: Number(item.quantity.toFixed(2)),
+        costo_unitario: Number((item.costo_compra || 0).toFixed(2)),
+        precio_unitario: Number(item.precio_venta.toFixed(2)),
+        ganancia_unitaria: Number(((item.precio_venta || 0) - (item.costo_compra || 0)).toFixed(2)),
+        ganancia_total: Number((((item.precio_venta || 0) - (item.costo_compra || 0)) * item.quantity).toFixed(2)),
+        total_linea: Number((item.precio_venta * item.quantity).toFixed(2)),
         itbis_gravado: aplicarItbis
       }));
 
@@ -566,8 +577,9 @@ export default function POS() {
             placeholder="Monto inicial (RD$)"
           />
           <button 
+            disabled={!montoInicial || isNaN(parseFloat(montoInicial))}
             onClick={handleOpenShift}
-            className="w-full bg-vuttik-blue text-white py-4 rounded-3xl font-black uppercase tracking-wider text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/10"
+            className="w-full bg-vuttik-blue text-white py-4 rounded-3xl font-black uppercase tracking-wider text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/10 disabled:opacity-50"
           >
             Abrir Turno
           </button>
