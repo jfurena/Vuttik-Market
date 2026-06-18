@@ -9,6 +9,7 @@ import { metricsQueue } from './queue.js';
 import { initDB, run, all, get } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authRouter, authenticateToken } from './auth.js';
+import compression from 'compression';
 
 const app = express();
 const port = process.env.PORT || 3005;
@@ -20,6 +21,8 @@ const allowedOrigins = [
   'https://www.vuttik.com',
   'https://pos.vuttik.com'
 ];
+// Gzip compression - reduces JSON response size by 70-80%
+app.use(compression());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
@@ -1162,12 +1165,8 @@ app.get('/api/products', async (req, res) => {
         isIndependent: !!r.is_independent,
         upVotes: parsedUpVotes,
         downVotes: parsedDownVotes,
-        images: (() => {
-          try {
-            const parsed = JSON.parse(r.images || '[]');
-            return Array.isArray(parsed) ? parsed.slice(0, 1) : [];
-          } catch(e) { return []; }
-        })(),
+        // Return URL instead of Base64 to avoid bloating the JSON response
+        images: [`/api/images/product/${r.id}`],
         customFields: JSON.parse(r.custom_fields || '{}')
       };
     });
@@ -1178,6 +1177,32 @@ app.get('/api/products', async (req, res) => {
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Dedicated binary image endpoint for products - avoids Base64 bloat in list responses
+app.get('/api/images/product/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await get('SELECT images FROM vuttik_products WHERE id = ?', [id]);
+    if (!product) return res.status(404).send('Not found');
+    const images = JSON.parse((product as any).images || '[]');
+    const first = images[0];
+    if (!first) return res.status(404).send('No image');
+    if (typeof first === 'string' && first.startsWith('data:')) {
+      // Strip the data:image/...;base64, prefix
+      const [header, b64] = first.split(',');
+      const mimeMatch = header.match(/data:([^;]+)/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const buffer = Buffer.from(b64, 'base64');
+      res.set('Content-Type', mime);
+      res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24h in browser
+      return res.send(buffer);
+    }
+    // It's already a URL, redirect to it
+    return res.redirect(first);
+  } catch (error) {
+    res.status(500).send('Error');
   }
 });
 
@@ -2104,18 +2129,11 @@ app.get('/api/posts/feed', async (req, res) => {
         WHERE f.user_id = ?
         ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}
       `, [userId]);
-      products = pRows.map((p: any) => {
-        let parsedImages = [];
-        try {
-          const parsed = JSON.parse(p.images || '[]');
-          parsedImages = Array.isArray(parsed) ? parsed.slice(0, 1) : [];
-        } catch(e) {}
-        return {
-          ...p,
-          images: parsedImages,
-          feedType: 'product'
-        };
-      });
+      products = pRows.map((p: any) => ({
+        ...p,
+        images: [`/api/images/product/${p.id}`],
+        feedType: 'product'
+      }));
     }
 
     const combined = [...posts, ...products].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

@@ -129,12 +129,15 @@ const ProductCard = (props: ProductCardProps) => {
           <img
             src={image}
             alt={title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             referrerPolicy="no-referrer"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <Info size={40} className="opacity-50" />
+          <div className="w-full h-full flex items-center justify-center bg-gray-100 animate-pulse">
+            <Info size={40} className="opacity-20 text-gray-400" />
           </div>
         )}
       </div>
