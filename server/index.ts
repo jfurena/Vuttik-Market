@@ -1330,7 +1330,6 @@ app.get('/api/products/:id', async (req, res) => {
       isIndependent: !!product.is_independent,
       upVotes: parsedUpVotes,
       downVotes: parsedDownVotes,
-      images: JSON.parse(product.images || '[]'),
       customFields: JSON.parse(product.custom_fields || '{}')
     });
   } catch (error) {
