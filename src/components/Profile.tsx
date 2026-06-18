@@ -115,13 +115,6 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
       targetType: 'user',
       metadata: { profileName: profileUser?.displayName }
     });
-    
-    trackMetric({
-      userId: currentUserId || 'anonymous',
-      action: 'VIEW_PROFILE' as any,
-      targetId: targetUserId,
-      targetType: 'user'
-    });
   }, [targetUserId]);
 
   useEffect(() => {

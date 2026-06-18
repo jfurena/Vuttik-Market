@@ -329,8 +329,10 @@ app.get('/api/users/:uid', async (req, res) => {
 
       const mappedUser = {
         ...user,
+        photo_url: undefined,
+        logo: undefined,
         displayName,
-        photoURL,
+        photoURL: `/api/images/user/${user.uid}`,
         bio,
         location,
         planId: user.plan_id,
@@ -1286,7 +1288,6 @@ app.get('/api/products/:id', async (req, res) => {
     const product = await get(`
       SELECT p.*,
              u.country as author_country,
-             COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
              (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_votes,
              (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_votes
       FROM vuttik_products p
@@ -1296,7 +1297,14 @@ app.get('/api/products/:id', async (req, res) => {
       WHERE p.id = ?
     `, [id]);
 
-    if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+
+    let images = [];
+    try {
+      images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images || [];
+    } catch {
+      images = typeof product.images === 'string' ? [product.images] : [];
+    }
 
     let parsedUpVotes = [];
     let parsedDownVotes = [];
@@ -1305,11 +1313,12 @@ app.get('/api/products/:id', async (req, res) => {
 
     res.json({
       ...product,
+      images,
       typeId: product.type_id,
       categoryId: product.category_id,
       authorId: product.author_id,
       authorName: product.author_name,
-      authorAvatar: product.author_avatar,
+      authorAvatar: `/api/images/user/${product.author_id}`,
       createdAt: product.created_at,
       salePrice: product.sale_price,
       isOnSale: !!product.is_on_sale,
@@ -1506,7 +1515,7 @@ app.get('/api/posts', async (req, res) => {
   const { authorId, postedAs } = req.query;
   try {
     let query = `
-      SELECT p.*, COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar
+      SELECT p.*
       FROM vuttik_posts p
       LEFT JOIN vuttik_users u ON p.author_id = u.uid
       LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
@@ -1538,7 +1547,7 @@ app.get('/api/posts', async (req, res) => {
       return {
         ...r,
         author_name: r.author_name,
-        author_avatar: r.author_avatar,
+        author_avatar: `/api/images/user/${r.author_id}`,
         likes: likes.map(l => l.user_id),
         verifications: verifications.map(v => ({ user_id: v.user_id, is_veracious: !!v.is_veracious })),
         is_verified: !!r.is_verified,
@@ -2158,7 +2167,7 @@ app.get('/api/posts/feed', async (req, res) => {
     // Fetch posts
     if (!type || type === 'all' || type === 'posts') {
       let query = `
-        SELECT p.*, COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar
+        SELECT p.*
         FROM vuttik_posts p
         LEFT JOIN vuttik_users u ON p.author_id = u.uid
         LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
