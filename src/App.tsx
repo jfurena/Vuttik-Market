@@ -331,37 +331,41 @@ export default function App() {
       {/* Product Detail Modal */}
       <AnimatePresence>
         {selectedProductId && selectedProduct && (
-          <ProductDetails 
-            product={selectedProduct}
-            onClose={() => setSelectedProductId(null)}
-            onEdit={(id) => {
-              navigate(`/editar/${id}`);
-              setSelectedProductId(null); // Close the details modal
-            }}
-            onDelete={async (id) => {
-              if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-                try {
-                  await api.deleteProduct(id, user?.uid || '');
-                  setSelectedProductId(null);
-                  window.location.reload(); // Refresh to reflect deletion globally
-                } catch (error) {
-                  console.error('Error deleting product:', error);
-                  alert('Hubo un error al eliminar el producto.');
+          <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div className="w-12 h-12 border-4 border-vuttik-blue border-t-transparent rounded-full animate-spin"></div></div>}>
+            <ProductDetails 
+              product={selectedProduct}
+              onClose={() => setSelectedProductId(null)}
+              onEdit={(id) => {
+                navigate(`/editar/${id}`);
+                setSelectedProductId(null); // Close the details modal
+              }}
+              onDelete={async (id) => {
+                if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+                  try {
+                    await api.deleteProduct(id, user?.uid || '');
+                    setSelectedProductId(null);
+                    window.location.reload(); // Refresh to reflect deletion globally
+                  } catch (error) {
+                    console.error('Error deleting product:', error);
+                    alert('Hubo un error al eliminar el producto.');
+                  }
                 }
-              }
-            }}
-            currentUserId={user?.uid || ''}
-          />
+              }}
+              currentUserId={user?.uid || ''}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {/* Publish Selection Modal */}
       <AnimatePresence>
         {showPublishSelection && (
-          <PublishSelection 
-            onSelect={handlePublishSelect}
-            onClose={() => setShowPublishSelection(false)}
-          />
+          <Suspense fallback={null}>
+            <PublishSelection 
+              onSelect={handlePublishSelect}
+              onClose={() => setShowPublishSelection(false)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
