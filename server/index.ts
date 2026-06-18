@@ -1109,7 +1109,6 @@ app.get('/api/products', async (req, res) => {
           p.barcode, p.is_on_sale, p.sale_price, p.created_at, p.posted_as,
           p.chain, p.store_name, p.is_independent, p.country, p.province, p.stock,
           u.country as author_country,
-          COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
           (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_count,
           (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_count
         FROM (
@@ -1161,7 +1160,7 @@ app.get('/api/products', async (req, res) => {
         categoryId: r.category_id,
         authorId: r.author_id,
         authorName: r.author_name,
-        authorAvatar: r.author_avatar,
+        authorAvatar: `/api/images/user/${r.author_id}`,
         authorCountry: r.country || r.author_country,
         location: r.location,
         phone: r.phone,
@@ -1236,6 +1235,46 @@ app.get('/api/images/product/*', async (req, res) => {
     }
     // It's already a URL, redirect to it
     return res.redirect(first);
+  } catch (error) {
+    res.status(500).send('Error');
+  }
+});
+
+// Dedicated binary image endpoint for user/business avatars
+app.get('/api/images/user/:uid', async (req, res) => {
+  const { uid } = req.params;
+  
+  const imgCacheKey = `img_user_${uid}`;
+  const cachedImg = globalCache.get(imgCacheKey);
+  if (cachedImg) {
+    res.set('Content-Type', cachedImg.mime);
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(cachedImg.buffer);
+  }
+
+  try {
+    const user = await get(`
+      SELECT COALESCE(b.logo, u.photo_url, owner.photo_url) as avatar 
+      FROM vuttik_users u 
+      LEFT JOIN vuttik_business_profiles b ON u.uid = b.uid 
+      LEFT JOIN vuttik_users owner ON b.owner_uid = owner.uid 
+      WHERE u.uid = ?
+    `, [uid]);
+    
+    if (!user || !user.avatar) return res.status(404).send('Not found');
+    
+    const avatar = user.avatar;
+    if (typeof avatar === 'string' && avatar.startsWith('data:')) {
+      const [header, b64] = avatar.split(',');
+      const mimeMatch = header.match(/data:([^;]+)/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const buffer = Buffer.from(b64, 'base64');
+      globalCache.set(imgCacheKey, { buffer, mime }, 3600);
+      res.set('Content-Type', mime);
+      res.set('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+    return res.redirect(avatar);
   } catch (error) {
     res.status(500).send('Error');
   }
