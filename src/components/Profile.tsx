@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2, ImageIcon, UserPlus, UserMinus, Users, Share2, Timer, Bell, Settings, Star, Heart, MessageCircle, Package } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { api } from '../lib/api';
+import { compressImage } from '../utils/imageCompressor';
 import ProductCard from './ProductCard';
 import UserAvatar from './UserAvatar';
 import PromotionModal from './PromotionModal';
@@ -209,51 +210,12 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     }
   };
 
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 1200;
-
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          resolve(dataUrl);
-        };
-        img.onerror = (err) => reject(err);
-      };
-      reader.onerror = (err) => reject(err);
-    });
-  };
-
   const handleImageFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const file = files[0];
     if (file.type.startsWith('image/')) {
       try {
-        const b64 = await compressImage(file);
+        const b64 = await compressImage(file, 800, 0.7);
         setNewPhotoURL(b64);
       } catch (error) {
         console.error('Compression error:', error);

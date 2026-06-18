@@ -14,6 +14,7 @@ import {
   LineChart, Line, AreaChart, Area
 } from 'recharts';
 import LocationInput from './LocationInput';
+import { compressImage } from '../utils/imageCompressor';
 
 const MOCK_METRICS = [
   { name: 'Lun', views: 400, sales: 240 },
@@ -154,14 +155,15 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
     }
   };
 
-  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileForm({ ...profileForm, logo: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, 400, 0.5);
+        setProfileForm({ ...profileForm, logo: compressed });
+      } catch (error) {
+        console.error("Error compressing image:", error);
+      }
     }
   };
 

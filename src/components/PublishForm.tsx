@@ -10,6 +10,7 @@ import CameraModal from './CameraModal';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Product } from '../types/index';
+import { compressImage } from '../utils/imageCompressor';
 
 interface CategoryField {
   id: string;
@@ -192,47 +193,6 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
       loadProduct();
     }
   }, [editProductId]);
-
-  // Compress and resize image before upload
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 800; // Reduced for performance
-
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Quality 0.6 for massive reduction in base64 size
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-          resolve(dataUrl);
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  };
 
   const handleImageFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;

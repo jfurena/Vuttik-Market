@@ -5,6 +5,9 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { Link } from 'react-router-dom';
+import CameraModal from './CameraModal';
+import { compressImage } from '../utils/imageCompressor';
 import PromotionModal from './PromotionModal';
 import UserAvatar from './UserAvatar';
 import ProductCard from './ProductCard';
@@ -158,14 +161,15 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
     }
   };
 
-  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewPostImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, 800, 0.6);
+        setNewPostImage(compressed);
+      } catch (error) {
+        console.error("Error compressing image:", error);
+      }
     }
   };
 
