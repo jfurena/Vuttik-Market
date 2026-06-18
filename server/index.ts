@@ -1290,7 +1290,7 @@ app.post('/api/products', async (req, res) => {
     }
     
     globalCache.delete('global_products_page_1');
-    res.status(201).json({ id: productId, ...data });
+    res.status(201).json({ id: id, ...data });
 
   } catch (error) {
     console.error('Error in /api/products:', error);

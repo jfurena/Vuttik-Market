@@ -34,9 +34,9 @@ class MetricsQueue {
     try {
       // In a real high-perf scenario, we'd use a single transaction batch insert.
       // For SQLite, doing sequential awaits inside a transaction is very fast.
-      await run('BEGIN TRANSACTION');
+      await (run as any)('BEGIN TRANSACTION');
       for (const metric of batch) {
-        await run(
+        await (run as any)(
           'INSERT INTO vuttik_metrics (id, user_id, action, target_id, target_type, metadata, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [
             uuidv4(),
@@ -59,11 +59,11 @@ class MetricsQueue {
           if (action === 'contact' && metric.targetId) {
             // Note: Since we are in a transaction, `get` will just read the current state
             // If the product doesn't exist, it defaults to 0
-            const product = await import('./db.js').then(m => m.get('SELECT price FROM vuttik_products WHERE id = ?', [metric.targetId]));
+            const product = await import('./db.js').then(m => (m.get as any)('SELECT price FROM vuttik_products WHERE id = ?', [metric.targetId]));
             volumeIncrement = (product as any)?.price || 0;
           }
 
-          await run(`
+          await (run as any)(`
             INSERT INTO vuttik_daily_stats (date, ${field}, total_p2p_volume) 
             VALUES (?, 1, ?) 
             ON CONFLICT(date) DO UPDATE SET 
@@ -72,10 +72,10 @@ class MetricsQueue {
           `, [dateStr, volumeIncrement, volumeIncrement]);
         }
       }
-      await run('COMMIT');
+      await (run as any)('COMMIT');
     } catch (error) {
       console.error('Error processing metrics queue:', error);
-      await run('ROLLBACK').catch(() => {});
+      await (run as any)('ROLLBACK').catch(() => {});
       // In a real scenario, we might requeue the failed items.
       // For metrics, it's often acceptable to drop them on catastrophic failure.
     } finally {
