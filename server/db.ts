@@ -613,6 +613,11 @@ export async function initDB() {
   await run('CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON vuttik_conversations(participant_1)');
   await run('CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON vuttik_conversations(participant_2)');
 
+  // Complex Indexes for Performance
+  await run('CREATE INDEX IF NOT EXISTS idx_products_author_created ON vuttik_products(author_id, created_at DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_products_category_created ON vuttik_products(category_id, created_at DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_posts_author_created ON vuttik_posts(author_id, created_at DESC)');
+
   console.log('Database schema created successfully.');
   
   // Seed initial categories if empty

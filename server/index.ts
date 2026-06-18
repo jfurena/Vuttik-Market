@@ -4,6 +4,8 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import helmet from 'helmet';
+import { globalCache } from './cache.js';
+import { metricsQueue } from './queue.js';
 import { initDB, run, all, get } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authRouter, authenticateToken } from './auth.js';
@@ -106,13 +108,12 @@ app.get('/api/health', (req, res) => {
 // Log a metric/action from the frontend
 app.post('/api/metrics', async (req, res) => {
   const { userId, action, targetId, targetType, metadata } = req.body;
-  if (!userId || !action) return res.status(400).json({ error: 'Missing userId or action' });
-  try {
-    await logAction(userId, action, targetId || 'none', targetType || 'none', metadata || {});
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  if (!action) return res.status(400).json({ error: 'Missing action' });
+  
+  // Enqueue for async processing instead of blocking
+  metricsQueue.enqueue({ userId, action, targetId, targetType, metadata });
+  
+  res.json({ success: true });
 });
 
 // Get user specific analytics (Real data)
@@ -1086,6 +1087,16 @@ app.get('/api/products', async (req, res) => {
     const offset = (page - 1) * limit;
 
     const { categoryId, authorId, postedAs } = req.query;
+
+    // Cache logic for global feed
+    const isGlobalQuery = page === 1 && (!categoryId || categoryId === 'GLOBAL') && !authorId && !postedAs;
+    const cacheKey = 'global_products_page_1';
+    
+    if (isGlobalQuery) {
+      const cached = globalCache.get(cacheKey);
+      if (cached) return res.json(cached);
+    }
+
     try {
       let query = `
         SELECT p.*,
@@ -1160,6 +1171,10 @@ app.get('/api/products', async (req, res) => {
         customFields: JSON.parse(r.custom_fields || '{}')
       };
     });
+    if (isGlobalQuery) {
+      globalCache.set(cacheKey, products, 15); // Cache for 15 seconds
+    }
+    
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1273,6 +1288,9 @@ app.post('/api/products', async (req, res) => {
         [uuidv4(), follower.user_id, 'Nuevo producto de tu interés', `Se ha publicado "${data.title}" y coincide con tus seguimientos.`, 0, new Date().toISOString(), 'price_drop']
       );
     }
+    
+    globalCache.delete('global_products_page_1');
+    res.status(201).json({ id: productId, ...data });
 
   } catch (error) {
     console.error('Error in /api/products:', error);
@@ -1293,7 +1311,8 @@ app.delete('/api/products/:id', async (req, res) => {
     }
     
     await run('DELETE FROM vuttik_products WHERE id = ?', [id]);
-    res.json({ success: true });
+    globalCache.delete('global_products_page_1');
+    res.json({ message: 'Product deleted successfully' });
 
     // Log action
     if (userId) await logAction(userId as string, 'DELETE_PRODUCT', id, 'product', { title: product.title });
@@ -1771,42 +1790,7 @@ app.post('/api/users/:uid/ban', authenticateToken, async (req, res) => {
   }
 });
 
-// --- Metrics Route ---
-app.post('/api/metrics', async (req, res) => {
-  const { userId, action, targetId, targetType, metadata } = req.body;
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  const timestamp = now.toISOString();
 
-  try {
-    await logAction(userId || 'anonymous', action, targetId || 'none', targetType || 'none', metadata || {});
-
-    // Update Daily Aggregated Stats
-    if (['view', 'search', 'contact'].includes(action)) {
-      const field = action === 'view' ? 'views' : (action === 'search' ? 'searches' : 'contacts');
-      
-      // Calculate volume if it's a contact action
-      let volumeIncrement = 0;
-      if (action === 'contact' && targetId) {
-        const product = await get('SELECT price FROM vuttik_products WHERE id = ?', [targetId]);
-        volumeIncrement = (product as any)?.price || 0;
-      }
-
-      await run(`
-        INSERT INTO vuttik_daily_stats (date, ${field}, total_p2p_volume) 
-        VALUES (?, 1, ?) 
-        ON CONFLICT(date) DO UPDATE SET 
-          ${field} = ${field} + 1,
-          total_p2p_volume = total_p2p_volume + ?
-      `, [dateStr, volumeIncrement, volumeIncrement]);
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Metrics Error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // --- Aggregated Stats Routes ---
 
