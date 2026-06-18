@@ -5,6 +5,7 @@ import { ApiService } from '../services/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Store, Loader2, LogOut, Hash, Package, ShoppingBag, ChevronRight, X, AlertCircle, User, TrendingUp, DollarSign, MapPin, Briefcase, Settings, Edit2, Send, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
+import LocationInput from '../../components/LocationInput';
 
 interface BizSummary {
   id: string;
@@ -28,6 +29,8 @@ export default function BusinessSelector() {
   const [newName, setNewName] = useState('');
   const [newUbicacion, setNewUbicacion] = useState('');
   const [newTipo, setNewTipo] = useState('');
+  const [newLat, setNewLat] = useState<number | null>(null);
+  const [newLng, setNewLng] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
@@ -73,10 +76,12 @@ export default function BusinessSelector() {
     setCreating(true);
     setError('');
     try {
-      await ApiService.createBusiness(newName.trim(), newUbicacion.trim(), newTipo);
+      await ApiService.createBusiness(newName.trim(), newUbicacion.trim(), newTipo, newLat ?? undefined, newLng ?? undefined);
       setNewName('');
       setNewUbicacion('');
       setNewTipo('');
+      setNewLat(null);
+      setNewLng(null);
       setShowCreate(false);
       await load();
     } catch (err: any) {
@@ -369,12 +374,12 @@ export default function BusinessSelector() {
                   />
                 </div>
                 
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    required type="text" value={newUbicacion} onChange={e => setNewUbicacion(e.target.value)}
+                <div>
+                  <LocationInput
+                    value={newUbicacion}
+                    onChange={(val, placeName) => setNewUbicacion(placeName || val)}
+                    onCoordinatesChange={(lat, lng) => { setNewLat(lat); setNewLng(lng); }}
                     placeholder="Ubicación del local (ej: Av. Principal #123)"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold"
                   />
                 </div>
 

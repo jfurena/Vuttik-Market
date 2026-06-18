@@ -358,7 +358,7 @@ async function startServer() {
 
   // Create business
   app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
-    const { nombre, ubicacion, tipo } = req.body;
+    const { nombre, ubicacion, tipo, lat, lng } = req.body;
     if (!nombre || !nombre.trim()) return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
     const s = req.session as any;
     const db = getDB();
@@ -366,6 +366,11 @@ async function startServer() {
     const codigo = generateCode(nombre, existingCodes);
     const newBizId = 'biz-' + Date.now();
     const newBiz = emptyBusiness(newBizId, nombre.trim(), codigo, s.owner_id, ubicacion?.trim() || '', tipo || '');
+    // Persist coordinates if provided
+    if (lat != null && lng != null) {
+      if (!newBiz.settings) newBiz.settings = {};
+      newBiz.settings.allowed_location = { address: ubicacion?.trim() || '', lat: Number(lat), lng: Number(lng) };
+    }
     db.businesses.push(newBiz);
     saveDB(db);
     
