@@ -69,6 +69,22 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
     fetchFollowStatus();
   }, [currentUserId, product?.id]);
 
+  const [fullProduct, setFullProduct] = useState(product);
+
+  useEffect(() => {
+    const fetchFullProduct = async () => {
+      if (product?.id) {
+        try {
+          const res = await api.getProduct(product.id);
+          if (res) setFullProduct(res);
+        } catch (e) {
+          console.error('Error fetching full product:', e);
+        }
+      }
+    };
+    fetchFullProduct();
+  }, [product?.id]);
+
   const handleFollowToggle = async () => {
     if (!currentUserId) {
       alert('Debes iniciar sesión para guardar productos');
@@ -122,7 +138,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
   }, []);
 
   const isAuthor = currentUserId === product.authorId;
-  const currentImage = (product.images && product.images.length > 0 ? product.images[selectedImageIndex] : null) || product.image || product.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200';
+  const currentImage = (fullProduct.images && fullProduct.images.length > 0 ? fullProduct.images[selectedImageIndex] : null) || fullProduct.image || fullProduct.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200';
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto overflow-x-hidden">
@@ -165,9 +181,9 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
             </div>
 
             {/* Thumbnail Gallery */}
-            {product.images && product.images.length > 1 && (
+            {fullProduct.images && fullProduct.images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                {product.images.map((img: string, idx: number) => (
+                {(fullProduct.images || [fullProduct.image || '']).map((img: string, idx: number) => (
                   <button 
                     key={idx} 
                     onClick={() => setSelectedImageIndex(idx)} 

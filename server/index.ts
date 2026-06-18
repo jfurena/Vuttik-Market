@@ -1147,7 +1147,12 @@ app.get('/api/products', async (req, res) => {
         isIndependent: !!r.is_independent,
         upVotes: parsedUpVotes,
         downVotes: parsedDownVotes,
-        images: JSON.parse(r.images || '[]'),
+        images: (() => {
+          try {
+            const parsed = JSON.parse(r.images || '[]');
+            return Array.isArray(parsed) ? parsed.slice(0, 1) : [];
+          } catch(e) { return []; }
+        })(),
         customFields: JSON.parse(r.custom_fields || '{}')
       };
     });
@@ -2107,10 +2112,18 @@ app.get('/api/posts/feed', async (req, res) => {
         WHERE f.user_id = ?
         ORDER BY p.created_at DESC LIMIT 50
       `, [userId]);
-      products = pRows.map((p: any) => ({
-        ...p,
-        feedType: 'product'
-      }));
+      products = pRows.map((p: any) => {
+        let parsedImages = [];
+        try {
+          const parsed = JSON.parse(p.images || '[]');
+          parsedImages = Array.isArray(parsed) ? parsed.slice(0, 1) : [];
+        } catch(e) {}
+        return {
+          ...p,
+          images: parsedImages,
+          feedType: 'product'
+        };
+      });
     }
 
     const combined = [...posts, ...products].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
