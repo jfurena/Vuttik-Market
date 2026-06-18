@@ -205,7 +205,7 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const MAX_SIZE = 1200;
+          const MAX_SIZE = 800; // Reduced for performance
 
           if (width > height) {
             if (width > MAX_SIZE) {
@@ -224,13 +224,13 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Quality 0.7 for good balance between size and quality
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          // Quality 0.6 for massive reduction in base64 size
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
           resolve(dataUrl);
         };
-        img.onerror = (err) => reject(err);
+        img.onerror = reject;
       };
-      reader.onerror = (err) => reject(err);
+      reader.onerror = reject;
     });
   };
 

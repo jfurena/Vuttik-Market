@@ -129,18 +129,44 @@ export default function P2PBoard({
     loadTypes();
   }, []);
 
-  const loadProducts = async () => {
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  const loadProducts = async (pageNumber = 1) => {
     try {
-      const prods = await api.getProducts(activeCategory);
-      setProducts(prods);
+      setLoadingProducts(true);
+      const prods = await api.getProducts(activeCategory, undefined, undefined, pageNumber, 20);
+      if (pageNumber === 1) {
+        setProducts(prods);
+      } else {
+        setProducts(prev => [...prev, ...prods]);
+      }
+      setHasMore(prods.length === 20);
+      setPage(pageNumber);
     } catch (error) {
       console.error('Error loading products:', error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const loadMoreProducts = () => {
+    if (!loadingProducts && hasMore) {
+      loadProducts(page + 1);
     }
   };
 
   useEffect(() => {
-    loadProducts();
-    const interval = setInterval(loadProducts, 30000);
+    loadProducts(1);
+    const interval = setInterval(() => {
+      setPage(currentPage => {
+        if (currentPage === 1) {
+          loadProducts(1);
+        }
+        return currentPage;
+      });
+    }, 30000);
     return () => clearInterval(interval);
   }, [activeCategory]);
 
@@ -596,6 +622,18 @@ export default function P2PBoard({
         }
       </div>
       
+      {/* Load More Button */}
+      {hasMore && filteredProducts.length > 0 && (
+        <div className="flex justify-center mt-8 mb-4">
+          <button 
+            onClick={loadMoreProducts} 
+            disabled={loadingProducts}
+            className="bg-white border-2 border-vuttik-gray text-vuttik-navy font-bold py-3 px-8 rounded-full shadow-sm hover:border-vuttik-blue hover:text-vuttik-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loadingProducts ? 'Cargando...' : 'Cargar Más'}
+          </button>
+        </div>
+      )}
       {/* Empty State */}
       {filteredProducts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center px-6">

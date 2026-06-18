@@ -117,11 +117,13 @@ export const api = {
   getBusinessSuggestions: (query: string) => request(`/api/business-names?query=${encodeURIComponent(query)}`),
   getChains: () => request('/api/chains'),
   getProduct: (id: string) => request(`/api/products/${id}`),
-  getProducts: (categoryId?: string, authorId?: string, postedAs?: string) => {
+  getProducts: (categoryId?: string, authorId?: string, postedAs?: string, page = 1, limit = 20) => {
     const params = new URLSearchParams();
     if (categoryId && categoryId !== 'GLOBAL') params.set('categoryId', categoryId);
     if (authorId) params.set('authorId', authorId);
     if (postedAs) params.set('postedAs', postedAs);
+    params.set('page', page.toString());
+    params.set('limit', limit.toString());
     const qs = params.toString();
     return request(`/api/products${qs ? `?${qs}` : ''}`);
   },
@@ -162,11 +164,13 @@ export const api = {
 
   // Social Posts
   getUserSocialPosts: (authorId: string, postedAs?: string) => request(`/api/posts?authorId=${authorId}${postedAs ? `&postedAs=${postedAs}` : ''}`),
-  getPosts: (filter?: 'all' | 'following', userId?: string, type?: 'all' | 'posts' | 'products') => {
+  getPosts: (filter?: 'all' | 'following', userId?: string, type?: 'all' | 'posts' | 'products', page = 1, limit = 20) => {
     const params = new URLSearchParams();
     if (filter) params.set('filter', filter);
     if (userId) params.set('userId', userId);
     if (type) params.set('type', type);
+    params.set('page', page.toString());
+    params.set('limit', limit.toString());
     const qs = params.toString();
     return request(`/api/posts/feed${qs ? `?${qs}` : ''}`);
   },

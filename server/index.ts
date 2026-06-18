@@ -1081,6 +1081,10 @@ app.put('/api/ean-database/:ean', async (req, res) => {
 
 // --- Product Routes ---
 app.get('/api/products', async (req, res) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+
     const { categoryId, authorId, postedAs } = req.query;
     try {
       let query = `
@@ -1121,7 +1125,7 @@ app.get('/api/products', async (req, res) => {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' ORDER BY p.created_at DESC LIMIT 150';
+      query += ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     const rows = await all(query, params);
     const products = rows.map(r => {
       let parsedUpVotes = [];
@@ -2060,6 +2064,10 @@ app.get('/api/users/:uid/following-products', async (req, res) => {
 // Override /api/posts to support ?filter=following&userId=X&type=X
 app.get('/api/posts/feed', async (req, res) => {
   const { filter, userId, type } = req.query;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const offset = (page - 1) * limit;
+
   try {
     let posts = [];
     let products = [];
@@ -2084,7 +2092,7 @@ app.get('/api/posts/feed', async (req, res) => {
           query += ` WHERE 1=0`;
         }
       }
-      query += ' ORDER BY p.created_at DESC LIMIT 50';
+      query += ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
       const rows = await all(query, queryParams);
       posts = await Promise.all(rows.map(async (r: any) => {
         const likes = await all('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
@@ -2110,7 +2118,7 @@ app.get('/api/posts/feed', async (req, res) => {
           (f.entity_type = 'title' AND LOWER(p.title) = f.entity_value) OR
           (f.product_id = p.id)
         WHERE f.user_id = ?
-        ORDER BY p.created_at DESC LIMIT 50
+        ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}
       `, [userId]);
       products = pRows.map((p: any) => {
         let parsedImages = [];
