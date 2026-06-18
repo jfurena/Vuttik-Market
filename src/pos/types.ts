@@ -69,6 +69,7 @@ export interface Product {
   marca: string;
   costo_compra: number;
   precio_venta: number;
+  itbis_rate?: number; // 0, 16, or 18
   cantidad_disponible: number;
   stock_minimo: number;
   unidad_venta: UnitType;

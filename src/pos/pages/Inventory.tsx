@@ -79,6 +79,7 @@ export default function Inventory() {
     marca: '',
     costo_compra: 0,
     precio_venta: 0,
+    itbis_rate: 18,
     cantidad_disponible: 0,
     stock_minimo: 5,
     unidad_venta: UnitType.UNIDAD,
@@ -105,6 +106,7 @@ export default function Inventory() {
       marca: '',
       costo_compra: 0,
       precio_venta: 0,
+      itbis_rate: 18,
       cantidad_disponible: 0,
       stock_minimo: 5,
       unidad_venta: UnitType.UNIDAD,
@@ -129,6 +131,7 @@ export default function Inventory() {
       marca: product.marca || '',
       costo_compra: product.costo_compra,
       precio_venta: product.precio_venta,
+      itbis_rate: product.itbis_rate !== undefined ? product.itbis_rate : 18,
       cantidad_disponible: product.cantidad_disponible,
       stock_minimo: product.stock_minimo,
       unidad_venta: product.unidad_venta,
@@ -537,6 +540,20 @@ export default function Inventory() {
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Precio de Venta (RD$)</label>
                 <input required type="number" step="0.01" placeholder="0.00" className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none font-bold animate-pulse focus:animate-none border-blue-100" value={formData.precio_venta} onChange={e => setFormData({...formData, precio_venta: Number(e.target.value)})} />
+                <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">
+                  ⚠️ El precio final cobrado al cliente. Debe incluir impuestos.
+                </p>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tasa de ITBIS (Impuesto)</label>
+                <select className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none font-bold" value={formData.itbis_rate} onChange={e => setFormData({...formData, itbis_rate: Number(e.target.value)})}>
+                  <option value={0}>Exento (0%) - Carnes, frutas, agua, salud</option>
+                  <option value={16}>Reducido (16%) - Yogurt, café, azúcar, aceites</option>
+                  <option value={18}>General (18%) - Todo lo demás</option>
+                </select>
+                <p className="text-[10px] text-blue-500 mt-2 font-bold uppercase tracking-wider cursor-pointer hover:underline" title="Revisa la factura de compra de tu proveedor (Comprobante B02) para ver qué tasa de impuesto pagaste al adquirir este producto.">
+                  💡 ¿No estás seguro? Mira la factura de tu proveedor (B02)
+                </p>
               </div>
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Stock Inicial Disponible</label>

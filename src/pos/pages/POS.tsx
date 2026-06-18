@@ -117,7 +117,7 @@ export default function POS() {
   const [clienteRnc, setClienteRnc] = useState<string>('');
   const [tipoComprobante, setTipoComprobante] = useState<string>('Consumidor Final');
   const [ncfCode, setNcfCode] = useState<string>('');
-  const [aplicarItbis, setAplicarItbis] = useState<boolean>(true); // Default Dominican 18% ITBIS
+
 
   const generateNcfCodeForType = (type: string) => {
     if (type === 'Consumidor Final') {
@@ -382,9 +382,17 @@ export default function POS() {
     setCart(current => current.filter(item => item.id !== id));
   };
 
-  const subtotal = Number(cart.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0).toFixed(2));
-  const itbis = aplicarItbis ? Number((subtotal * 0.18).toFixed(2)) : 0;
-  const total = Number((subtotal + itbis).toFixed(2));
+  const total = Number(cart.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0).toFixed(2));
+  
+  const itbis = Number(cart.reduce((acc, item) => {
+    const rate = item.itbis_rate !== undefined ? item.itbis_rate : 18;
+    if (rate === 0) return acc;
+    const itemTotal = item.precio_venta * item.quantity;
+    const itemBase = itemTotal / (1 + (rate / 100));
+    return acc + (itemTotal - itemBase);
+  }, 0).toFixed(2));
+  
+  const subtotal = Number((total - itbis).toFixed(2));
 
   const handleOpenShift = async () => {
     if (!profile) return;
@@ -504,7 +512,8 @@ export default function POS() {
         ganancia_unitaria: Number(((item.precio_venta || 0) - (item.costo_compra || 0)).toFixed(2)),
         ganancia_total: Number((((item.precio_venta || 0) - (item.costo_compra || 0)) * item.quantity).toFixed(2)),
         total_linea: Number((item.precio_venta * item.quantity).toFixed(2)),
-        itbis_gravado: aplicarItbis
+        itbis_gravado: (item.itbis_rate !== undefined ? item.itbis_rate : 18) > 0,
+        itbis_rate: item.itbis_rate !== undefined ? item.itbis_rate : 18
       }));
 
       let locationMetadata = null;
@@ -634,26 +643,6 @@ export default function POS() {
                   <span className="bg-surface-container-lowest/10 px-3 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-100 border border-white/5 font-sans">
                     {payMethod}
                   </span>
-                </div>
-
-                <div className="flex justify-between items-center p-3.5 bg-surface border border-gray-100 rounded-2xl">
-                  <div>
-                    <span className="block font-black text-xs text-gray-800 font-sans">Aplicar ITBIS (18%)</span>
-                    <span className="text-[9px] text-gray-400 font-semibold font-sans">Grava los artículos con impuesto de ley dominicana</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setAplicarItbis(!aplicarItbis)}
-                    className={cn(
-                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                      aplicarItbis ? "bg-emerald-500" : "bg-gray-300"
-                    )}
-                  >
-                    <span className={cn(
-                      "inline-block h-5 w-5 transform rounded-full bg-surface-container-lowest shadow ring-0 transition duration-200 ease-in-out",
-                      aplicarItbis ? "translate-x-5" : "translate-x-0"
-                    )} />
-                  </button>
                 </div>
 
                 <div className="space-y-1.5 font-sans">
@@ -1732,7 +1721,7 @@ export default function POS() {
                     setClienteRnc('');
                     setTipoComprobante('Consumidor Final');
                     setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                    setAplicarItbis(true);
+
                     setShowPayModal(true);
                   }}
                   className="col-span-2 flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-400 text-white py-6 rounded-3xl font-black text-xl transition-all shadow-xl shadow-emerald-500/15 disabled:opacity-40 select-none group"
@@ -1750,7 +1739,7 @@ export default function POS() {
                     setClienteRnc('');
                     setTipoComprobante('Consumidor Final');
                     setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                    setAplicarItbis(true);
+
                     setShowPayModal(true);
                   }}
                   className="flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 hover:bg-emerald-500 hover:border-emerald-600 text-slate-300 hover:text-white py-4 rounded-2xl font-black text-[10px] tracking-wider uppercase transition-all disabled:opacity-30 select-none"
@@ -1769,7 +1758,7 @@ export default function POS() {
                     setClienteRnc('');
                     setTipoComprobante('Consumidor Final');
                     setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                    setAplicarItbis(true);
+
                     setShowPayModal(true);
                   }}
                 >
@@ -2034,7 +2023,7 @@ export default function POS() {
                   setClienteRnc('');
                   setTipoComprobante('Consumidor Final');
                   setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                  setAplicarItbis(true);
+
                   setShowPayModal(true);
                 }}
                 className="col-span-2 flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-400 text-white py-5 rounded-[1.5rem] font-black text-xl transition-all shadow-xl shadow-emerald-500/10 disabled:opacity-40 select-none group"
@@ -2052,7 +2041,7 @@ export default function POS() {
                   setClienteRnc('');
                   setTipoComprobante('Consumidor Final');
                   setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                  setAplicarItbis(true);
+
                   setShowPayModal(true);
                 }}
                 className="flex items-center justify-center gap-2 bg-surface-container-lowest/10 hover:bg-vuttik-blue text-white py-3.5 rounded-2xl font-black text-[9px] tracking-wider uppercase transition-all disabled:opacity-30 select-none"
@@ -2071,7 +2060,7 @@ export default function POS() {
                   setClienteRnc('');
                   setTipoComprobante('Consumidor Final');
                   setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                  setAplicarItbis(true);
+
                   setShowPayModal(true);
                 }}
               >

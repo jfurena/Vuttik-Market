@@ -25,20 +25,35 @@ export const printReceipt = (sale: any, businessInfo: any = {}) => {
 
   // Subtotal and tax items separation
   // If the sale already has the pre-computed tax details, use them; otherwise, compute based on default 18%
-  const hasTax = sale.impuesto > 0 || sale.itbis > 0 || (sale.items && sale.items.some((i: any) => i.itbis_gravado));
-  let subtotalExento = 0;
-  let subtotalGravado = 0;
-  let totalItbis = sale.impuesto || sale.itbis || 0;
+  let gravado18 = 0, gravado16 = 0, exento0 = 0;
+  let itbis18 = 0, itbis16 = 0;
 
-  if (hasTax && totalItbis === 0) {
-    // Fallback if tax is enabled but totalItbis is zero, compute 18%
-    subtotalGravado = sale.subtotal;
-    totalItbis = subtotalGravado * 0.18;
-  } else if (totalItbis > 0) {
-    subtotalGravado = Number((totalItbis / 0.18).toFixed(2));
-    subtotalExento = Math.max(0, sale.subtotal - subtotalGravado);
+  if (items.length > 0) {
+    items.forEach((item: any) => {
+      const itemQty = item.cantidad ?? item.quantity ?? 1;
+      const rate = item.itbis_rate !== undefined ? item.itbis_rate : (item.itbis_gravado ? 18 : 0);
+      const totalLinea = itemQty * (item.precio_venta || item.precio_unitario || 0);
+      const baseLinea = totalLinea / (1 + (rate / 100));
+      const impuestoLinea = totalLinea - baseLinea;
+      if (rate === 18) {
+        gravado18 += baseLinea;
+        itbis18 += impuestoLinea;
+      } else if (rate === 16) {
+        gravado16 += baseLinea;
+        itbis16 += impuestoLinea;
+      } else {
+        exento0 += totalLinea;
+      }
+    });
   } else {
-    subtotalExento = sale.subtotal;
+    const totalItbis = sale.impuesto || sale.itbis || 0;
+    if (totalItbis > 0) {
+      gravado18 = Number((totalItbis / 0.18).toFixed(2));
+      exento0 = Math.max(0, sale.subtotal - gravado18);
+      itbis18 = totalItbis;
+    } else {
+      exento0 = sale.subtotal;
+    }
   }
 
   // Dominican Republic NCF details
@@ -161,8 +176,8 @@ export const printReceipt = (sale: any, businessInfo: any = {}) => {
               // DAT-003 FIX: server saves `cantidad`, older records may have `quantity`
               const itemQty = item.cantidad ?? item.quantity ?? 1;
               const itemTotal = (itemQty * item.precio_venta);
-              const isGravado = item.itbis_gravado || (hasTax && item.precio_venta > 0);
-              const taxIndicator = isGravado ? 'G18' : 'E';
+              const rate = item.itbis_rate !== undefined ? item.itbis_rate : (item.itbis_gravado ? 18 : 0);
+              const taxIndicator = rate === 18 ? 'G18' : (rate === 16 ? 'G16' : 'E');
               const sku = escHtml(item.codigo_barra || item.producto_id?.slice(-6) || 'FACTUR');
               
               return `
@@ -187,25 +202,32 @@ export const printReceipt = (sale: any, businessInfo: any = {}) => {
             <span>${formatCurrency(sale.subtotal)}</span>
           </div>
           
-          ${totalItbis > 0 ? `
+          ${itbis18 > 0 ? `
             <div class="totals-row">
               <span>GRAVADO (ITBIS 18%):</span>
-              <span>${formatCurrency(subtotalGravado)}</span>
-            </div>
-            <div class="totals-row">
-              <span>EXENTO (ITBIS 0%):</span>
-              <span>${formatCurrency(subtotalExento)}</span>
+              <span>${formatCurrency(gravado18)}</span>
             </div>
             <div class="totals-row">
               <span>ITBIS COBRADO (18%):</span>
-              <span>${formatCurrency(totalItbis)}</span>
+              <span>${formatCurrency(itbis18)}</span>
             </div>
-          ` : `
+          ` : ''}
+
+          ${itbis16 > 0 ? `
             <div class="totals-row">
-              <span>ITBIS COBRADO (0%):</span>
-              <span>RD$0.00</span>
+              <span>GRAVADO (ITBIS 16%):</span>
+              <span>${formatCurrency(gravado16)}</span>
             </div>
-          `}
+            <div class="totals-row">
+              <span>ITBIS COBRADO (16%):</span>
+              <span>${formatCurrency(itbis16)}</span>
+            </div>
+          ` : ''}
+          
+          <div class="totals-row">
+            <span>EXENTO (ITBIS 0%):</span>
+            <span>${formatCurrency(exento0)}</span>
+          </div>
 
           ${sale.descuento > 0 ? `
             <div class="totals-row bold text-red-650">

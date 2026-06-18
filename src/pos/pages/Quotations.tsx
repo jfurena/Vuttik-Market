@@ -32,7 +32,6 @@ interface SavedQuote {
   subtotal: number;
   discount: number;
   tax: number;
-  taxRate?: number; // BIZ-009: stored to avoid recalculation bugs with discounts
   total: number;
   date: string;
   notes: string;
@@ -46,7 +45,6 @@ interface QuoteDraft {
   items: QuoteItem[];
   discountType: 'percent' | 'fixed';
   discountValue: string;
-  taxRate: number;
   notes: string;
   createdAt: string;
   lastModified: string;
@@ -137,7 +135,7 @@ export default function Quotations() {
         items: [],
         discountType: 'percent',
         discountValue: '0',
-        taxRate: 0,
+        
         notes: '',
         createdAt: new Date().toISOString(),
         lastModified: new Date().toISOString()
@@ -155,7 +153,7 @@ export default function Quotations() {
     setClientPhone(firstDraft.clientPhone);
     setDiscountType(firstDraft.discountType);
     setDiscountValue(firstDraft.discountValue);
-    setTaxRate(firstDraft.taxRate);
+    
     setNotes(firstDraft.notes);
     setActiveDraftId(firstDraft.id);
     setLoading(false);
@@ -207,7 +205,7 @@ export default function Quotations() {
       localStorage.setItem(QUOTE_DRAFTS_KEY, JSON.stringify(updatedList));
       return updatedList;
     });
-  }, [quoteItems, clientName, clientPhone, discountType, discountValue, taxRate, notes, activeDraftId, loading, isSwitching]);
+  }, [quoteItems, clientName, clientPhone, discountType, discountValue, notes, activeDraftId, loading, isSwitching]);
 
   // Select another draft and map state variables
   const selectDraft = (draft: QuoteDraft) => {
@@ -217,7 +215,7 @@ export default function Quotations() {
     setClientPhone(draft.clientPhone);
     setDiscountType(draft.discountType);
     setDiscountValue(draft.discountValue);
-    setTaxRate(draft.taxRate);
+    
     setNotes(draft.notes);
     setActiveDraftId(draft.id);
     setTimeout(() => {
@@ -238,7 +236,7 @@ export default function Quotations() {
       items: [],
       discountType: 'percent',
       discountValue: '0',
-      taxRate: 0,
+      
       notes: '',
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString()
@@ -414,7 +412,7 @@ export default function Quotations() {
       setClientName('');
       setClientPhone('');
       setDiscountValue('0');
-      setTaxRate(0);
+      
       setNotes('');
     }
   };
@@ -513,7 +511,7 @@ export default function Quotations() {
       subtotal,
       discount: discountAmount,
       tax: taxAmount,
-      taxRate: taxRate, // BIZ-009: save original tax rate to avoid recalculation bugs with discounts
+      
       total,
       date: new Date().toLocaleString('es-DO'),
       notes: notes
@@ -544,7 +542,7 @@ export default function Quotations() {
       setClientName('');
       setClientPhone('');
       setDiscountValue('0');
-      setTaxRate(0);
+      
       setNotes('');
     }
   };
@@ -608,14 +606,7 @@ export default function Quotations() {
     setClientPhone(quote.clientPhone);
     setDiscountType('fixed');
     setDiscountValue(quote.discount.toString());
-    // BIZ-009 FIX: Use stored taxRate to avoid recalculation error when discount was applied
-    if (quote.taxRate !== undefined) {
-      setTaxRate(quote.taxRate);
-    } else {
-      // Fallback para cotizaciones antiguas sin taxRate guardado
-      const calculated = quote.subtotal > 0 ? Math.round((quote.tax / quote.subtotal) * 100) : 0;
-      setTaxRate(calculated);
-    }
+
     setNotes(quote.notes);
     setShowHistoryModal(false);
     showFeedback(`Cotización ${quote.id} cargada`);
@@ -1071,7 +1062,7 @@ export default function Quotations() {
           {/* Quotation totals draft controls */}
           {quoteItems.length > 0 && (
             <div className="bg-gray-55 p-5 rounded-[2rem] border border-gray-150 space-y-4 shrink-0 transition-all font-sans">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {/* Discount Control */}
                 <div className="col-span-1">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Descuento</label>
@@ -1094,19 +1085,7 @@ export default function Quotations() {
                   </div>
                 </div>
 
-                {/* Tax Option (ITBIS) */}
-                <div className="col-span-1">
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Cálculo Impuesto (ITBIS)</label>
-                  <select
-                    value={taxRate}
-                    onChange={e => setTaxRate(parseInt(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-white border border-gray-250 rounded-xl text-xs font-black outline-none"
-                  >
-                    <option value={0}>Sin Impuesto (0%)</option>
-                    <option value={18}>ITBIS General (18%)</option>
-                    <option value={16}>ITBIS Reducido (16%)</option>
-                  </select>
-                </div>
+
 
                 {/* Notes general quote */}
                 <div className="col-span-2 md:col-span-1">
@@ -1135,7 +1114,7 @@ export default function Quotations() {
                 )}
                 {taxAmount > 0 && (
                   <div className="flex justify-between items-center text-gray-500 font-semibold">
-                    <span>ITBIS ({taxRate}%):</span>
+                    <span>ITBIS:</span>
                     <span className="font-mono text-gray-900">{formatCurrency(taxAmount)}</span>
                   </div>
                 )}
@@ -1283,7 +1262,7 @@ export default function Quotations() {
                       )}
                       {taxAmount > 0 && (
                         <div className="flex justify-between font-semibold text-gray-500">
-                          <span>ITBIS ({taxRate}%):</span>
+                          <span>ITBIS:</span>
                           <span className="font-mono text-gray-900">{formatCurrency(taxAmount)}</span>
                         </div>
                       )}

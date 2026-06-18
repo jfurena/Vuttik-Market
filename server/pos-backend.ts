@@ -703,7 +703,13 @@ async function startServer() {
     const { usuario_id, ...productData } = req.body;
     const db = getDB();
     const biz = getBiz(db, s.business_id);
-    const newProduct = { ...productData, id: Date.now().toString(), fecha_creacion: new Date(), fecha_actualizacion: new Date() };
+    const newProduct = { 
+      ...productData, 
+      id: Date.now().toString(), 
+      itbis_rate: productData.itbis_rate !== undefined ? Number(productData.itbis_rate) : 18,
+      fecha_creacion: new Date(), 
+      fecha_actualizacion: new Date() 
+    };
     biz.products.push(newProduct);
 
     // Sync to Vuttik Market
