@@ -507,10 +507,13 @@ async function startServer() {
     saveDB(db);
 
     try {
-      // Sync deletion to SQLite
-      await run(`DELETE FROM vuttik_business_profiles WHERE uid = ? AND owner_uid = ?`, [bizId, s.owner_id]);
-      await run(`DELETE FROM vuttik_users WHERE uid = ? AND role = 'business'`, [bizId]);
-      await run(`DELETE FROM vuttik_products WHERE author_id = ?`, [bizId]);
+      if (req.query.global === 'true') {
+        // Sync deletion to SQLite (Vuttik Global)
+        await run(`DELETE FROM vuttik_business_profiles WHERE uid = ? AND owner_uid = ?`, [bizId, s.owner_id]);
+        await run(`DELETE FROM vuttik_users WHERE uid = ? AND role = 'business'`, [bizId]);
+        await run(`DELETE FROM vuttik_products WHERE author_id = ?`, [bizId]);
+        await run(`DELETE FROM vuttik_posts WHERE author_id = ?`, [bizId]);
+      }
     } catch (err) {
       console.error('Error syncing POS business deletion to SQLite:', err);
     }

@@ -123,12 +123,14 @@ export default function BusinessSelector() {
     }
   };
 
+  const [deleteGlobal, setDeleteGlobal] = useState(true);
+
   const handleDeleteSubmit = async () => {
     if (!deleteBiz) return;
     setIsProcessing(true);
     setError('');
     try {
-      await ApiService.deleteBusiness(deleteBiz.id);
+      await ApiService.deleteBusiness(deleteBiz.id, deleteGlobal);
       setDeleteBiz(null);
       await load();
     } catch (err: any) {
@@ -592,11 +594,25 @@ export default function BusinessSelector() {
                   <X size={20} />
                 </button>
               </div>
-              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
-                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
-                <p className="text-sm text-red-700 font-bold leading-relaxed">
-                  ¿Estás seguro de eliminar <span className="font-black">{deleteBiz.nombre}</span>? Perderás todos los productos, ventas y empleados asociados permanentemente.
-                </p>
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+                  <p className="text-sm text-red-700 font-bold leading-relaxed">
+                    ¿Estás seguro de eliminar <span className="font-black">{deleteBiz.nombre}</span>? Perderás todos los datos del POS permanentemente.
+                  </p>
+                </div>
+                <label className="flex items-start gap-3 mt-2 cursor-pointer bg-white p-3 rounded-xl border border-red-100">
+                  <input
+                    type="checkbox"
+                    checked={deleteGlobal}
+                    onChange={(e) => setDeleteGlobal(e.target.checked)}
+                    className="mt-1 w-5 h-5 rounded text-red-600 focus:ring-red-500"
+                  />
+                  <div>
+                    <span className="block text-sm font-bold text-gray-900">Eliminar de Vuttik.com</span>
+                    <span className="block text-xs text-gray-500 mt-0.5">Esto eliminará la cuenta del negocio en la app global, incluyendo todos sus productos, posts y seguidores de forma irreversible.</span>
+                  </div>
+                </label>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setDeleteBiz(null)} className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">

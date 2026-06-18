@@ -213,8 +213,8 @@ export const ApiService = {
     return res.json();
   },
 
-  async deleteBusiness(id: string) {
-    const res = await fetch(`${API_BASE}/businesses/${id}`, {
+  async deleteBusiness(id: string, global: boolean = false) {
+    const res = await fetch(`${API_BASE}/businesses/${id}${global ? '?global=true' : ''}`, {
       method: 'DELETE'
     });
     if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al eliminar negocio.'); }
