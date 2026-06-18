@@ -14,7 +14,7 @@ const DefaultIcon = L.icon({
 
 interface LocationInputProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, placeName?: string, country?: string, state?: string) => void;
   onCoordinatesChange?: (lat: number, lng: number) => void;
   placeholder?: string;
   label?: string;
@@ -84,6 +84,17 @@ export default function LocationInput({ value, onChange, onCoordinatesChange, pl
     setQuery(value);
   }, [value]);
 
+  // Request user location on component mount or when map is opened
+  useEffect(() => {
+    if (showMapModal && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setMapCenter([pos.coords.latitude, pos.coords.longitude]);
+      }, (err) => {
+        console.warn("Geolocation denied or error:", err);
+      });
+    }
+  }, [showMapModal]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -120,12 +131,16 @@ export default function LocationInput({ value, onChange, onCoordinatesChange, pl
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
       );
       const data = await response.json();
       const displayName = data.display_name;
-      setQuery(displayName);
-      onChange(displayName);
+      const placeName = displayName.split(',')[0].trim();
+      const country = data.address?.country || '';
+      const state = data.address?.state || data.address?.province || data.address?.city || '';
+      
+      setQuery(placeName);
+      onChange(displayName, placeName, country, state);
       onCoordinatesChange?.(lat, lng);
       setMarkerPos([lat, lng]);
       setMapCenter([lat, lng]);
@@ -156,10 +171,14 @@ export default function LocationInput({ value, onChange, onCoordinatesChange, pl
     const displayName = suggestion.display_name;
     const lat = parseFloat(suggestion.lat);
     const lon = parseFloat(suggestion.lon);
+    // Extract place name (first part before comma)
+    const placeName = displayName.split(',')[0].trim();
+    const country = suggestion.address?.country || '';
+    const state = suggestion.address?.state || suggestion.address?.province || suggestion.address?.city || '';
     
     // Update local and parent state
-    setQuery(displayName);
-    onChange(displayName);
+    setQuery(placeName);
+    onChange(displayName, placeName, country, state);
     onCoordinatesChange?.(lat, lon);
     
     // Update map position
@@ -202,7 +221,7 @@ export default function LocationInput({ value, onChange, onCoordinatesChange, pl
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {query && (
             <button 
-              onClick={() => { setQuery(''); onChange(''); setMarkerPos(null); setSuggestions([]); }}
+              onClick={() => { setQuery(''); onChange('', ''); setMarkerPos(null); setSuggestions([]); }}
               className="p-1 hover:bg-gray-200 rounded-full transition-colors text-vuttik-text-muted"
             >
               <X size={16} />
@@ -271,7 +290,7 @@ export default function LocationInput({ value, onChange, onCoordinatesChange, pl
                 
                 {query && (
                   <button 
-                    onClick={() => { setQuery(''); onChange(''); setSuggestions([]); }}
+                    onClick={() => { setQuery(''); onChange('', ''); setSuggestions([]); }}
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-full transition-colors text-vuttik-text-muted"
                   >
                     <X size={20} />
