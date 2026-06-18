@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
       fetchUnread();
-      interval = setInterval(fetchUnread, 15000);
+      interval = setInterval(fetchUnread, 60000); // Poll every 60s instead of 15s
     } else {
       setUnreadMessagesCount(0);
     }

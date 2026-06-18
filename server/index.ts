@@ -1102,11 +1102,15 @@ app.get('/api/products', async (req, res) => {
 
     try {
       let query = `
-        SELECT p.*,
-               u.country as author_country,
-               COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
-               (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_votes,
-               (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_votes
+        SELECT 
+          p.id, p.title, p.price, p.currency, p.category_id, p.type_id,
+          p.author_id, p.author_name, p.location, p.phone, p.lat, p.lng,
+          p.barcode, p.is_on_sale, p.sale_price, p.created_at, p.posted_as,
+          p.chain, p.store_name, p.is_independent, p.country, p.province, p.stock,
+          u.country as author_country,
+          COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
+          (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_count,
+          (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_count
         FROM vuttik_products p
         LEFT JOIN vuttik_users u ON p.author_id = u.uid
         LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
@@ -1141,37 +1145,49 @@ app.get('/api/products', async (req, res) => {
 
       query += ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     const rows = await all(query, params);
-    const products = rows.map(r => {
-      let parsedUpVotes = [];
-      let parsedDownVotes = [];
-      try { parsedUpVotes = r.up_votes ? JSON.parse(r.up_votes).filter((v: any) => v !== null) : []; } catch (e) {}
-      try { parsedDownVotes = r.down_votes ? JSON.parse(r.down_votes).filter((v: any) => v !== null) : []; } catch (e) {}
-      
-      return {
-        ...r,
+    const products = rows.map(r => ({
+        id: r.id,
+        title: r.title,
+        price: r.price,
+        currency: r.currency,
         typeId: r.type_id,
         categoryId: r.category_id,
         authorId: r.author_id,
         authorName: r.author_name,
         authorAvatar: r.author_avatar,
-        createdAt: r.created_at,
-        salePrice: r.sale_price,
-        isOnSale: !!r.is_on_sale,
         authorCountry: r.country || r.author_country,
-        province: r.province,
-        storeName: r.store_name,
-        business: r.store_name || r.chain, // Map store_name or chain to business for frontend
+        location: r.location,
+        phone: r.phone,
+        lat: r.lat,
+        lng: r.lng,
+        barcode: r.barcode,
+        isOnSale: !!r.is_on_sale,
+        salePrice: r.sale_price,
+        createdAt: r.created_at,
+        postedAs: r.posted_as,
         chain: r.chain,
+        storeName: r.store_name,
+        business: r.store_name || r.chain,
         isIndependent: !!r.is_independent,
-        upVotes: parsedUpVotes,
-        downVotes: parsedDownVotes,
+        country: r.country,
+        province: r.province,
+        stock: r.stock,
+        // Return counts only (not full arrays) to reduce payload size dramatically
+        upVotes: r.up_count || 0,
+        downVotes: r.down_count || 0,
         // Return URL instead of Base64 to avoid bloating the JSON response
         images: [`/api/images/product/${r.id}`],
-        customFields: JSON.parse(r.custom_fields || '{}')
-      };
-    });
+      }));
     if (isGlobalQuery) {
-      globalCache.set(cacheKey, products, 15); // Cache for 15 seconds
+      globalCache.set(cacheKey, products, 30); // Cache for 30 seconds
+    }
+    
+    // ETag for browser-level caching on repeat visits
+    const etag = `"products-p${page}-${products.length}"`;
+    res.set('ETag', etag);
+    res.set('Cache-Control', 'public, max-age=10');
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end();
     }
     
     res.json(products);
@@ -1183,6 +1199,16 @@ app.get('/api/products', async (req, res) => {
 // Dedicated binary image endpoint for products - avoids Base64 bloat in list responses
 app.get('/api/images/product/:id', async (req, res) => {
   const { id } = req.params;
+  
+  // Check RAM cache first (images almost never change, cache for 1 hour)
+  const imgCacheKey = `img_product_${id}`;
+  const cachedImg = globalCache.get(imgCacheKey);
+  if (cachedImg) {
+    res.set('Content-Type', cachedImg.mime);
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(cachedImg.buffer);
+  }
+
   try {
     const product = await get('SELECT images FROM vuttik_products WHERE id = ?', [id]);
     if (!product) return res.status(404).send('Not found');
@@ -1195,6 +1221,8 @@ app.get('/api/images/product/:id', async (req, res) => {
       const mimeMatch = header.match(/data:([^;]+)/);
       const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
       const buffer = Buffer.from(b64, 'base64');
+      // Cache decoded buffer in RAM for 3600 seconds
+      globalCache.set(imgCacheKey, { buffer, mime }, 3600);
       res.set('Content-Type', mime);
       res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24h in browser
       return res.send(buffer);

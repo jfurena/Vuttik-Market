@@ -602,9 +602,9 @@ export default function P2PBoard({
               type={product.typeId || product.type_id}
               typeLabel={transactionTypes.find(t => t.id === (product.typeId || product.type_id))?.label}
               image={product.images?.[0]}
-              upvotes={product.upVotes?.length || 0}
-              downvotes={product.downVotes?.length || 0}
-              userVote={product.upVotes?.includes(user?.uid) ? 'up' : product.downVotes?.includes(user?.uid) ? 'down' : null}
+              upvotes={typeof product.upVotes === 'number' ? product.upVotes : (product.upVotes?.length || 0)}
+              downvotes={typeof product.downVotes === 'number' ? product.downVotes : (product.downVotes?.length || 0)}
+              userVote={Array.isArray(product.upVotes) && product.upVotes.includes(user?.uid) ? 'up' : Array.isArray(product.downVotes) && product.downVotes.includes(user?.uid) ? 'down' : null}
               authorName={product.authorName || product.author_name || 'Usuario'}
               authorId={product.authorId || product.author_id || product.uid}
               onAuthorClick={(id) => {

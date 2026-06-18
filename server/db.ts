@@ -617,6 +617,10 @@ export async function initDB() {
   await run('CREATE INDEX IF NOT EXISTS idx_products_author_created ON vuttik_products(author_id, created_at DESC)');
   await run('CREATE INDEX IF NOT EXISTS idx_products_category_created ON vuttik_products(category_id, created_at DESC)');
   await run('CREATE INDEX IF NOT EXISTS idx_posts_author_created ON vuttik_posts(author_id, created_at DESC)');
+  // Index for global feed (most frequently executed query)
+  await run('CREATE INDEX IF NOT EXISTS idx_products_created_desc ON vuttik_products(created_at DESC)');
+  // Index for COUNT(*) on product votes (used in list endpoint)
+  await run('CREATE INDEX IF NOT EXISTS idx_votes_product_type ON vuttik_product_votes(product_id, vote_type)');
 
   console.log('Database schema created successfully.');
   
