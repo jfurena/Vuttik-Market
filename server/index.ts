@@ -1121,7 +1121,7 @@ app.get('/api/products', async (req, res) => {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' ORDER BY p.created_at DESC';
+      query += ' ORDER BY p.created_at DESC LIMIT 150';
     const rows = await all(query, params);
     const products = rows.map(r => {
       let parsedUpVotes = [];
@@ -1402,7 +1402,7 @@ app.get('/api/posts', async (req, res) => {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    query += ' ORDER BY p.created_at DESC';
+    query += ' ORDER BY p.created_at DESC LIMIT 100';
 
     const rows = await all(query, params);
     const posts = await Promise.all(rows.map(async (r: any) => {

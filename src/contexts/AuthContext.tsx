@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
-    if (user) {
+    if (user?.uid) {
       const fetchUnread = async () => {
         try {
           const res = await api.getUnreadMessagesCount(user.uid);
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [user]);
+  }, [user?.uid]);
 
   const login = (newToken: string, newUser: AuthUser) => {
     localStorage.setItem('vuttik_token', newToken);
