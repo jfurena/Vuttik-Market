@@ -368,7 +368,6 @@ async function startServer() {
     const newBiz = emptyBusiness(newBizId, nombre.trim(), codigo, s.owner_id, ubicacion?.trim() || '', tipo || '');
     // Persist coordinates if provided
     if (lat != null && lng != null) {
-      if (!newBiz.settings) newBiz.settings = {};
       newBiz.settings.allowed_location = { address: ubicacion?.trim() || '', lat: Number(lat), lng: Number(lng) };
     }
     db.businesses.push(newBiz);
