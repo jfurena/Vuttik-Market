@@ -541,7 +541,14 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                            price={post.is_on_sale ? String(post.sale_price) : String(post.price)}
                            regularPrice={post.is_on_sale ? String(post.price) : undefined}
                            currency={post.currency || 'DOP'}
-                           image={post.images ? JSON.parse(post.images)[0] : undefined}
+                           image={(() => { 
+                             if (!post.images) return undefined;
+                             if (Array.isArray(post.images)) return post.images[0];
+                             if (typeof post.images === 'string') {
+                               try { const p = JSON.parse(post.images); return Array.isArray(p) ? p[0] : p; } catch { return post.images; }
+                             }
+                             return undefined;
+                           })()}
                            location={post.location}
                            registeredAt={post.created_at}
                            isOffer={post.is_on_sale}

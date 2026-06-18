@@ -66,8 +66,8 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
       const isProduct = p.price !== undefined || p.categoryId !== undefined;
       if (!isProduct) return;
       
-      const up = p.upVotes?.length || 0;
-      const down = p.downVotes?.length || 0;
+      const up = Array.isArray(p.upVotes) ? p.upVotes.length : (p.upVotes || 0);
+      const down = Array.isArray(p.downVotes) ? p.downVotes.length : (p.downVotes || 0);
       const total = up + down;
       if (total > 0) {
         totalScore += (up / total) * 5;
@@ -306,8 +306,9 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     if (productIndex === -1) return;
     
     const product = userProducts[productIndex];
-    const upVotes = [...(product.upVotes || [])];
-    const downVotes = [...(product.downVotes || [])];
+    // Normalise to array (API may return a count or an array depending on context)
+    const upVotes: string[] = Array.isArray(product.upVotes) ? [...product.upVotes] : [];
+    const downVotes: string[] = Array.isArray(product.downVotes) ? [...product.downVotes] : [];
     
     const isUpvoted = upVotes.includes(currentUserId);
     const isDownvoted = downVotes.includes(currentUserId);
@@ -555,9 +556,9 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                               category={categories.find(c => c.id === (product.categoryId || product.category_id))?.name || 'General'}
                               type={product.typeId || product.type_id}
                               image={product.images?.[0]}
-                              upvotes={product.upVotes?.length || 0}
-                              downvotes={product.downVotes?.length || 0}
-                              userVote={product.upVotes?.includes(currentUserId) ? 'up' : product.downVotes?.includes(currentUserId) ? 'down' : null}
+                              upvotes={typeof product.upVotes === 'number' ? product.upVotes : (Array.isArray(product.upVotes) ? product.upVotes.length : 0)}
+                              downvotes={typeof product.downVotes === 'number' ? product.downVotes : (Array.isArray(product.downVotes) ? product.downVotes.length : 0)}
+                              userVote={Array.isArray(product.upVotes) && product.upVotes.includes(currentUserId) ? 'up' : Array.isArray(product.downVotes) && product.downVotes.includes(currentUserId) ? 'down' : null}
                               onVote={handleVoteProduct}
                               onViewDetails={() => onViewProduct?.(product.id)}
                               trustLevel="High"

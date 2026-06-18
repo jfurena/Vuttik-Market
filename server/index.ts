@@ -1197,8 +1197,8 @@ app.get('/api/products', async (req, res) => {
 });
 
 // Dedicated binary image endpoint for products - avoids Base64 bloat in list responses
-app.get('/api/images/product/:id', async (req, res) => {
-  const { id } = req.params;
+app.get('/api/images/product/*', async (req, res) => {
+  const id = (req.params as any)[0] || '';
   
   // Check RAM cache first (images almost never change, cache for 1 hour)
   const imgCacheKey = `img_product_${id}`;
