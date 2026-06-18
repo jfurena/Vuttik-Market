@@ -2069,13 +2069,16 @@ app.get('/api/follows/:userId/following', async (req, res) => {
 app.get('/api/follows/:userId/followers', async (req, res) => {
   try {
     const rows = await all(`
-      SELECT f.follower_id, u.display_name, u.photo_url, u.username, u.role
+      SELECT f.follower_id, u.display_name, u.username, u.role
       FROM vuttik_follows f
       JOIN vuttik_users u ON f.follower_id = u.uid
       WHERE f.following_id = ?
       ORDER BY f.created_at DESC
     `, [req.params.userId]);
-    res.json(rows);
+    res.json(rows.map((r: any) => ({
+      ...r,
+      photo_url: `/api/images/user/${r.follower_id}`
+    })));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -2250,9 +2253,7 @@ app.get('/api/conversations/:userId', async (req, res) => {
     const rows = await all(
       `SELECT c.*, 
         COALESCE(c.p1_name, u1.display_name) as p1_name, 
-        COALESCE(c.p1_photo, u1.photo_url) as p1_photo,
-        COALESCE(c.p2_name, u2.display_name) as p2_name, 
-        COALESCE(c.p2_photo, u2.photo_url) as p2_photo
+        COALESCE(c.p2_name, u2.display_name) as p2_name
        FROM vuttik_conversations c
        LEFT JOIN vuttik_users u1 ON c.participant_1 = u1.uid
        LEFT JOIN vuttik_users u2 ON c.participant_2 = u2.uid
@@ -2260,7 +2261,11 @@ app.get('/api/conversations/:userId', async (req, res) => {
        ORDER BY c.last_message_at DESC`,
       [req.params.userId, req.params.userId]
     );
-    res.json(rows);
+    res.json(rows.map((r: any) => ({
+      ...r,
+      p1_photo: `/api/images/user/${r.participant_1}`,
+      p2_photo: `/api/images/user/${r.participant_2}`
+    })));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
