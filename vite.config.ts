@@ -20,34 +20,18 @@ export default defineConfig(({ mode }) => {
         'motion/react': path.resolve(__dirname, 'src/lib/framer-motion-mock.tsx')
       },
     },
-    server: {
-      port: 3000,
-      host: '0.0.0.0',
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3005',
-          changeOrigin: true,
-        },
-        '/pos/api': {
-          target: 'http://localhost:3005',
-          changeOrigin: true,
-        },
-      },
-      hmr: process.env.DISABLE_HMR !== 'true',
-    },
     build: {
-      outDir: 'dist',
-      sourcemap: true,
-      minify: false,
-      target: 'es2020',
       rollupOptions: {
         output: {
-          manualChunks: undefined,
-        },
-      },
-    },
-    esbuild: {
-      logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    },
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('leaflet') || id.includes('react-leaflet')) return 'leaflet';
+              if (id.includes('lucide-react')) return 'icons';
+              return 'vendor'; // all other node_modules
+            }
+          }
+        }
+      }
+    }
   };
 });
