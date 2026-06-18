@@ -1101,6 +1101,7 @@ app.get('/api/products', async (req, res) => {
     }
 
     try {
+      // We paginate the products first, then join the rest to ensure we only do heavy work for the 20 rows needed
       let query = `
         SELECT 
           p.id, p.title, p.price, p.currency, p.category_id, p.type_id,
@@ -1111,11 +1112,16 @@ app.get('/api/products', async (req, res) => {
           COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
           (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_count,
           (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_count
-        FROM vuttik_products p
+        FROM (
+          SELECT * FROM vuttik_products p
+          -- CONDITIONS_PLACEHOLDER
+          ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}
+        ) p
         LEFT JOIN vuttik_users u ON p.author_id = u.uid
         LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
         LEFT JOIN vuttik_users owner ON b.owner_uid = owner.uid
       `;
+
       const params = [];
       const conditions = [];
 
@@ -1139,11 +1145,12 @@ app.get('/api/products', async (req, res) => {
         conditions.push("(p.id NOT LIKE 'pos-%' OR p.stock > 0)");
       }
 
+      let whereClause = '';
       if (conditions.length > 0) {
-        query += ' WHERE ' + conditions.join(' AND ');
+        whereClause = ' WHERE ' + conditions.join(' AND ');
       }
+      query = query.replace('-- CONDITIONS_PLACEHOLDER', whereClause);
 
-      query += ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
     const rows = await all(query, params);
     const products = rows.map(r => ({
         id: r.id,

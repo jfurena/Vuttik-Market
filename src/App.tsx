@@ -3,36 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import TopNav from './components/TopNav';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 import P2PBoard from './components/P2PBoard';
 import Auth from './components/Auth';
-import Chat from './components/Chat';
-import Profile from './components/Profile';
-import ResetPassword from './components/ResetPassword';
-import VerifyEmail from './components/VerifyEmail';
-import MegaGuardianDashboard from './components/MegaGuardianDashboard';
-import GuardianDashboard from './components/GuardianDashboard';
-import BusinessDashboard from './components/BusinessDashboard';
-import NegocioDashboard from './components/NegocioDashboard';
-import CategoryExplorer from './components/CategoryExplorer';
-import SocialFeed from './components/SocialFeed';
-import PublishForm from './components/PublishForm';
-import ProductDetails from './components/ProductDetails';
-import PublishSelection from './components/PublishSelection';
-import MyPlan from './components/MyPlan';
-import Settings from './components/Settings';
 import OnboardingModal from './components/OnboardingModal';
-import NotificationsPage from './components/NotificationsPage';
-import LemonSqueezyMockCheckout from './components/LemonSqueezyMockCheckout';
-import GlobalBusinessSelector from './components/GlobalBusinessSelector';
 import MissingDemographicsModal from './components/MissingDemographicsModal';
-import Herramientas from './components/Herramientas';
-import EanRecollector from './components/EanRecollector';
 import GlobalInviteModal from './components/GlobalInviteModal';
+
+// Lazy loaded heavy routes to reduce initial JS bundle size
+const Chat = lazy(() => import('./components/Chat'));
+const Profile = lazy(() => import('./components/Profile'));
+const ResetPassword = lazy(() => import('./components/ResetPassword'));
+const VerifyEmail = lazy(() => import('./components/VerifyEmail'));
+const MegaGuardianDashboard = lazy(() => import('./components/MegaGuardianDashboard'));
+const GuardianDashboard = lazy(() => import('./components/GuardianDashboard'));
+const BusinessDashboard = lazy(() => import('./components/BusinessDashboard'));
+const NegocioDashboard = lazy(() => import('./components/NegocioDashboard'));
+const CategoryExplorer = lazy(() => import('./components/CategoryExplorer'));
+const SocialFeed = lazy(() => import('./components/SocialFeed'));
+const PublishForm = lazy(() => import('./components/PublishForm'));
+const ProductDetails = lazy(() => import('./components/ProductDetails'));
+const PublishSelection = lazy(() => import('./components/PublishSelection'));
+const MyPlan = lazy(() => import('./components/MyPlan'));
+const Settings = lazy(() => import('./components/Settings'));
+const NotificationsPage = lazy(() => import('./components/NotificationsPage'));
+const LemonSqueezyMockCheckout = lazy(() => import('./components/LemonSqueezyMockCheckout'));
+const GlobalBusinessSelector = lazy(() => import('./components/GlobalBusinessSelector'));
+const Herramientas = lazy(() => import('./components/Herramientas'));
+const EanRecollector = lazy(() => import('./components/EanRecollector'));
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from './lib/api';
 import { trackMetric } from './utils/metrics';
@@ -266,52 +268,54 @@ export default function App() {
         />
         
         <main className="flex-1 overflow-y-auto no-scrollbar pt-20 md:pt-24 pb-24 md:pb-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="max-w-[1600px] mx-auto w-full"
-            >
-              <Routes location={location}>
-                <Route path="/" element={
-                  (!marketCategory && !new URLSearchParams(location.search).get('q')) ? 
-                    <CategoryExplorer onSelectCategory={handleCategorySelect} /> :
-                    <P2PBoard 
-                      initialCategory={marketCategory || 'GLOBAL'} 
-                      initialType={marketType}
-                      onViewDetails={(id) => setSelectedProductId(id)} 
-                      onBack={() => {
-                        setMarketCategory(null);
-                        if (new URLSearchParams(location.search).get('q')) {
-                          navigate('/');
-                        }
-                      }}
-                    />
-                } />
-                <Route path="/social" element={<SocialFeed onNavigateToProfile={(uid) => navigate('/perfil/' + uid)} />} />
-                <Route path="/mensajes" element={<Chat />} />
-                <Route path="/perfil/:userId" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
-                <Route path="/perfil" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
-                <Route path="/@:username" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
-                <Route path="/notificaciones" element={<NotificationsPage />} />
-                <Route path="/panel/empresa" element={<BusinessDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
-                <Route path="/panel/negocio" element={<NegocioDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
-                <Route path="/panel/guardian" element={<GuardianDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
-                <Route path="/panel/mega-guardian" element={<MegaGuardianDashboard />} />
-                <Route path="/publicar" element={<PublishForm onComplete={() => navigate('/')} onCancel={() => navigate('/')} />} />
-                <Route path="/editar/:id" element={<EditFormWrapper />} />
-                <Route path="/checkout" element={<LemonSqueezyMockCheckout isOpen={true} onClose={() => {}} onSuccess={() => {}} planName="Plan" planPrice={0} />} />
-                <Route path="/mi-plan" element={<MyPlan />} />
-                <Route path="/herramientas" element={<Herramientas />} />
-                <Route path="/herramientas/ean-recollector" element={<EanRecollector />} />
-                <Route path="/ajustes" element={<Settings />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </motion.div>
-          </AnimatePresence>
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="max-w-[1600px] mx-auto w-full"
+              >
+                <Routes location={location}>
+                  <Route path="/" element={
+                    (!marketCategory && !new URLSearchParams(location.search).get('q')) ? 
+                      <CategoryExplorer onSelectCategory={handleCategorySelect} /> :
+                      <P2PBoard 
+                        initialCategory={marketCategory || 'GLOBAL'} 
+                        initialType={marketType}
+                        onViewDetails={(id) => setSelectedProductId(id)} 
+                        onBack={() => {
+                          setMarketCategory(null);
+                          if (new URLSearchParams(location.search).get('q')) {
+                            navigate('/');
+                          }
+                        }}
+                      />
+                  } />
+                  <Route path="/social" element={<SocialFeed onNavigateToProfile={(uid) => navigate('/perfil/' + uid)} />} />
+                  <Route path="/mensajes" element={<Chat />} />
+                  <Route path="/perfil/:userId" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
+                  <Route path="/perfil" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
+                  <Route path="/@:username" element={<Profile currentUserId={user.uid} onViewProduct={(id) => setSelectedProductId(id)} />} />
+                  <Route path="/notificaciones" element={<NotificationsPage />} />
+                  <Route path="/panel/empresa" element={<BusinessDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
+                  <Route path="/panel/negocio" element={<NegocioDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
+                  <Route path="/panel/guardian" element={<GuardianDashboard onViewProduct={(id) => setSelectedProductId(id)} />} />
+                  <Route path="/panel/mega-guardian" element={<MegaGuardianDashboard />} />
+                  <Route path="/publicar" element={<PublishForm onComplete={() => navigate('/')} onCancel={() => navigate('/')} />} />
+                  <Route path="/editar/:id" element={<EditFormWrapper />} />
+                  <Route path="/checkout" element={<LemonSqueezyMockCheckout isOpen={true} onClose={() => {}} onSuccess={() => {}} planName="Plan" planPrice={0} />} />
+                  <Route path="/mi-plan" element={<MyPlan />} />
+                  <Route path="/herramientas" element={<Herramientas />} />
+                  <Route path="/herramientas/ean-recollector" element={<EanRecollector />} />
+                  <Route path="/ajustes" element={<Settings />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </main>
 
         <BottomNav 
