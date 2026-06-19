@@ -143,6 +143,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
   }, []);
 
   const isAuthor = currentUserId === product.authorId;
+  const isMegaGuardian = currentUserRole === 'mega_guardian';
   const currentImage = (fullProduct.images && fullProduct.images.length > 0 ? fullProduct.images[selectedImageIndex] : null) || fullProduct.image || fullProduct.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200';
 
   return (
