@@ -258,13 +258,13 @@ function Auth({ onLogin }: AuthProps) {
 
   // --- RENDER MAIN AUTH ---
   return (
-    <div className="min-h-screen flex w-full bg-white">
+    <div className="min-h-screen flex w-full bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* LEFT PANE: BRAND HERO (DESKTOP ONLY) */}
       <motion.div 
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="hidden lg:flex w-1/2 relative overflow-hidden group bg-[#060B19]"
+        className="hidden lg:flex flex-col flex-1 p-12 relative overflow-hidden bg-slate-950 justify-between animate-fade-in"
       >
         <motion.img 
           initial={{ scale: 1.02 }}
@@ -272,41 +272,50 @@ function Auth({ onLogin }: AuthProps) {
           transition={{ duration: 25, ease: 'linear', repeat: Infinity, repeatType: 'reverse' }}
           src="/auth_bg.png" 
           alt="Premium E-commerce" 
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[15s]"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[15s] pointer-events-none"
         />
         {/* Navy tint to integrate the image with the brand colors and ensure text contrast */}
-        <div className="absolute inset-0 bg-[#060B19]/60 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#060B19] via-[#060B19]/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/30 pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-950/35 mix-blend-color pointer-events-none" />
         
-        <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full">
-          <div className="max-w-xl">
-            <h1 className="text-5xl lg:text-7xl font-display font-black text-white mb-6 leading-[1.05] tracking-tight">
-              El mercado en<br/><span className="text-[#38bdf8]">tiempo real.</span>
-            </h1>
-            <p className="text-white/70 text-xl font-medium leading-relaxed max-w-md">
-              Conectando compradores y vendedores al instante.
-            </p>
-          </div>
-          
-          <div className="mt-20 flex items-center justify-between border-t border-white/5 pt-8">
-             <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity">
-               <img src="/logo_solo.png" alt="Vuttik" className="h-6 w-6 object-contain" />
-               <span className="text-white font-bold tracking-widest text-sm">VUTTIK</span>
-             </div>
-             <p className="text-white/30 text-xs font-semibold tracking-widest uppercase">
-              © 2026 Todos los derechos reservados
-             </p>
-          </div>
+        <div className="relative z-10 max-w-xl mt-auto mb-16">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-5xl lg:text-7xl font-display font-black text-white mb-6 leading-[1.05] tracking-tight"
+          >
+            El mercado en<br/><span className="text-[#38bdf8]">tiempo real.</span>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="text-slate-300 text-xl leading-relaxed mb-10 font-medium font-sans opacity-90 max-w-md"
+          >
+            Conectando compradores y vendedores al instante.
+          </motion.p>
+        </div>
+        
+        <div className="relative z-10 flex items-center justify-between pt-8">
+           <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity">
+             <img src="/logo_solo.png" alt="Vuttik" className="h-6 w-6 object-contain" />
+             <span className="text-white font-bold tracking-widest text-sm">VUTTIK</span>
+           </div>
+           <p className="text-white/50 text-xs font-semibold tracking-widest uppercase">
+            © {new Date().getFullYear()} Todos los derechos reservados
+           </p>
         </div>
       </motion.div>
 
       {/* RIGHT PANE: ACTION FORM */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-12 overflow-y-auto bg-white">
-        <motion.div 
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="max-w-[420px] w-full"
-        >
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="flex flex-col items-center justify-center w-full lg:w-[540px] xl:w-[600px] p-6 sm:p-12 bg-white overflow-y-auto"
+      >
+        <div className="w-full max-w-[420px]">
           <div className="text-center mb-4 md:mb-8">
             <img src="/logo.png" alt="Vuttik Logo" className="h-12 md:h-16 mx-auto mb-3 md:mb-6 object-contain" />
             <h2 className="text-2xl md:text-3xl font-display font-black text-vuttik-navy mb-1 md:mb-2">{isLogin ? 'Bienvenido de vuelta' : 'Únete a Vuttik'}</h2>
@@ -439,8 +448,8 @@ function Auth({ onLogin }: AuthProps) {
           <p className="mt-4 md:mt-8 text-center text-[10px] md:text-xs text-vuttik-text-muted font-medium">
             Al acceder aceptas los <button onClick={() => setShowTerms(true)} className="text-vuttik-navy font-bold hover:underline cursor-pointer bg-transparent border-none p-0 outline-none">Términos de Uso</button> y la <button onClick={() => setShowPrivacy(true)} className="text-vuttik-navy font-bold hover:underline cursor-pointer bg-transparent border-none p-0 outline-none">Política de Privacidad</button>.
           </p>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
 
       <AnimatePresence>
         {showTerms && (
