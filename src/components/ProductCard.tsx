@@ -127,7 +127,7 @@ const ProductCard = (props: ProductCardProps) => {
           )}
         </div>
 
-        {(image && image !== '/producto.jpeg' && !imageError) ? (
+        {(image && image !== '/producto.jpeg' && !image.includes('/api/images/product/pos-') && !imageError) ? (
           <img
             src={image}
             alt={title}
