@@ -31,22 +31,26 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
     const fetchAuthorRating = async () => {
       if (!product?.authorId) return;
       try {
-        const authorProds = await api.getProducts(undefined, product.authorId);
+        const [authorProds, authorProfile] = await Promise.all([
+          api.getProducts(undefined, product.authorId).catch(() => []),
+          api.getUser(product.authorId, true).catch(() => null)
+        ]);
+        
         if (Array.isArray(authorProds)) {
           let totalScore = 0;
           let count = 0;
           authorProds.forEach((p: any) => {
             const isProduct = p.price !== undefined || p.categoryId !== undefined;
             if (!isProduct) return;
-            const up = p.upVotes?.length || 0;
-            const down = p.downVotes?.length || 0;
+            const up = Array.isArray(p.upVotes) ? p.upVotes.length : (p.upVotes || 0);
+            const down = Array.isArray(p.downVotes) ? p.downVotes.length : (p.downVotes || 0);
             const total = up + down;
             if (total > 0) {
               totalScore += (up / total) * 5;
               count++;
             }
           });
-          setComputedAuthorRating(count > 0 ? totalScore / count : 0);
+          setComputedAuthorRating(count > 0 ? totalScore / count : (authorProfile?.rating || 0));
         }
       } catch (error) {
         console.error('Error fetching author rating:', error);
