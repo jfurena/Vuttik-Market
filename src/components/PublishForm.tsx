@@ -207,7 +207,7 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
         }
       }
     }
-    setSelectedImages(prev => [...prev, ...newImages].slice(0, 6)); // max 6 images
+    setSelectedImages(newImages.slice(0, 1)); // max 1 image
   };
 
   const removeImage = (index: number) => {
@@ -745,7 +745,7 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
                 </label>
               </div>
               {selectedImages.length > 0 && (
-                <p className="text-[10px] text-vuttik-text-muted text-center">{selectedImages.length} foto(s) seleccionada(s) · Máx. 6</p>
+                <p className="text-[10px] text-vuttik-text-muted text-center">{selectedImages.length} foto(s) seleccionada(s) · Máx. 1</p>
               )}
             </div>
 
@@ -1105,9 +1105,7 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
       {showCamera && (
         <CameraModal 
           onCapture={(base64Img) => {
-            if (selectedImages.length < 6) {
-              setSelectedImages([...selectedImages, base64Img]);
-            }
+            setSelectedImages([base64Img]);
             setShowCamera(false);
           }}
           onClose={() => setShowCamera(false)}
