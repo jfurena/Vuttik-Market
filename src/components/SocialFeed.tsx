@@ -274,7 +274,6 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
         alert('Enlace copiado al portapapeles');
       }
     } catch (err) {
-} catch (err) {
       console.error('Error sharing post:', err);
     }
   };
