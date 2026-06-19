@@ -982,7 +982,7 @@ app.get('/api/products', async (req, res) => {
         let query = `
         SELECT p.*,
                u.country as author_country,
-               COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
+               COALESCE(b.logo, u.photo_url) as author_avatar,
                (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_votes,
                (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_votes
         FROM vuttik_products p
@@ -1058,7 +1058,7 @@ app.get('/api/products/:id', async (req, res) => {
         const product = await get(`
       SELECT p.*,
              u.country as author_country,
-             COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar,
+             COALESCE(b.logo, u.photo_url) as author_avatar,
              (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_votes,
              (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_votes
       FROM vuttik_products p
@@ -1254,7 +1254,7 @@ app.get('/api/posts', async (req, res) => {
     const { authorId, postedAs } = req.query;
     try {
         let query = `
-      SELECT p.*, COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar
+      SELECT p.*, COALESCE(b.logo, u.photo_url) as author_avatar
       FROM vuttik_posts p
       LEFT JOIN vuttik_users u ON p.author_id = u.uid
       LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
@@ -1870,7 +1870,7 @@ app.get('/api/posts/feed', async (req, res) => {
         // Fetch posts
         if (!type || type === 'all' || type === 'posts') {
             let query = `
-        SELECT p.*, COALESCE(b.logo, u.photo_url, owner.photo_url) as author_avatar
+        SELECT p.*, COALESCE(b.logo, u.photo_url) as author_avatar
         FROM vuttik_posts p
         LEFT JOIN vuttik_users u ON p.author_id = u.uid
         LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid

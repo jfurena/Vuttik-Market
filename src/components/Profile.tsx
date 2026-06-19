@@ -38,7 +38,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const isBusinessMode = searchParams.get('mode') === 'business' || (targetUserId?.startsWith('biz-')) || profileUser?.role === 'business';
   
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
-  const effectiveTab = isBusinessMode ? 'products' : activeProfileTab;
+  const effectiveTab = activeProfileTab;
   const [userProducts, setUserProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [showPromoModal, setShowPromoModal] = useState(false);

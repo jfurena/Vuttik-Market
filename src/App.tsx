@@ -163,7 +163,12 @@ export default function App() {
     const path = location.pathname;
     if (path.startsWith('/social')) return 'social';
     if (path.startsWith('/mensajes')) return 'messages';
-    if (path.startsWith('/perfil')) return 'profile';
+    if (path.startsWith('/perfil')) {
+      if (path === '/perfil' || (user && path === `/perfil/${user.uid}`)) {
+        return 'profile';
+      }
+      return 'social';
+    }
     if (path.startsWith('/panel/negocio')) return 'business';
     if (path.startsWith('/panel/empresa')) return 'business_dash';
     if (path.startsWith('/panel/guardian')) return 'guardian_dash';
