@@ -1126,7 +1126,6 @@ app.post('/api/products', async (req, res) => {
             new Date().toISOString(), data.postedAs || 'personal',
             data.chain || null, data.storeName || null, data.isIndependent ? 1 : 0, data.country || null, data.province || null
         ]);
-        res.json({ id, success: true });
         await logAction(data.authorId, 'CREATE_PRODUCT', id, 'product', { title: data.title });
         // Auto-feed EAN Database
         if (data.barcode) {
@@ -1143,7 +1142,7 @@ app.post('/api/products', async (req, res) => {
         }
         // Notify followers of EAN or Title
         const entityType = data.barcode ? 'ean' : 'title';
-        const entityValue = data.barcode || data.title.toLowerCase();
+        const entityValue = data.barcode || data.title?.toLowerCase() || '';
         const followers = await all(`
       SELECT DISTINCT user_id 
       FROM vuttik_product_follows 
@@ -1152,6 +1151,7 @@ app.post('/api/products', async (req, res) => {
         for (const follower of followers) {
             await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?)', [uuidv4(), follower.user_id, 'Nuevo producto de tu interés', `Se ha publicado "${data.title}" y coincide con tus seguimientos.`, 0, new Date().toISOString(), 'price_drop']);
         }
+        res.json({ id, success: true });
     }
     catch (error) {
         console.error('Error in /api/products:', error);

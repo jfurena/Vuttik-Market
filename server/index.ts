@@ -1360,7 +1360,6 @@ app.post('/api/products', async (req, res) => {
         data.chain || null, data.storeName || null, data.isIndependent ? 1 : 0, data.country || null, data.province || null
       ]
     );
-    res.json({ id, success: true });
     await logAction(data.authorId, 'CREATE_PRODUCT', id, 'product', { title: data.title });
 
     // Auto-feed EAN Database
@@ -1381,7 +1380,7 @@ app.post('/api/products', async (req, res) => {
 
     // Notify followers of EAN or Title
     const entityType = data.barcode ? 'ean' : 'title';
-    const entityValue = data.barcode || data.title.toLowerCase();
+    const entityValue = data.barcode || data.title?.toLowerCase() || '';
 
     const followers = await all(`
       SELECT DISTINCT user_id 
