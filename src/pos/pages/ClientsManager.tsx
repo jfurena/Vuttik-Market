@@ -222,7 +222,7 @@ export default function ClientsManager() {
   const clientesAlLimite = clientes.filter(c => c.estado === 'activo' && c.limite_credito > 0 && c.deuda_actual >= c.limite_credito * 0.8).length;
 
   return (
-    <div className="space-y-6">
+    <div id="clients-main-view" className="space-y-6">
       {/* Title Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

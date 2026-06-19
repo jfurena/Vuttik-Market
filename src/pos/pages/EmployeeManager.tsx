@@ -102,7 +102,7 @@ export default function EmployeeManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div id="employees-main-view" className="space-y-6">
       {/* Business Code Banner */}
       {profile?.business_codigo && (
         <motion.div

@@ -249,7 +249,46 @@ export default function TrainingTour({ isOpen, onClose }: TrainingTourProps) {
       tips: [
         'La deuda pendiente total aparece en el bloque verde de la tarjeta "Lo Fiado".',
         'Cuando un cliente pague, debes registrar el cobro desde el módulo de Clientes.',
-        '¡Felicidades! Ya conoces todas las herramientas del sistema Vuttik 🎉'
+        'El historial queda guardado para siempre aunque el cliente haya pagado.'
+      ]
+    },
+    {
+      targetPage: '/inventory',
+      selector: '#inventory-main-view',
+      title: '16. Inventario — Mis Mercancías',
+      subtitle: 'Controla el stock, precios y productos del negocio.',
+      icon: Package,
+      description: 'Aquí se administra todo lo que el colmado tiene disponible para vender. Puedes agregar productos nuevos, actualizar su precio, cambiar la cantidad en stock y clasificarlos por categoría. Las alertas rojas te avisan cuando un producto está por agotarse antes de quedarte sin nada.',
+      tips: [
+        'El botón verde "+ GUARDAR PRODUCTO NUEVO" abre el formulario de carga.',
+        'Haz clic en cualquier fila para ver el historial completo de ese producto.',
+        'Puedes escanear el código de barras del producto al agregarlo para más velocidad.'
+      ]
+    },
+    {
+      targetPage: '/clients',
+      selector: '#clients-main-view',
+      title: '17. Clientes y Crédito (Fiao)',
+      subtitle: 'Registra clientes y controla sus deudas pendientes.',
+      icon: CreditCard,
+      description: 'Aquí gestionas la cartera de clientes que compran a crédito. Puedes registrar un cliente nuevo con su límite de deuda máxima, ver cuánto debe cada uno, registrar abonos de pago parcial y bloquear a quienes superen su límite. También puedes buscar a cualquier cliente por nombre rápidamente.',
+      tips: [
+        'Un cliente con borde rojo ha llegado al 80% o más de su límite de crédito.',
+        'Para cobrarle una deuda, usa el botón "Abonar" en su tarjeta.',
+        'Solo el administrador puede cambiar el límite de crédito de un cliente.'
+      ]
+    },
+    {
+      targetPage: '/employees',
+      selector: '#employees-main-view',
+      title: '18. Gestión de Empleados',
+      subtitle: 'Crea accesos para cada cajero o colaborador.',
+      icon: Shield,
+      description: 'Desde aquí el dueño puede crear cuentas individuales para cada empleado del negocio. Cada empleado recibe un usuario y contraseña propios, y usa el código del negocio para iniciar sesión. Esto garantiza que cada acción en el sistema quede registrada con el nombre exacto de quien la realizó.',
+      tips: [
+        'Comparte el Código del Negocio con nuevos empleados para que puedan iniciar sesión.',
+        'Puedes desactivar un empleado sin borrar su historial en caso de que ya no trabaje.',
+        '¡Felicidades! Has completado el recorrido completo del sistema Vuttik POS 🎉'
       ]
     }
   ];
@@ -318,6 +357,45 @@ export default function TrainingTour({ isOpen, onClose }: TrainingTourProps) {
         'Paso 3: Verifica que su deuda actual sumada al nuevo carrito no exceda su límite de crédito permitido.',
         'Paso 4: Completa la venta. El monto se sumará a su cuenta pendiente y NO se registrará como ganancia libre aún.',
         'Paso 5: Puedes ver el historial de fechas y artículos fiados en el panel de Administración > Resumen > pestaña "Lo Fiado".'
+      ]
+    },
+    {
+      id: 'inventory',
+      title: 'Inventario y Productos',
+      icon: Package,
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      howTo: [
+        'Paso 1: Ve a "Mis Productos" en el menú lateral del sistema.',
+        'Paso 2: Haz clic en "+ GUARDAR PRODUCTO NUEVO" para agregar un artículo al inventario.',
+        'Paso 3: Completa el nombre, categoría, precio de venta y cantidad disponible (stock). Puedes escanear el código de barras con un lector físico.',
+        'Paso 4: Guarda el producto. Ahora aparecerá automáticamente en el POS para que los cajeros lo puedan vender.',
+        'Paso 5: Para actualizar el precio o el stock de un producto existente, haz clic en su fila y usa el ícono de lápiz (editar) o el ícono de recarga (actualizar stock).'
+      ]
+    },
+    {
+      id: 'clients',
+      title: 'Clientes y Crédito (Fiao)',
+      icon: CreditCard,
+      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      howTo: [
+        'Paso 1: Ve a "Clientes y Crédito" en el menú lateral del sistema.',
+        'Paso 2: Haz clic en "NUEVO CLIENTE DE CRÉDITO" y completa el nombre, teléfono y límite máximo de deuda.',
+        'Paso 3: Guarda el cliente. Ya podrá ser seleccionado cuando se haga una venta a crédito desde el POS.',
+        'Paso 4: Cuando el cliente haga un abono, búscalo en la lista y presiona el botón "Abonar" para registrar el pago parcial o total.',
+        'Paso 5: Si un cliente supera su límite, el sistema alerta antes de fiarle más. Solo el administrador puede ampliar o reducir ese límite.'
+      ]
+    },
+    {
+      id: 'employees',
+      title: 'Gestión de Empleados',
+      icon: Shield,
+      color: 'bg-purple-50 text-purple-700 border-purple-200',
+      howTo: [
+        'Paso 1: Ve a "Mis Empleados" en el menú lateral del sistema (solo visible para el dueño/admin).',
+        'Paso 2: Haz clic en "Agregar Empleado" e ingresa el nombre completo, usuario y contraseña del nuevo cajero.',
+        'Paso 3: Comparte el Código del Negocio (que aparece en el banner azul de esta sección) con el empleado.',
+        'Paso 4: El empleado debe iniciar sesión en pos.vuttik.com usando el Código del Negocio + su usuario + su contraseña.',
+        'Paso 5: Para desactivar a un empleado que ya no trabaje, usa el menú de opciones en su tarjeta para deshabilitarlo sin borrar su historial.'
       ]
     }
   ];
