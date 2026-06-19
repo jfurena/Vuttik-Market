@@ -275,7 +275,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 
                 <div className="flex items-center gap-4 cursor-pointer" onClick={() => {
                   onClose();
-                  navigate(`/perfil/${product.authorId}`);
+                  navigate(`/perfil/${product.authorId}${isBusinessProduct ? '?mode=business' : ''}`);
                 }}>
                   <div className="relative">
                     <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border border-gray-200">

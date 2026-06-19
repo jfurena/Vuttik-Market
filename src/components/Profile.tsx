@@ -10,7 +10,7 @@ import PromotionModal from './PromotionModal';
 import CameraModal from './CameraModal';
 import PortfolioManager from './PortfolioManager';
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { trackMetric } from '../utils/metrics';
 
 const safeDate = (dateStr: any) => {
@@ -28,9 +28,13 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Profile({ currentUserId, onViewProduct }: { currentUserId?: string, onViewProduct?: (id: string) => void }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isBusinessMode = searchParams.get('mode') === 'business';
   const { setShowGlobalBusinessSelector } = useAuth();
   const { userId, username } = useParams<{ userId?: string, username?: string }>();
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
+  const effectiveTab = isBusinessMode ? 'products' : activeProfileTab;
   const [profileUser, setProfileUser] = useState<any>(null);
   const [userProducts, setUserProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -93,7 +97,15 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     const fetchUser = async () => {
       try {
         let user;
-        if (username) {
+        if (isBusinessMode && targetUserId) {
+          user = await api.getBusinessProfile(targetUserId);
+          if (user) {
+            user.displayName = user.name;
+            user.photoURL = user.logo;
+            user.bio = user.description;
+            user.role = 'business';
+          }
+        } else if (username) {
           user = await api.getUserByUsername(username, true);
         } else if (targetUserId) {
           user = await api.getUser(targetUserId, true);
@@ -123,16 +135,17 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
     const loadUserProducts = async () => {
       try {
         const [prodsRes, postsRes] = await Promise.allSettled([
-          api.getProducts(undefined, targetUserId),
-          api.getUserSocialPosts(targetUserId)
+          api.getProducts(undefined, targetUserId, isBusinessMode ? 'business' : undefined),
+          isBusinessMode ? Promise.resolve({ value: [] }) : api.getUserSocialPosts(targetUserId)
         ]);
         
         let allItems: any[] = [];
         if (prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value)) {
           allItems = [...allItems, ...prodsRes.value];
         }
-        if (postsRes.status === 'fulfilled' && Array.isArray(postsRes.value)) {
-          allItems = [...allItems, ...postsRes.value];
+        if (postsRes.status === 'fulfilled' && postsRes.value !== undefined && Array.isArray((postsRes.value as any).value ? (postsRes.value as any).value : postsRes.value)) {
+          const arr = (postsRes.value as any).value || postsRes.value;
+          allItems = [...allItems, ...arr];
         }
 
         const mapped = allItems.map((p: any) => ({
@@ -418,6 +431,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
         </section>
 
         {/* Stats Bar */}
+        {!isBusinessMode && (
         <section className="max-w-4xl mx-auto mb-10">
           <div className="bg-white rounded-lg shadow-[0_8px_32px_0_rgba(6,11,25,0.04)] p-6 flex justify-around items-center gap-4 text-center">
             <div className="flex-1 flex flex-col items-center justify-center">
@@ -445,9 +459,11 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             </div>
           </div>
         </section>
+        )}
 
         {/* Tabs Content */}
         <section>
+          {!isBusinessMode && (
           <div className="flex border-b border-outline-variant/20 mb-8 sticky top-20 bg-surface/80 backdrop-blur-md z-10">
             <button 
               onClick={() => setActiveProfileTab('posts')}
@@ -472,6 +488,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               </button>
             )}
           </div>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -481,7 +498,8 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {activeProfileTab === 'posts' && (
+          <div className="max-w-6xl mx-auto">
+            {effectiveTab === 'posts' && (
                 <div className="space-y-6">
                   {/* Filter Section */}
                   <div className="flex gap-2 mb-4 overflow-x-auto custom-scrollbar pb-2">
@@ -603,7 +621,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                 </div>
               )}
 
-              {activeProfileTab === 'analytics' && (
+              {effectiveTab === 'analytics' && (
                 <div className="bg-white rounded-lg p-8 shadow-[0_8px_32px_0_rgba(6,11,25,0.04)]">
                   <div className="flex justify-between items-center mb-8">
                     <div>
@@ -685,6 +703,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               {activeProfileTab === 'portfolios' && currentUserId === targetUserId && (
                 <PortfolioManager userId={currentUserId} />
               )}
+            </div>
             </motion.div>
           </AnimatePresence>
         </section>
