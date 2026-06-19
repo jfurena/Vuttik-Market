@@ -725,7 +725,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{card.title}</p>
-              <p className={cn("text-2xl xl:text-3xl font-black tracking-tight truncate", card.color)} title={card.value as string}>{card.value}</p>
+              <p className={cn("text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-black tracking-tight leading-tight break-words", card.color)} title={card.value as string}>{card.value}</p>
               <p className="text-xs font-bold text-gray-400 mt-2 flex items-center gap-1">
                 {card.description}
               </p>
@@ -789,7 +789,7 @@ export default function Dashboard() {
             </div>
             <p className="font-label-md font-black text-emerald-600 uppercase tracking-widest">Estimado en Caja</p>
             <p className="text-sm text-emerald-800 font-medium mb-3">Ventas cobradas menos gastos de caja</p>
-            <div className="text-3xl font-black text-emerald-900 font-mono">
+            <div className="text-2xl md:text-3xl font-black text-emerald-900 font-mono leading-tight break-words">
               {formatCurrency(stats?.financieroStats?.dineroEstimadoCaja || 0)}
             </div>
           </div>
@@ -803,7 +803,7 @@ export default function Dashboard() {
             </div>
             <p className="font-label-md font-black text-vuttik-blue uppercase tracking-widest">Ido al Banco (Guardado)</p>
             <p className="text-sm text-blue-800 font-medium mb-3">Dinero enviado de la caja al banco para guardarlo</p>
-            <div className="text-3xl font-black text-blue-900 font-mono">
+            <div className="text-2xl md:text-3xl font-black text-blue-900 font-mono leading-tight break-words">
               {formatCurrency(stats?.financieroStats?.totalIdoBanco || 0)}
             </div>
           </div>
@@ -817,7 +817,7 @@ export default function Dashboard() {
             </div>
             <p className="font-label-md font-black text-purple-600 uppercase tracking-widest">Inversión Externa</p>
             <p className="text-sm text-purple-800 font-medium mb-3">Dinero inyectado de tu propio bolsillo</p>
-            <div className="text-3xl font-black text-purple-900 font-mono">
+            <div className="text-2xl md:text-3xl font-black text-purple-900 font-mono leading-tight break-words">
               {formatCurrency(stats?.financieroStats?.totalInversionExterna || 0)}
             </div>
           </div>
