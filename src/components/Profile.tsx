@@ -30,12 +30,15 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const isBusinessMode = searchParams.get('mode') === 'business';
   const { setShowGlobalBusinessSelector } = useAuth();
   const { userId, username } = useParams<{ userId?: string, username?: string }>();
+  const targetUserId = userId || (!username ? currentUserId : undefined);
+  
+  const [profileUser, setProfileUser] = useState<any>(null);
+  const isBusinessMode = searchParams.get('mode') === 'business' || (targetUserId?.startsWith('biz-')) || profileUser?.role === 'business';
+  
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
   const effectiveTab = isBusinessMode ? 'products' : activeProfileTab;
-  const [profileUser, setProfileUser] = useState<any>(null);
   const [userProducts, setUserProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -53,8 +56,6 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [followersList, setFollowersList] = useState<any[]>([]);
   const [isTogglingFollow, setIsTogglingFollow] = useState(false);
-
-  const targetUserId = userId || (!username ? currentUserId : undefined);
 
   const handlePromote = (id: string, type: 'product' | 'post') => {
     setPromoTarget({ id, type });
