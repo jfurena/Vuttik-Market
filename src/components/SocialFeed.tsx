@@ -274,17 +274,20 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
         alert('Enlace copiado al portapapeles');
       }
     } catch (err) {
+} catch (err) {
       console.error('Error sharing post:', err);
     }
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (!(await dialog.confirm('¿Estás seguro de que deseas eliminar esta publicación?'))) return;
+    if (!window.confirm('¿Seguro que deseas eliminar esta publicación?')) return;
     try {
-      await api.deletePost(postId, currentUser.uid);
+      if (!currentUser) return;
+      await api.deletePost(postId, currentUser.uid, currentUser.role === 'mega_guardian');
       setPosts(prev => prev.filter(p => p.id !== postId));
-    } catch (error) {
-      console.error('Error deleting post:', error);
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      alert('Error al eliminar');
     }
   };
 
@@ -622,10 +625,10 @@ export default function SocialFeed({ onNavigateToProfile }: { onNavigateToProfil
                               <>
                                 <div className="fixed inset-0 z-40" onClick={() => setActiveMenu(null)} />
                                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-surface-container-low py-2 z-50">
-                                  {isOwn ? (
+                                  {isOwn || currentUser?.role === 'mega_guardian' ? (
                                     <>
-                                      <button onClick={() => { setEditingPostId(post.id); setEditingContent(post.content); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors">Editar publicación</button>
-                                      <button onClick={() => handleDeletePost(post.id)} className="w-full px-4 py-2 text-left text-sm text-error hover:bg-error-container transition-colors">Eliminar publicación</button>
+                                      {isOwn && <button onClick={() => { setEditingPostId(post.id); setEditingContent(post.content); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors">Editar publicación</button>}
+                                      <button onClick={() => handleDeletePost(post.id)} className="w-full px-4 py-2 text-left text-sm text-error hover:bg-error-container transition-colors">Eliminar publicación {currentUser?.role === 'mega_guardian' && !isOwn ? '(Admin)' : ''}</button>
                                     </>
                                   ) : (
                                     <button onClick={() => { setActiveMenu(null); handleReportPost(post); }} className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors">Reportar</button>

@@ -13,9 +13,10 @@ interface ProductDetailsProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   currentUserId?: string;
+  currentUserRole?: string;
 }
 
-export default function ProductDetails({ product, onClose, onEdit, onDelete, currentUserId }: ProductDetailsProps) {
+export default function ProductDetails({ product, onClose, onEdit, onDelete, currentUserId, currentUserRole }: ProductDetailsProps) {
   const [transactionTypes, setTransactionTypes] = useState<{ id: string; label: string }[]>([]);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -314,7 +315,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 </div>
 
                 {/* Main CTA */}
-                {!isAuthor ? (
+                {!isAuthor && !isMegaGuardian ? (
                   <button 
                     onClick={() => {
                       if (product.phone) {
@@ -331,19 +332,21 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                   </button>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    <button 
-                      onClick={() => onEdit?.(product.id)}
-                      className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
-                    >
-                      <Edit2 size={18} /> Editar
-                    </button>
+                    {isAuthor && (
+                      <button 
+                        onClick={() => onEdit?.(product.id)}
+                        className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
+                      >
+                        <Edit2 size={18} /> Editar
+                      </button>
+                    )}
                     <button 
                       onClick={() => {
                         if (window.confirm('¿Estás seguro que deseas eliminar esta publicación?')) onDelete?.(product.id);
                       }}
                       className="w-full py-3 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
                     >
-                      <Trash2 size={18} /> Eliminar
+                      <Trash2 size={18} /> Eliminar {isMegaGuardian && !isAuthor ? '(Admin)' : ''}
                     </button>
                   </div>
                 )}

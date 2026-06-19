@@ -342,7 +342,7 @@ export default function App() {
               onDelete={async (id) => {
                 if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
                   try {
-                    await api.deleteProduct(id, user?.uid || '');
+                    await api.deleteProduct(id, user?.uid || '', user?.role === 'mega_guardian');
                     setSelectedProductId(null);
                     window.location.reload(); // Refresh to reflect deletion globally
                   } catch (error) {
@@ -352,6 +352,7 @@ export default function App() {
                 }
               }}
               currentUserId={user?.uid || ''}
+              currentUserRole={user?.role}
             />
           </Suspense>
         )}
