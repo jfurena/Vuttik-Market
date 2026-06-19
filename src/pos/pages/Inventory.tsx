@@ -10,6 +10,7 @@ export default function Inventory() {
   const { profile } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -144,8 +145,9 @@ export default function Inventory() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
-
+    if (!profile || isSubmitting) return;
+    
+    setIsSubmitting(true);
     try {
       if (editingProduct) {
         await ApiService.updateProduct(editingProduct.id, { ...formData, usuario_id: profile.id, usuario_nombre: profile.nombre });
@@ -157,6 +159,8 @@ export default function Inventory() {
       loadProducts();
     } catch (error) {
       console.error("Error saving product:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -602,8 +606,8 @@ export default function Inventory() {
                 </div>
               )}
               <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 mt-6">
-                <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-blue-100">
-                  {editingProduct ? 'Guardar Cambios' : 'Registrar'}
+                <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-blue-100 disabled:opacity-50">
+                  {isSubmitting ? 'Guardando...' : (editingProduct ? 'Guardar Cambios' : 'Registrar')}
                 </button>
                 <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-600 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all">
                   Cancelar
