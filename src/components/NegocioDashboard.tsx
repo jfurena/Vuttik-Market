@@ -277,7 +277,7 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
     if (!window.confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
     try {
       if (!user) return;
-      await api.deleteProduct(id, user.uid);
+      await api.deleteProduct(id, businessUid || user.uid);
       await loadData();
     } catch (error) {
       console.error('Error deleting product:', error);
