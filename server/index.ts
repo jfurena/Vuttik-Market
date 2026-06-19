@@ -1256,7 +1256,7 @@ app.get('/api/images/user/:uid', async (req, res) => {
 
   try {
     const user = await get(`
-      SELECT COALESCE(b.logo, u.photo_url, owner.photo_url) as avatar 
+      SELECT COALESCE(b.logo, u.photo_url) as avatar 
       FROM vuttik_users u 
       LEFT JOIN vuttik_business_profiles b ON u.uid = b.uid 
       LEFT JOIN vuttik_users owner ON b.owner_uid = owner.uid 
