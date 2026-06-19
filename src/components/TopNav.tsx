@@ -32,9 +32,13 @@ export default function TopNav({ userRole = 'user', userPlan, userProfile }: Top
   const [searchText, setSearchText] = useState('');
   
   useEffect(() => {
-    const q = new URLSearchParams(location.search).get('q');
-    if (q && searchText === '') setSearchText(q);
-  }, [location.search]);
+    if (location.pathname !== '/') {
+      setSearchText('');
+    } else {
+      const q = new URLSearchParams(location.search).get('q');
+      if (q && searchText === '') setSearchText(q);
+    }
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
