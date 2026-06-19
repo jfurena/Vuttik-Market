@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Lock, User, ArrowRight, CheckCircle2, Eye, EyeOff, AlertCircle, ArrowLeft, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import SplashScreen from './SplashScreen';
 
 interface AuthProps {
   onLogin: () => void;
@@ -27,6 +28,7 @@ function Auth({ onLogin }: AuthProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
 
   // Form fields
   const [name, setName] = useState('');
@@ -62,8 +64,11 @@ function Auth({ onLogin }: AuthProps) {
           }
 
           if (response?.user && response?.token) {
-              login(response.token, response.user);
-              onLogin();
+              setShowSplash(true);
+              setTimeout(() => {
+                login(response.token, response.user);
+                onLogin();
+              }, 2000);
           }
         } catch (err: any) {
           setError(err.message || 'Error de autenticación. Intenta de nuevo.');
@@ -130,8 +135,11 @@ function Auth({ onLogin }: AuthProps) {
       
       // Verify signature on backend
       const response = await api.verifyWalletSignature(address, signature);
-      login(response.token, response.user);
-      onLogin();
+      setShowSplash(true);
+      setTimeout(() => {
+        login(response.token, response.user);
+        onLogin();
+      }, 2000);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Error al conectar la billetera.');
@@ -147,8 +155,11 @@ function Auth({ onLogin }: AuthProps) {
     setLoading(true);
     try {
       const response = await api.login({ email, password });
-      login(response.token, response.user);
-      onLogin();
+      setShowSplash(true);
+      setTimeout(() => {
+        login(response.token, response.user);
+        onLogin();
+      }, 2000);
     } catch (err: any) {
       // Very basic error handling, assuming JSON api throws with error string
       setError(err.message || 'Credenciales inválidas.');
@@ -164,9 +175,12 @@ function Auth({ onLogin }: AuthProps) {
     if (!password || password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return; }
     setLoading(true);
     try {
-      const response = await api.register({ name, email, password });
-      login(response.token, response.user);
-      onLogin();
+      const response = await api.register({ name, email, password, plan: selectedPlan });
+      setShowSplash(true);
+      setTimeout(() => {
+        login(response.token, response.user);
+        onLogin();
+      }, 2000);
     } catch (err: any) {
       setError(err.message || 'Error al registrar la cuenta.');
     } finally {
@@ -255,6 +269,8 @@ function Auth({ onLogin }: AuthProps) {
       </div>
     );
   }
+
+  if (showSplash) return <SplashScreen />;
 
   // --- RENDER MAIN AUTH ---
   return (

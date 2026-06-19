@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { ApiService } from '../services/api';
 import { api } from '../../lib/api';
+import SplashScreen from '../../components/SplashScreen';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
@@ -33,8 +34,9 @@ export default function Login() {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Forgot password
+  // Forgot password & Splash
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
 
   // Legal Modal states
@@ -72,7 +74,10 @@ export default function Login() {
 
           if (response?.token && response?.user) {
             // Full page reload to ensure session cookie is properly picked up by checkAuth
-            window.location.href = '/businesses';
+            setShowSplash(true);
+            setTimeout(() => {
+              window.location.href = '/businesses';
+            }, 2000);
           }
         } catch (err: any) {
           console.error('OAuth error:', err);
@@ -131,7 +136,10 @@ export default function Login() {
       
       const response = await api.verifyWalletSignature(address, signature);
       if (response?.token && response?.user) {
-        window.location.href = '/businesses';
+        setShowSplash(true);
+        setTimeout(() => {
+          window.location.href = '/businesses';
+        }, 2000);
       }
     } catch (err: any) {
       console.error(err);
@@ -212,7 +220,10 @@ export default function Login() {
       const nextPath = '/pos';
       const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       if (isDev || localStorage.getItem('vuttik_legal_accepted_v1') === 'true') {
-        navigate(nextPath);
+        setShowSplash(true);
+        setTimeout(() => {
+          window.location.href = nextPath;
+        }, 2000);
       } else {
         setPendingRedirect(nextPath);
         setShowLegalModal(true);
@@ -244,7 +255,10 @@ export default function Login() {
         
         setShowLegalModal(false);
         setModalLoading(false);
-        window.location.href = pendingRedirect;
+        setShowSplash(true);
+        setTimeout(() => {
+          window.location.href = pendingRedirect;
+        }, 2000);
       } catch (err: any) {
         console.error("Failed to log login location:", err);
         localStorage.setItem('vuttik_language', language);
@@ -302,6 +316,8 @@ export default function Login() {
       { enableHighAccuracy: true, timeout: 5000 }
     );
   };
+
+  if (showSplash) return <SplashScreen />;
 
   if (showForgotPassword) {
     return (
