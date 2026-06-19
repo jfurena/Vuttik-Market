@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, Store, Hash, ArrowRight, ShieldAlert, X } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, Store, Hash, ArrowRight, ShieldAlert, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { ApiService } from '../services/api';
@@ -30,7 +30,12 @@ export default function Login() {
   const [showEmpPassword, setShowEmpPassword] = useState(false);
 
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forgot password
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   // Legal Modal states
   const [showLegalModal, setShowLegalModal] = useState(false);
@@ -136,6 +141,24 @@ export default function Login() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+    if (!resetEmail) {
+      setError('Por favor, ingresa tu correo electrónico.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.requestPasswordReset(resetEmail);
+      setSuccessMsg(res.message || 'Se ha enviado un enlace a tu correo.');
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un error. Inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
   const clearState = (newTab: Tab) => {
     setTab(newTab);
     setError('');
@@ -279,6 +302,73 @@ export default function Login() {
       { enableHighAccuracy: true, timeout: 5000 }
     );
   };
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 font-sans">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <div className="text-center mb-8">
+            <img 
+              src="/vuttik-pos-logo.png" 
+              alt="Vuttik POS" 
+              className="h-20 md:h-24 mx-auto mb-6 object-contain" 
+            />
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Recuperar Acceso</h2>
+            <p className="text-slate-500 text-sm">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                  className="bg-red-50 text-red-600 border border-red-100 p-4 rounded-xl mb-6 text-sm flex items-center gap-3 font-medium">
+                  <AlertCircle size={18} />
+                  {error}
+                </motion.div>
+              )}
+              {successMsg && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                  className="bg-emerald-50 text-emerald-600 border border-emerald-100 p-4 rounded-xl mb-6 text-sm flex items-center gap-3 font-medium">
+                  <CheckCircle2 size={18} />
+                  {successMsg}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <form className="space-y-5" onSubmit={handleForgotPassword}>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700">Correo electrónico</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input type="email" placeholder="tu@correo.com" value={resetEmail}
+                    onChange={e => setResetEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm" />
+                </div>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full py-3.5 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed group">
+                {loading ? <Loader2 className="animate-spin" size={18} /> : (
+                  <>
+                    Enviar enlace
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <button onClick={() => { setShowForgotPassword(false); setError(''); setSuccessMsg(''); }}
+              className="mt-6 flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-sm font-semibold w-full">
+              Volver al Inicio
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -441,9 +531,9 @@ export default function Login() {
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-semibold text-slate-700">Contraseña</label>
                     {tab === 'login' && (
-                      <a href="#" className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                      <button type="button" onClick={() => { setShowForgotPassword(true); setError(''); setSuccessMsg(''); setResetEmail(correo); }} className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                         ¿Olvidaste tu contraseña?
-                      </a>
+                      </button>
                     )}
                   </div>
                   <div className="relative">
