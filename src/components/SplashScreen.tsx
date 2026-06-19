@@ -1,33 +1,30 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Loader2 } from 'lucide-react';
 
-export default function SplashScreen({ message = "Preparando tu espacio..." }: { message?: string }) {
+export default function SplashScreen() {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950">
-      <div className="absolute inset-0 mesh-gradient-premium opacity-50" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white">
       <motion.div 
-        className="relative z-10 flex flex-col items-center"
+        className="relative flex items-center justify-center"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
+        {/* Loading ring around the logo */}
+        <motion.div 
+          className="absolute inset-[-25%] border-[3px] border-slate-100 border-t-blue-600 border-r-blue-600 rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+        />
+        
+        {/* Logo */}
         <motion.img 
           src="/logo_solo.png" 
           alt="Vuttik" 
-          className="w-32 h-32 md:w-40 md:h-40 object-contain mb-8 drop-shadow-2xl"
+          className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div 
-          className="flex flex-col items-center"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <Loader2 className="animate-spin text-vuttik-cyan mb-4" size={32} />
-          <h2 className="text-xl md:text-2xl font-bold text-white tracking-wide">{message}</h2>
-        </motion.div>
       </motion.div>
     </div>
   );
