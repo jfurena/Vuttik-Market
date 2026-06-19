@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown, MapPin, Star, Edit2, Trash2, Info, ArrowUpRight, Megaphone, ShieldAlert, ShieldCheck, Store, Eye } from 'lucide-react';
+import { ArrowUp, ArrowDown, MapPin, Star, Edit2, Trash2, Info, ArrowUpRight, Megaphone, ShieldAlert, ShieldCheck, Store, Eye, Package } from 'lucide-react';
 import UserAvatar from './UserAvatar';
 import { motion } from 'motion/react';
 
@@ -136,8 +136,8 @@ const ProductCard = (props: ProductCardProps) => {
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100 animate-pulse">
-            <Info size={40} className="opacity-20 text-gray-400" />
+          <div className="w-full h-full flex items-center justify-center bg-gray-100/50">
+            <Package size={48} className="opacity-40 text-blue-400" />
           </div>
         )}
       </div>

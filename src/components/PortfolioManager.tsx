@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Folder, Lock, Globe, Plus, Trash2, Edit2, ChevronLeft, Minus, ShoppingBag, Search } from 'lucide-react';
+import { Folder, Lock, Globe, Plus, Trash2, Edit2, ChevronLeft, Minus, ShoppingBag, Search, Package } from 'lucide-react';
 import { api } from '../lib/api';
 import MarketSearchModal from './MarketSearchModal';
 
@@ -232,8 +232,12 @@ export default function PortfolioManager({ userId }: { userId: string }) {
             {selectedPortfolio.products.map((item: any) => (
               <div key={item.product.id} className="flex flex-col md:flex-row items-center justify-between p-4 border border-gray-100 rounded-2xl hover:border-gray-200 transition-colors gap-4">
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
-                    <img src={item.product.images?.[0] || item.product.image || '/producto.jpeg'} alt="product" className="w-full h-full object-cover" />
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0 flex items-center justify-center">
+                    {(item.product.images?.[0] || item.product.image) ? (
+                      <img src={item.product.images[0] || item.product.image} alt="product" className="w-full h-full object-cover" />
+                    ) : (
+                      <Package size={24} className="opacity-40 text-blue-400" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 line-clamp-1">{item.product.title}</h4>

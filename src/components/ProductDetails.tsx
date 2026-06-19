@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { X, MapPin, Calendar, ShieldCheck, Star, Share2, Edit2, Trash2, Clock, Info, Building2, TrendingUp, Users, Eye, Tag, Phone, Bookmark } from 'lucide-react';
+import { X, MapPin, Calendar, ShieldCheck, Star, Share2, Edit2, Trash2, Clock, Info, Building2, TrendingUp, Users, Eye, Tag, Phone, Bookmark, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProductCardProps } from './ProductCard';
 import { useEffect, useState } from 'react';
@@ -147,7 +147,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
 
   const isAuthor = currentUserId === product.authorId;
   const isMegaGuardian = currentUserRole === 'mega_guardian';
-  const currentImage = (fullProduct.images && fullProduct.images.length > 0 ? fullProduct.images[selectedImageIndex] : null) || fullProduct.image || fullProduct.images?.[0] || '/producto.jpeg';
+  const currentImage = (fullProduct.images && fullProduct.images.length > 0 ? fullProduct.images[selectedImageIndex] : null) || fullProduct.image || fullProduct.images?.[0] || null;
   const isBusinessProduct = product.postedAs === 'business' || product.business || authorProfileData?.role === 'business';
   const displayAvatar = isBusinessProduct && authorProfileData?.logo 
     ? authorProfileData.logo 
@@ -175,8 +175,12 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           {/* Left Column: Image Gallery & Description */}
           <div className="flex-1 space-y-8">
             {/* Image Gallery */}
-            <div className="w-full aspect-square md:aspect-[4/3] relative rounded-[32px] overflow-hidden bg-gray-50 border border-gray-100">
-              <img alt={product.title} className="w-full h-full object-contain" src={currentImage} />
+            <div className="w-full aspect-square md:aspect-[4/3] relative rounded-[32px] overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center">
+              {currentImage ? (
+                <img alt={product.title} className="w-full h-full object-contain" src={currentImage} />
+              ) : (
+                <Package size={80} className="opacity-20 text-blue-400" />
+              )}
               
               <div className="absolute top-4 left-4 flex gap-2">
                 {product.isOnSale && (
