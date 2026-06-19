@@ -185,6 +185,7 @@ export default function NegocioDashboard({ onViewProduct }: { onViewProduct?: (i
         currency: 'DOP',
         authorId: user.uid,
         authorName: profile?.name || user.displayName || 'Vuttik Negocio',
+        authorAvatar: profile?.logo || user.photoURL || '',
         location: profile?.location || '',
         postedAs: 'business'
       };
