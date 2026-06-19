@@ -167,6 +167,7 @@ export async function initDB() {
   try { await run("ALTER TABLE vuttik_users ADD COLUMN oauth_id TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN onboarding_completed BOOLEAN DEFAULT 0"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN age INTEGER"); } catch (e) {}
+  try { await run("ALTER TABLE vuttik_users ADD COLUMN date_of_birth TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN gender TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN country TEXT"); } catch (e) {}
   try { await run("ALTER TABLE vuttik_users ADD COLUMN language TEXT"); } catch (e) {}

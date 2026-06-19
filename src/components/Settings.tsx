@@ -21,7 +21,7 @@ export default function Settings() {
   // Other info states
   const [displayNameInput, setDisplayNameInput] = useState(user?.displayName || '');
   const [emailInput, setEmailInput] = useState(user?.email || '');
-  const [ageInput, setAgeInput] = useState(user?.age?.toString() || '');
+  const [dateOfBirthInput, setDateOfBirthInput] = useState(user?.dateOfBirth || '');
   const [genderInput, setGenderInput] = useState(user?.gender || '');
   const [countryInput, setCountryInput] = useState(user?.country || '');
   const [languageInput, setLanguageInput] = useState(user?.language || '');
@@ -34,7 +34,7 @@ export default function Settings() {
       setUsernameInput(user.username || '');
       setDisplayNameInput(user.displayName || '');
       setEmailInput(user.email || '');
-      setAgeInput(user.age?.toString() || '');
+      setDateOfBirthInput(user.dateOfBirth || '');
       setGenderInput(user.gender || '');
       setCountryInput(user.country || '');
       setLanguageInput(user.language || '');
@@ -83,7 +83,8 @@ export default function Settings() {
         uid: user.uid,
         displayName: displayNameInput,
         email: emailInput,
-        age: ageInput ? parseInt(ageInput) : user.age,
+        dateOfBirth: dateOfBirthInput || user.dateOfBirth,
+        age: dateOfBirthInput ? Math.floor((new Date().getTime() - new Date(dateOfBirthInput).getTime()) / 31557600000) : user.age,
         gender: genderInput || user.gender,
         country: countryInput || user.country,
         language: languageInput || user.language
@@ -249,9 +250,9 @@ export default function Settings() {
                     </div>
                     
                     <div className="flex flex-col md:flex-row gap-4 mt-2">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Edad</label>
-                        <input type="number" min="13" max="120" value={ageInput} onChange={e => setAgeInput(e.target.value)} className="bg-vuttik-gray border-none rounded-xl px-4 py-3 text-sm font-bold text-vuttik-navy outline-none" placeholder="Tu edad" />
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Fecha de Nacimiento</label>
+                        <input type="date" max={new Date().toISOString().split("T")[0]} value={dateOfBirthInput} onChange={e => setDateOfBirthInput(e.target.value)} className="bg-vuttik-gray border-none rounded-xl px-4 py-3 text-sm font-bold text-vuttik-navy outline-none" />
                       </div>
                       <div className="flex flex-col gap-2 flex-1">
                         <label className="text-[10px] font-black uppercase tracking-widest text-vuttik-text-muted">Género</label>

@@ -411,6 +411,7 @@ app.get('/api/users/by-username/:username', async (req, res) => {
         onboardingCompleted: !!user.onboarding_completed,
         activeProfileMode: user.active_profile_mode || 'personal',
         age: user.age,
+        dateOfBirth: user.date_of_birth,
         gender: user.gender,
         country: user.country,
         username: user.username
@@ -1708,7 +1709,7 @@ app.put('/api/posts/:id', async (req, res) => {
 // --- User Profile Update ---
 app.put('/api/users/:uid/profile', async (req, res) => {
   const { uid } = req.params;
-  const { displayName, bio, location, photoURL, age, gender, country, language, username } = req.body;
+  const { displayName, bio, location, photoURL, age, dateOfBirth, gender, country, language, username } = req.body;
   try {
     if (username) {
       const existingUsername = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, uid]);
@@ -1716,8 +1717,8 @@ app.put('/api/users/:uid/profile', async (req, res) => {
     }
 
     await run(
-      'UPDATE vuttik_users SET display_name = ?, bio = ?, location = ?, photo_url = COALESCE(?, photo_url), age = COALESCE(?, age), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?',
-      [displayName, bio, location, photoURL || null, age || null, gender || null, country || null, language || null, username || null, uid]
+      'UPDATE vuttik_users SET display_name = ?, bio = ?, location = ?, photo_url = COALESCE(?, photo_url), age = COALESCE(?, age), date_of_birth = COALESCE(?, date_of_birth), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?',
+      [displayName, bio, location, photoURL || null, age || null, dateOfBirth || null, gender || null, country || null, language || null, username || null, uid]
     );
     await logAction(uid, 'UPDATE_PROFILE', uid, 'user', { displayName });
     res.json({ success: true });
