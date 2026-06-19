@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2, ImageIcon, UserPlus, UserMinus, Users, Share2, Timer, Bell, Settings, Star, Heart, MessageCircle, Package } from 'lucide-react';
+import { User, ShieldCheck, Award, MapPin, Calendar, Grid, List, TrendingUp, Eye, MessageSquare, DollarSign, BarChart3, PieChart, Megaphone, Camera, X, Save, Activity, Store, Edit2, ImageIcon, UserPlus, UserMinus, Users, Share2, Timer, Bell, Settings, Star, Heart, MessageCircle, Package, Phone, Instagram, Facebook, Twitter, Globe, Clock } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { api } from '../lib/api';
 import { compressImage } from '../utils/imageCompressor';
@@ -104,6 +104,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             user.photoURL = user.logo;
             user.bio = user.description;
             user.role = 'business';
+            user.workingHours = user.working_hours || user.workingHours;
           }
         } else if (username) {
           user = await api.getUserByUsername(username, true);
@@ -350,9 +351,48 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                   <h2 className="font-headline-lg text-headline-lg text-vuttik-navy font-black md:drop-shadow-none">
                     {profileUser.displayName || profileUser.display_name}
                   </h2>
-                  <p className="font-body-md text-vuttik-text-muted">
+                  <p className="font-body-md text-vuttik-text-muted mb-4">
                     {profileUser.bio || 'Digital Collector & Curated Goods Vendor'}
                   </p>
+                  
+                  {isBusinessMode && (
+                    <div className="flex flex-wrap gap-4 text-sm font-medium text-gray-500 justify-center md:justify-start mb-6">
+                      {profileUser.location && (
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                          <MapPin size={16} className="text-vuttik-blue" />
+                          <span>{profileUser.location}</span>
+                        </div>
+                      )}
+                      {profileUser.workingHours && (
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                          <Clock size={16} className="text-vuttik-blue" />
+                          <span>{profileUser.workingHours}</span>
+                        </div>
+                      )}
+                      {profileUser.phone && (
+                        <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                          <Phone size={16} className="text-vuttik-blue" />
+                          <span>{profileUser.phone}</span>
+                        </div>
+                      )}
+                      {profileUser.socialLinks && (
+                        <div className="flex gap-2 items-center bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                          {profileUser.socialLinks.instagram && (
+                            <a href={profileUser.socialLinks.instagram} target="_blank" rel="noreferrer" className="p-1 text-pink-600 hover:bg-gray-100 rounded-full transition-colors"><Instagram size={18} /></a>
+                          )}
+                          {profileUser.socialLinks.facebook && (
+                            <a href={profileUser.socialLinks.facebook} target="_blank" rel="noreferrer" className="p-1 text-blue-600 hover:bg-gray-100 rounded-full transition-colors"><Facebook size={18} /></a>
+                          )}
+                          {profileUser.socialLinks.twitter && (
+                            <a href={profileUser.socialLinks.twitter} target="_blank" rel="noreferrer" className="p-1 text-blue-400 hover:bg-gray-100 rounded-full transition-colors"><Twitter size={18} /></a>
+                          )}
+                          {profileUser.socialLinks.website && (
+                            <a href={profileUser.socialLinks.website} target="_blank" rel="noreferrer" className="p-1 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><Globe size={18} /></a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3 justify-center md:justify-start">
                   {currentUserId === targetUserId ? (
@@ -431,7 +471,6 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
         </section>
 
         {/* Stats Bar */}
-        {!isBusinessMode && (
         <section className="max-w-4xl mx-auto mb-10">
           <div className="bg-white rounded-lg shadow-[0_8px_32px_0_rgba(6,11,25,0.04)] p-6 flex justify-around items-center gap-4 text-center">
             <div className="flex-1 flex flex-col items-center justify-center">
@@ -459,11 +498,9 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
             </div>
           </div>
         </section>
-        )}
 
         {/* Tabs Content */}
         <section>
-          {!isBusinessMode && (
           <div className="flex border-b border-outline-variant/20 mb-8 sticky top-20 bg-surface/80 backdrop-blur-md z-10">
             <button 
               onClick={() => setActiveProfileTab('posts')}
@@ -488,7 +525,6 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
               </button>
             )}
           </div>
-          )}
 
           <AnimatePresence mode="wait">
             <motion.div
