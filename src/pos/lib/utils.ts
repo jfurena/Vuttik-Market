@@ -6,10 +6,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-  }).format(amount);
+  const isNegative = amount < 0;
+  const absAmount = Math.abs(amount);
+  const formattedStr = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(absAmount);
+  
+  return `${isNegative ? '-' : ''}RD$\u00A0${formattedStr}`;
 }
 
 export function generateReceiptCode() {

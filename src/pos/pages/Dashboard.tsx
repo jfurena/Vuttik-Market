@@ -725,7 +725,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{card.title}</p>
-              <p className={cn("text-3xl font-black tracking-tight", card.color)}>{card.value}</p>
+              <p className={cn("text-2xl xl:text-3xl font-black tracking-tight truncate", card.color)} title={card.value as string}>{card.value}</p>
               <p className="text-xs font-bold text-gray-400 mt-2 flex items-center gap-1">
                 {card.description}
               </p>
