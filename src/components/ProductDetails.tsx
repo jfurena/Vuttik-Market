@@ -176,10 +176,10 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
           <div className="flex-1 space-y-8">
             {/* Image Gallery */}
             <div className="w-full aspect-square md:aspect-[4/3] relative rounded-[32px] overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center">
-              {currentImage ? (
-                <img alt={product.title} className="w-full h-full object-contain" src={currentImage} />
+              {(currentImage && currentImage !== '/producto.jpeg') ? (
+                <img alt={product.title} className="w-full h-full object-contain" src={currentImage} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               ) : (
-                <Package size={80} className="opacity-20 text-blue-400" />
+                <Package size={80} className="text-vuttik-blue opacity-50" />
               )}
               
               <div className="absolute top-4 left-4 flex gap-2">

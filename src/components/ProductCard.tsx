@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowUp, ArrowDown, MapPin, Star, Edit2, Trash2, Info, ArrowUpRight, Megaphone, ShieldAlert, ShieldCheck, Store, Eye, Package } from 'lucide-react';
 import UserAvatar from './UserAvatar';
 import { motion } from 'motion/react';
@@ -40,6 +41,7 @@ export interface ProductCardProps {
 }
 
 const ProductCard = (props: ProductCardProps) => {
+  const [imageError, setImageError] = useState(false);
   const {
     id,
     type,
@@ -125,7 +127,7 @@ const ProductCard = (props: ProductCardProps) => {
           )}
         </div>
 
-        {image ? (
+        {(image && image !== '/producto.jpeg' && !imageError) ? (
           <img
             src={image}
             alt={title}
@@ -133,11 +135,11 @@ const ProductCard = (props: ProductCardProps) => {
             decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             referrerPolicy="no-referrer"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100/50">
-            <Package size={48} className="opacity-40 text-blue-400" />
+            <Package size={48} className="text-vuttik-blue opacity-50" />
           </div>
         )}
       </div>

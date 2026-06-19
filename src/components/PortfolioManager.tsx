@@ -233,10 +233,10 @@ export default function PortfolioManager({ userId }: { userId: string }) {
               <div key={item.product.id} className="flex flex-col md:flex-row items-center justify-between p-4 border border-gray-100 rounded-2xl hover:border-gray-200 transition-colors gap-4">
                 <div className="flex items-center gap-4 w-full md:w-auto">
                   <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0 flex items-center justify-center">
-                    {(item.product.images?.[0] || item.product.image) ? (
-                      <img src={item.product.images[0] || item.product.image} alt="product" className="w-full h-full object-cover" />
+                    {((item.product.images?.[0] || item.product.image) && item.product.images?.[0] !== '/producto.jpeg' && item.product.image !== '/producto.jpeg') ? (
+                      <img src={item.product.images[0] || item.product.image} alt="product" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     ) : (
-                      <Package size={24} className="opacity-40 text-blue-400" />
+                      <Package size={24} className="text-vuttik-blue opacity-50" />
                     )}
                   </div>
                   <div>
