@@ -56,6 +56,7 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [followersList, setFollowersList] = useState<any[]>([]);
   const [isTogglingFollow, setIsTogglingFollow] = useState(false);
+  const [showEditMenu, setShowEditMenu] = useState(false);
 
   const handlePromote = (id: string, type: 'product' | 'post') => {
     setPromoTarget({ id, type });
@@ -406,20 +407,34 @@ export default function Profile({ currentUserId, onViewProduct }: { currentUserI
                         <Store size={18} />
                         <span className="hidden sm:inline">Modo Negocio</span>
                       </button>
-                      <button 
-                        onClick={() => setIsEditingBio(true)}
-                        className="px-4 md:px-6 py-2.5 bg-surface border border-gray-200 text-on-surface rounded-full font-label-md hover:bg-surface-variant active:scale-95 transition-all shadow-sm flex items-center gap-2"
-                        title="Editar bio"
-                      >
-                        <Edit2 size={16} />
-                        <span className="hidden sm:inline">Editar Bio</span>
-                      </button>
-                      <button 
-                        onClick={() => setIsEditingPhoto(true)}
-                        className="px-6 py-2.5 bg-vuttik-blue text-white rounded-full font-label-md hover:brightness-110 active:scale-95 transition-all shadow-md"
-                      >
-                        Editar Perfil
-                      </button>
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowEditMenu(!showEditMenu)}
+                          className="p-2.5 bg-white border border-outline-variant/30 rounded-full text-vuttik-navy active:scale-95 transition-all shadow-sm"
+                          title="Editar"
+                        >
+                          <Edit2 size={20} />
+                        </button>
+                        {showEditMenu && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowEditMenu(false)}></div>
+                            <div className="absolute left-1/2 -translate-x-1/2 md:left-auto md:-translate-x-0 md:right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                              <button 
+                                onClick={() => { setShowEditMenu(false); setIsEditingBio(true); }}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-bold text-vuttik-navy"
+                              >
+                                Editar Bio
+                              </button>
+                              <button 
+                                onClick={() => { setShowEditMenu(false); setIsEditingPhoto(true); }}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-bold text-vuttik-navy"
+                              >
+                                Editar Perfil
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <>
