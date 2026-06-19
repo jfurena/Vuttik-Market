@@ -144,7 +144,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
 
   const isAuthor = currentUserId === product.authorId;
   const isMegaGuardian = currentUserRole === 'mega_guardian';
-  const currentImage = (fullProduct.images && fullProduct.images.length > 0 ? fullProduct.images[selectedImageIndex] : null) || fullProduct.image || fullProduct.images?.[0] || 'https://picsum.photos/seed/detail/1200/1200';
+  const currentImage = (fullProduct.images && fullProduct.images.length > 0 ? fullProduct.images[selectedImageIndex] : null) || fullProduct.image || fullProduct.images?.[0] || '/producto.jpeg';
 
   return (
     <div className="fixed inset-0 z-[100] bg-white overflow-y-auto overflow-x-hidden">
@@ -268,7 +268,7 @@ export default function ProductDetails({ product, onClose, onEdit, onDelete, cur
                 }}>
                   <div className="relative">
                     <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
-                      <img alt="Seller" src={product.authorAvatar || '/user unkwon.jpeg'} className="w-full h-full object-cover" />
+                      <img alt="Seller" src={product.authorAvatar || '/user_unknown.jpeg'} className="w-full h-full object-cover" />
                     </div>
                     {product.trustLevel === 'High' && (
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white">

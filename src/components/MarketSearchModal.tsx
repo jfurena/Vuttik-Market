@@ -112,7 +112,7 @@ export default function MarketSearchModal({ isOpen, onClose, onAddProduct, portf
                 {products.map(product => (
                   <div key={product.id} className="bg-white border border-gray-100 p-4 rounded-2xl flex items-center gap-4 hover:border-gray-200 transition-colors shadow-sm">
                     <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-gray-100">
-                      <img src={product.images?.[0] || product.image || 'https://picsum.photos/seed/m/200/200'} alt={product.title} className="w-full h-full object-cover" />
+                      <img src={product.images?.[0] || product.image || '/producto.jpeg'} alt={product.title} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-gray-900 text-sm truncate">{product.title}</h4>

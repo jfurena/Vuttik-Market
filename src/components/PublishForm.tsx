@@ -278,7 +278,7 @@ export default function PublishForm({ onComplete, onCancel, editProductId }: Pub
         // Use real images if selected, fallback to placeholder
         const images = selectedImages.length > 0
           ? selectedImages
-          : ['https://picsum.photos/seed/' + Math.random() + '/800/600'];
+          : ['/producto.jpeg'];
 
         const productData = {
           title: formData.title,

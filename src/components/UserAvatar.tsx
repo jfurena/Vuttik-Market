@@ -9,7 +9,7 @@ interface UserAvatarProps {
 
 export default function UserAvatar({ src, alt, className = "w-full h-full", onClick }: UserAvatarProps) {
   const [error, setError] = useState(false);
-  const fallbackSrc = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOWNhM2FmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSI4IiByPSI1Ii8+PHBhdGggZD0iTTIwIDIxYTggOCAwIDAgMC0xNiAwIi8+PC9zdmc+';
+  const fallbackSrc = '/user_unknown.jpeg';
 
   return (
     <div className={`relative ${className}`} onClick={onClick}>
