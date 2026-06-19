@@ -45,18 +45,23 @@ const initialDB = {
 };
 
 // === DB HELPERS ===
+let dbCache: any = null;
+
 export const getDB = () => {
+  if (dbCache) return dbCache;
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
-    return JSON.parse(JSON.stringify(initialDB));
+    dbCache = JSON.parse(JSON.stringify(initialDB));
+    return dbCache;
   }
-  const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-  if (!db.owners) db.owners = [];
-  if (!db.businesses) db.businesses = [];
-  return db;
+  dbCache = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  if (!dbCache.owners) dbCache.owners = [];
+  if (!dbCache.businesses) dbCache.businesses = [];
+  return dbCache;
 };
 
 export const saveDB = (data: any) => {
+  dbCache = data;
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 };
 
