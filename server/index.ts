@@ -1984,22 +1984,38 @@ app.get('/api/stats/business/:userId', async (req, res) => {
       return d.toISOString().split('T')[0];
     });
 
+    // Fetch POS sales to merge into chart
+    const db = getDB();
+    const posBiz = db.businesses.find((b: any) => b.id === userId);
+    const posSales = posBiz?.sales || [];
+
     const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
     const chartData = last7Days.map(dateStr => {
       const row = rawDailyStats.find(r => r.day === dateStr);
-      // Ensure we get the correct local day by splitting the date string
       const [year, month, day] = dateStr.split('-');
       const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      
+      // Filter POS sales for this specific day
+      const posSalesCount = posSales.filter((s: any) => {
+        if (!s.fecha) return false;
+        if (s.estado === 'cancelada' || s.estado === 'reembolsada') return false;
+        const sDate = new Date(s.fecha);
+        const sDateStr = sDate.getFullYear() + '-' + String(sDate.getMonth() + 1).padStart(2, '0') + '-' + String(sDate.getDate()).padStart(2, '0');
+        return sDateStr === dateStr;
+      }).length;
+
       return {
         name: dayNames[dateObj.getDay()],
         views: row?.views || 0,
-        sales: row?.sales || 0
+        sales: (row?.sales || 0) + posSalesCount
       };
     });
 
+    const totalPosSales = posSales.filter((s: any) => s.estado !== 'cancelada' && s.estado !== 'reembolsada').length;
+
     res.json({
       views: totalViews?.count || 0,
-      sales: totalContacts?.count || 0, // Using contacts as proxy for sales
+      sales: (totalContacts?.count || 0) + totalPosSales, // Merging POS sales with online contacts
       followers: 0,
       chartData
     });
