@@ -66,6 +66,7 @@ export default function Login() {
           }
 
           if (response?.token && response?.user) {
+            localStorage.setItem('vuttik_token', response.token);
             // Full page reload to ensure session cookie is properly picked up by checkAuth
             window.location.href = '/businesses';
           }
@@ -126,6 +127,7 @@ export default function Login() {
       
       const response = await api.verifyWalletSignature(address, signature);
       if (response?.token && response?.user) {
+        localStorage.setItem('vuttik_token', response.token);
         window.location.href = '/businesses';
       }
     } catch (err: any) {
