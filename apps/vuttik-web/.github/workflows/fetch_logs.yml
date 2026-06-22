@@ -1,0 +1,19 @@
+name: Fetch Backend Log
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch_log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Fetch Log
+        run: |
+          ssh -o ConnectTimeout=15 -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cat /home/sinagjwx/domains/vuttik.com/server/backend.log'

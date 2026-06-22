@@ -1,36 +1,6 @@
-# Dependencies
-node_modules/
-
-# Build output
-dist/
-build/
-*.tar.gz
-
-# Environment and Secrets
-.env
-.env.local
-.env.*.local
-*.pem
-*client_secret*.json
-Login/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-*.log
-npm-debug.log*
-
-# Editor
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# TypeScript cache
-tsconfig.tsbuildinfo
+node_modules/  
+apps/vuttik-pos-web/node_modules/  
+apps/vuttik-web/node_modules/  
+pos-portable/  
+release/  
+apps/vuttik-pos-web/release/  

@@ -1,0 +1,100 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and Build Frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Install and Build Backend
+        run: |
+          cd server
+          npm install
+          npm install typescript
+          npx tsc || true
+
+      - name: Create Deployment Archive
+        run: |
+          mkdir deploy_package
+          cp -r dist deploy_package/
+          cp -r server deploy_package/
+          tar -czf deploy.tar.gz -C deploy_package .
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload Deployment Archive
+        run: |
+          echo "Starting SCP transfer..."
+          for i in 1 2 3 4 5; do
+            scp -o ConnectTimeout=15 -i ~/.ssh/id_rsa deploy.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/sinagjwx/domains/vuttik.com/ && echo "SCP Success" && exit 0 || echo "SCP failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "SCP failed after 5 retries."
+          exit 1
+
+      - name: Extract, Clean, and Restart
+        run: |
+          echo "Starting SSH commands..."
+          cat << 'EOF' > run_deploy.sh
+          cd /home/sinagjwx/domains/vuttik.com/
+          mkdir -p temp_deploy
+          tar -xzf deploy.tar.gz -C temp_deploy
+          
+          # Deploy frontend to vuttik.com
+          find public_html/assets -mindepth 1 -delete || true
+          cp -a temp_deploy/dist/. public_html/
+          
+          # Deploy frontend to pos.vuttik.com
+          mkdir -p ../pos.vuttik.com/public_html
+          find ../pos.vuttik.com/public_html/assets -mindepth 1 -delete || true
+          cp -a temp_deploy/dist/. ../pos.vuttik.com/public_html/
+          
+          # Copy backend files
+          cp -r temp_deploy/server/* server/
+          rm -rf temp_deploy deploy.tar.gz
+          
+          cd server
+          export NODE_HOME="/home/sinagjwx/nodejs"
+          export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+          npm install --production
+          
+          # Stop old server processes
+          pkill -f "node index.js" || true
+          pkill -f "npx tsx" || true
+          pkill -9 lsnode || true
+          fuser -k 3005/tcp || true
+          sleep 2
+          
+          # Start server manually (Passenger is disabled in .htaccess)
+          export NODE_ENV=production
+          nohup node index.js >> backend.log 2>&1 < /dev/null &
+          echo "Server started with PID $!"
+          EOF
+          
+          for i in 1 2 3 4 5; do
+            ssh -o ConnectTimeout=15 -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' < run_deploy.sh && echo "SSH Success" && exit 0 || echo "SSH failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "SSH failed after 5 retries."
+          exit 1

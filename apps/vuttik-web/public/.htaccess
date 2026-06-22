@@ -1,0 +1,31 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  <IfModule mod_passenger.c>
+    PassengerEnabled off
+  </IfModule>
+
+  # --- POS Subdomain API Routing ---
+  RewriteCond %{HTTP_HOST} ^pos\.vuttik\.com$ [NC]
+  # Exception: Google OAuth Callback MUST hit the main authRouter
+  RewriteCond %{REQUEST_URI} ^/api/auth/google/callback$
+  RewriteRule ^api/auth/google/callback$ http://127.0.0.1:3005/api/auth/google/callback [P,L]
+
+  RewriteCond %{HTTP_HOST} ^pos\.vuttik\.com$ [NC]
+  # All other POS API requests go to posApp (mounted at /pos/api/...)
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^api/(.*)$ http://127.0.0.1:3005/pos/api/$1 [P,L]
+
+  # --- Main Domain API Routing ---
+  RewriteCond %{HTTP_HOST} !^pos\.vuttik\.com$ [NC]
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^api/(.*)$ http://127.0.0.1:3005/api/$1 [P,L]
+
+  # SPA fallback: all other non-file requests go to index.html
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>

@@ -1,0 +1,18 @@
+name: Test Node
+
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Server Logs
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh -o ConnectTimeout=15 -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cat /home/sinagjwx/domains/vuttik.com/logs/*.log || true; cat /home/sinagjwx/domains/vuttik.com/server/stderr.log || true; ls -la /home/sinagjwx/domains/vuttik.com/server/; ls -la /home/sinagjwx/domains/vuttik.com/logs/'
+
+      - name: Test
+        run: echo "Done"
