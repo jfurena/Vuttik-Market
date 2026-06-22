@@ -58,7 +58,7 @@ app.use((req, res, next) => {
   next();
 });
 
-import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from '../pos-vuttik/server/pos-backend.ts';
+import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.ts';
 
 app.use('/api/auth', authRouter);
 // --- Helpers ---
