@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiService } from '../services/api';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Store, Loader2, LogOut, Hash, Package, ShoppingBag, ChevronRight, X, AlertCircle, User, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, Store, Loader2, LogOut, Hash, Package, ShoppingBag, ChevronRight, X, AlertCircle, User, TrendingUp, DollarSign, Settings, Trash2, Edit2 } from 'lucide-react';
 import { formatCurrency } from '../lib/utils';
 
 interface BizSummary {
@@ -24,6 +24,8 @@ export default function BusinessSelector() {
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingBiz, setEditingBiz] = useState<BizSummary | null>(null);
+  const [editName, setEditName] = useState('');
   const [showProfitModal, setShowProfitModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -70,6 +72,46 @@ export default function BusinessSelector() {
       setCreating(false);
     }
   };
+
+  const handleEditClick = (biz: BizSummary, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingBiz(biz);
+    setEditName(biz.nombre);
+    setError('');
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editName.trim() || !editingBiz) return;
+    setCreating(true);
+    setError('');
+    try {
+      await ApiService.updateBusiness(editingBiz.id, editName.trim());
+      setEditingBiz(null);
+      await load();
+    } catch (err: any) {
+      setError(err.message || 'Error al actualizar negocio.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editingBiz) return;
+    if (!confirm('¿Estás seguro de eliminar este negocio? Esta acción no se puede deshacer y borrará todos los productos y ventas asociadas.')) return;
+    setCreating(true);
+    setError('');
+    try {
+      await ApiService.deleteBusiness(editingBiz.id);
+      setEditingBiz(null);
+      await load();
+    } catch (err: any) {
+      setError(err.message || 'Error al eliminar negocio.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
 
   const handleLogout = async () => {
     await logout();
@@ -196,6 +238,14 @@ export default function BusinessSelector() {
                       <span className="text-gray-500 text-xs font-mono font-bold uppercase tracking-wider">{biz.codigo}</span>
                     </div>
                   </div>
+                  {/* Settings Icon */}
+                  <button 
+                    onClick={(e) => handleEditClick(biz, e)}
+                    className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all shrink-0"
+                    title="Ajustes del negocio"
+                  >
+                    <Settings size={20} />
+                  </button>
                 </div>
 
                 {/* Stats */}
@@ -272,6 +322,63 @@ export default function BusinessSelector() {
                   </button>
                   <button type="submit" disabled={creating || !newName.trim()} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
                     {creating ? <Loader2 className="animate-spin" size={16} /> : 'Crear'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit/Delete Business Modal */}
+      <AnimatePresence>
+        {editingBiz && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 z-50"
+            onClick={e => { if (e.target === e.currentTarget) setEditingBiz(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl border border-gray-100"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-gray-900">Ajustes del Negocio</h2>
+                <button onClick={() => setEditingBiz(null)} className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 p-2 rounded-full">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleUpdate} className="space-y-5">
+                <div className="relative">
+                  <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    autoFocus required type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                    placeholder="Nombre del negocio (ej: Mi Tienda)"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold"
+                  />
+                </div>
+                <div className="flex justify-between items-center bg-red-50 p-4 rounded-2xl border border-red-100">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+                    <div>
+                      <p className="text-red-900 font-bold text-sm">Zona de Peligro</p>
+                      <p className="text-red-600 text-xs font-medium mt-0.5">Eliminar un negocio borrará todos sus datos permanentemente.</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={handleDelete} disabled={creating} className="shrink-0 p-2.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-xl transition-colors disabled:opacity-50">
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setEditingBiz(null)} className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">
+                    Cancelar
+                  </button>
+                  <button type="submit" disabled={creating || !editName.trim()} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
+                    {creating ? <Loader2 className="animate-spin" size={16} /> : 'Guardar Cambios'}
                   </button>
                 </div>
               </form>

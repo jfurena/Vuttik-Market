@@ -395,6 +395,22 @@ async function startServer() {
     res.json({ id: db.businesses[idx].id, nombre: db.businesses[idx].nombre, codigo: db.businesses[idx].codigo });
   });
 
+  // Update a business
+  app.put('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
+    const { bizId } = req.params;
+    const { nombre } = req.body;
+    if (!nombre || !nombre.trim()) return res.status(400).json({ error: 'Nombre inválido.' });
+
+    const s = req.session as any;
+    const db = getDB();
+    const idx = db.businesses.findIndex((b: any) => b.id === bizId && b.owner_id === s.owner_id);
+    if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado.' });
+
+    db.businesses[idx].nombre = nombre.trim();
+    saveDB(db);
+    res.json(db.businesses[idx]);
+  });
+
   // Delete business
   app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
     const { bizId } = req.params;

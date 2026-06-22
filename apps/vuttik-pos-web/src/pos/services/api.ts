@@ -214,6 +214,21 @@ export const ApiService = {
     return res.json();
   },
 
+  async updateBusiness(id: string, nombre: string) {
+    const res = await fetch(`${API_BASE}/businesses/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre })
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al actualizar negocio.'); }
+    return res.json();
+  },
+
+  async deleteBusiness(id: string) {
+    const res = await fetch(`${API_BASE}/businesses/${id}`, { method: 'DELETE' });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al eliminar negocio.'); }
+    return res.json();
+  },
   async selectBusiness(business_id: string) {
     const res = await fetch(`${API_BASE}/auth/select-business`, {
       method: 'POST',
