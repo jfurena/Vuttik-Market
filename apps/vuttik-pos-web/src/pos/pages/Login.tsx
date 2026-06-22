@@ -60,9 +60,9 @@ export default function Login() {
           const facebookRedirectUri = 'https://vuttik.com/';
 
           if (state === 'google') {
-            response = await api.googleCallback({ code, redirect_uri: googleRedirectUri });
+            response = await ApiService.googleCallback({ code, redirect_uri: googleRedirectUri });
           } else if (state === 'facebook') {
-            response = await api.facebookCallback({ code, redirect_uri: facebookRedirectUri });
+            response = await ApiService.facebookCallback({ code, redirect_uri: facebookRedirectUri });
           }
 
           if (response?.token && response?.user) {

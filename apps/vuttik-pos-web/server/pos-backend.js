@@ -222,14 +222,18 @@ async function startServer() {
         });
     });
     // Get current session user
-    app.get('/api/auth/me', (req, res) => {
+    app.get('/api/auth/me', async (req, res) => {
         const s = req.session;
         if (!s.owner_id && !s.employee_id)
             return res.json(null);
         const db = getDB();
         if (s.owner_id && !s.business_id) {
             // Owner without business selected → return owner info
-            const owner = db.owners.find((o) => o.id === s.owner_id);
+            let owner = db.owners.find((o) => o.id === s.owner_id);
+            if (!owner) {
+                const sqlUser = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+                if (sqlUser) owner = { id: sqlUser.uid, nombre: sqlUser.display_name, correo: sqlUser.email, password_hash: '' };
+            }
             if (!owner)
                 return res.json(null);
             const { password_hash: _, ...safe } = owner;
@@ -237,7 +241,11 @@ async function startServer() {
         }
         if (s.owner_id && s.business_id) {
             // Owner inside a business
-            const owner = db.owners.find((o) => o.id === s.owner_id);
+            let owner = db.owners.find((o) => o.id === s.owner_id);
+            if (!owner) {
+                const sqlUser = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+                if (sqlUser) owner = { id: sqlUser.uid, nombre: sqlUser.display_name, correo: sqlUser.email, password_hash: '' };
+            }
             const biz = db.businesses.find((b) => b.id === s.business_id);
             if (!owner || !biz)
                 return res.json(null);

@@ -159,6 +159,26 @@ export const ApiService = {
     return res.json();
   },
 
+  async googleCallback(data: any) {
+    const res = await fetch(`${API_BASE}/auth/google/callback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error en Google Callback.'); }
+    return res.json();
+  },
+
+  async facebookCallback(data: any) {
+    const res = await fetch(`${API_BASE}/auth/facebook/callback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error en Facebook Callback.'); }
+    return res.json();
+  },
+
   async loginMe() {
     if (isPracticeModeActive()) {
       initSimulation();
