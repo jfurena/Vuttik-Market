@@ -86,7 +86,7 @@ export default function BusinessSelector() {
           className="flex items-center justify-between mb-10 mt-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
         >
           <div className="flex items-center gap-6">
-            <img src="/Logo.png" alt="Vuttik POS" className="w-16 object-contain hidden sm:block" />
+            <img src="/logo.png" alt="Vuttik POS" className="w-16 object-contain hidden sm:block" />
             <div>
               <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Panel de Control de Vuttik</p>
               <h1 className="text-3xl font-black text-gray-900">
