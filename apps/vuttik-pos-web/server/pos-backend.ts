@@ -227,30 +227,39 @@ async function startServer() {
         estado: employee.estado,
         business_id: biz.id,
         business_nombre: biz.nombre,
-        business_codigo: biz.codigo,
-        owner_id: biz.owner_id
-      }
     });
   });
 
   // Get current session user
-  app.get('/api/auth/me', (req, res) => {
+  app.get('/api/auth/me', async (req, res) => {
     const s = req.session as any;
     if (!s.owner_id && !s.employee_id) return res.json(null);
 
     const db = getDB();
 
     if (s.owner_id && !s.business_id) {
-      // Owner without business selected → return owner info
-      const owner = db.owners.find((o: any) => o.id === s.owner_id);
+      // Owner without business selected -> return owner info
+      let owner = db.owners.find((o: any) => o.id === s.owner_id);
+      if (!owner) {
+        // Fallback to SQLite (Vuttik Market DB)
+        const user: any = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+        if (user) {
+          owner = { id: user.uid, nombre: user.display_name, correo: user.email };
+        }
+      }
       if (!owner) return res.json(null);
-      const { password_hash: _, ...safe } = owner;
-      return res.json({ ...safe, rol: 'admin', estado: 'activo' });
+      return res.json({ id: owner.id, nombre: owner.nombre, correo: owner.correo, rol: 'admin', estado: 'activo' });
     }
 
     if (s.owner_id && s.business_id) {
       // Owner inside a business
-      const owner = db.owners.find((o: any) => o.id === s.owner_id);
+      let owner = db.owners.find((o: any) => o.id === s.owner_id);
+      if (!owner) {
+        const user: any = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+        if (user) {
+          owner = { id: user.uid, nombre: user.display_name, correo: user.email };
+        }
+      }
       const biz = db.businesses.find((b: any) => b.id === s.business_id);
       if (!owner || !biz) return res.json(null);
       return res.json({

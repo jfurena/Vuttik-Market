@@ -184,7 +184,7 @@ export const ApiService = {
       initSimulation();
       return { id: 'user-sim-01', nombre: 'Usuario de Práctica', correo: 'practica@colmado.com', rol: 'admin' };
     }
-    const res = await fetch(`${API_BASE}/auth/me`);
+    const res = await fetch(`${API_BASE}/auth/me?t=${Date.now()}`);
     if (!res.ok) return null;
     return res.json();
   },
