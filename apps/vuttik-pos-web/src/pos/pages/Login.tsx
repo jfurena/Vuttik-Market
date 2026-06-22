@@ -57,8 +57,8 @@ export default function Login() {
         try {
           let response;
           const isLocal = window.location.hostname === 'localhost';
-          const googleRedirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
-          const facebookRedirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
+          const googleRedirectUri = isLocal ? 'http://localhost:5173' : 'https://vuttik.com';
+          const facebookRedirectUri = isLocal ? 'http://localhost:5173' : 'https://vuttik.com/';
 
           if (state === 'google') {
             response = await ApiService.googleCallback({ code, redirect_uri: googleRedirectUri });
@@ -91,7 +91,7 @@ export default function Login() {
     }
     setLoading(true);
     const isLocal = window.location.hostname === 'localhost';
-    const redirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
+    const redirectUri = isLocal ? 'http://localhost:5173' : 'https://vuttik.com';
     
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20email%20profile&state=pos_google`;
   };
@@ -103,7 +103,7 @@ export default function Login() {
     }
     setLoading(true);
     const isLocal = window.location.hostname === 'localhost';
-    const redirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
+    const redirectUri = isLocal ? 'http://localhost:5173' : 'https://vuttik.com/';
     window.location.href = `https://www.facebook.com/v16.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=email,public_profile&state=pos_facebook`;
   };
 
