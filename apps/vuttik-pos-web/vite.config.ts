@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY),
     },
     resolve: {
+      dedupe: ['react', 'react-dom'],
       alias: {
         '@': path.resolve(__dirname, 'src'),
         'framer-motion': path.resolve(__dirname, 'src/lib/framer-motion-mock.tsx'),
