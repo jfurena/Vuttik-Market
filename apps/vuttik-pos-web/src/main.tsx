@@ -15,8 +15,9 @@ const isPos = window.location.hostname.startsWith('pos.');
 
 // Proxy Google OAuth redirect back to pos.vuttik.com
 const params = new URLSearchParams(window.location.search);
-if (params.get('state') === 'pos_google' && !isPos) {
-  params.set('state', 'google');
+if ((params.get('state') === 'pos_google' || params.get('state') === 'pos_facebook') && !isPos) {
+  const originalState = params.get('state');
+  params.set('state', originalState === 'pos_google' ? 'google' : 'facebook');
   window.location.href = `https://pos.vuttik.com/login?${params.toString()}`;
 }
 
