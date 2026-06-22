@@ -56,8 +56,9 @@ export default function Login() {
         setLoading(true);
         try {
           let response;
-          const googleRedirectUri = 'https://vuttik.com';
-          const facebookRedirectUri = 'https://vuttik.com/';
+          const isLocal = window.location.hostname === 'localhost';
+          const googleRedirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
+          const facebookRedirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
 
           if (state === 'google') {
             response = await ApiService.googleCallback({ code, redirect_uri: googleRedirectUri });
@@ -89,9 +90,10 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    const redirectUri = 'https://vuttik.com';
-    const scope = 'openid email profile';
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=pos_google`;
+    const isLocal = window.location.hostname === 'localhost';
+    const redirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
+    
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20email%20profile&state=pos_google`;
   };
 
   const handleFacebookLogin = () => {
@@ -100,9 +102,9 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    const redirectUri = 'https://vuttik.com/';
-    const scope = 'email,public_profile';
-    window.location.href = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=pos_facebook`;
+    const isLocal = window.location.hostname === 'localhost';
+    const redirectUri = isLocal ? 'http://localhost:5174' : 'https://pos.vuttik.com/login';
+    window.location.href = `https://www.facebook.com/v16.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=email,public_profile&state=pos_facebook`;
   };
 
   const handleWalletLogin = async () => {
