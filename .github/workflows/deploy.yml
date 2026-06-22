@@ -20,13 +20,13 @@ jobs:
       - name: Install and Build Frontend
         run: |
           cd apps/vuttik-pos-web
-          npm install
+          npm install --no-package-lock
           npm run build
 
       - name: Install and Build Backend
         run: |
           cd apps/vuttik-pos-web/server
-          npm install
+          npm install --no-package-lock
           npm install typescript
           npx tsc || true
 
