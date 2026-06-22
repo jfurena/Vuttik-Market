@@ -353,7 +353,7 @@ export default function Login() {
         <div className="w-full max-w-[420px]">
           {/* Logo */}
           <div className="flex justify-center mb-4 lg:mb-6">
-            <img src="/logo.png" alt="Vuttik POS" className="h-24 md:h-28 object-contain" />
+            <img src="/vuttik-pos-logo.png" alt="Vuttik POS" className="h-24 md:h-28 object-contain" />
           </div>
 
           {/* Header */}

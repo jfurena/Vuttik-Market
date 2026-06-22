@@ -30,6 +30,8 @@ export default function BusinessSelector() {
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [multiBizStatus, setMultiBizStatus] = useState<'none' | 'needs_request' | 'pending_evaluation'>('none');
+  const [multiBizMessage, setMultiBizMessage] = useState('');
 
   const totalProfit = businesses.reduce((acc, b) => acc + (b.ganancia_neta || 0), 0);
 
@@ -61,13 +63,36 @@ export default function BusinessSelector() {
     if (!newName.trim()) return;
     setCreating(true);
     setError('');
+    setMultiBizStatus('none');
     try {
       await ApiService.createBusiness(newName.trim());
       setNewName('');
       setShowCreate(false);
       await load();
     } catch (err: any) {
-      setError(err.message || 'Error al crear negocio.');
+      if (err.message && err.message.startsWith('MULTI_BIZ_ERROR:')) {
+        const parts = err.message.split(':');
+        const errType = parts[1] as 'needs_request' | 'pending_evaluation';
+        const errMsg = parts.slice(2).join(':');
+        setMultiBizStatus(errType);
+        setMultiBizMessage(errMsg);
+      } else {
+        setError(err.message || 'Error al crear negocio.');
+      }
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleSendRequest = async () => {
+    setCreating(true);
+    setError('');
+    try {
+      await ApiService.requestMultiBusiness();
+      setMultiBizStatus('pending_evaluation');
+      setMultiBizMessage('Tu petición ha sido enviada y está siendo evaluada por el Mega Guardian.');
+    } catch (err: any) {
+      setError(err.message || 'Error al solicitar permiso.');
     } finally {
       setCreating(false);
     }
@@ -128,7 +153,7 @@ export default function BusinessSelector() {
           className="flex items-center justify-between mb-10 mt-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
         >
           <div className="flex items-center gap-6">
-            <img src="/logo.png" alt="Vuttik POS" className="w-16 object-contain hidden sm:block" />
+            <img src="/vuttik-pos-logo.png" alt="Vuttik POS" className="w-16 object-contain hidden sm:block" />
             <div>
               <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-1">Panel de Control de Vuttik</p>
               <h1 className="text-3xl font-black text-gray-900">
@@ -306,25 +331,58 @@ export default function BusinessSelector() {
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleCreate} className="space-y-5">
-                <div className="relative">
-                  <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    autoFocus required type="text" value={newName} onChange={e => setNewName(e.target.value)}
-                    placeholder="Nombre del negocio (ej: Mi Tienda)"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold"
-                  />
+              {multiBizStatus === 'needs_request' ? (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl text-center">
+                    <Store className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-blue-900 font-black text-lg mb-2">Límite de Negocios Alcanzado</h3>
+                    <p className="text-blue-700 text-sm font-bold">
+                      {multiBizMessage || 'Para crear más de un negocio, necesitas aprobación del Mega Guardian.'}
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">
+                      Cancelar
+                    </button>
+                    <button type="button" onClick={handleSendRequest} disabled={creating} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
+                      {creating ? <Loader2 className="animate-spin" size={16} /> : 'Solicitar Permiso'}
+                    </button>
+                  </div>
                 </div>
-                <p className="text-gray-500 text-xs font-bold">Se generará automáticamente un código único para tus empleados (ej: MIT-001).</p>
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">
-                    Cancelar
-                  </button>
-                  <button type="submit" disabled={creating || !newName.trim()} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
-                    {creating ? <Loader2 className="animate-spin" size={16} /> : 'Crear'}
+              ) : multiBizStatus === 'pending_evaluation' ? (
+                <div className="space-y-6">
+                  <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center">
+                    <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                    <h3 className="text-amber-900 font-black text-lg mb-2">Petición en Evaluación</h3>
+                    <p className="text-amber-700 text-sm font-bold">
+                      {multiBizMessage || 'Tu petición está siendo evaluada por el Mega Guardian. Por favor, espera a que sea aprobada.'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setShowCreate(false)} className="w-full py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">
+                    Cerrar
                   </button>
                 </div>
-              </form>
+              ) : (
+                <form onSubmit={handleCreate} className="space-y-5">
+                  <div className="relative">
+                    <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      autoFocus required type="text" value={newName} onChange={e => setNewName(e.target.value)}
+                      placeholder="Nombre del negocio (ej: Mi Tienda)"
+                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold"
+                    />
+                  </div>
+                  <p className="text-gray-500 text-xs font-bold">Se generará automáticamente un código único para tus empleados (ej: MIT-001).</p>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-black transition-all text-xs uppercase tracking-widest">
+                      Cancelar
+                    </button>
+                    <button type="submit" disabled={creating || !newName.trim()} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-blue-100">
+                      {creating ? <Loader2 className="animate-spin" size={16} /> : 'Crear'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           </motion.div>
         )}

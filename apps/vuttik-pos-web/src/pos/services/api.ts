@@ -210,7 +210,22 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre })
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al crear negocio.'); }
+    if (!res.ok) { 
+      const err = await res.json(); 
+      if (err.error === 'needs_request' || err.error === 'pending_evaluation') {
+        throw new Error(`MULTI_BIZ_ERROR:${err.error}:${err.message}`);
+      }
+      throw new Error(err.error || 'Error al crear negocio.'); 
+    }
+    return res.json();
+  },
+
+  async requestMultiBusiness() {
+    const res = await fetch(`${API_BASE}/pos/request-multi-business`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al solicitar permiso.'); }
     return res.json();
   },
 

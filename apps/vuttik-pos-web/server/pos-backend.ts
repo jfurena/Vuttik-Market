@@ -369,17 +369,54 @@ async function startServer() {
   });
 
   // Create business
-  app.post('/api/businesses', requireOwnerAuth, (req, res) => {
+  app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
     const { nombre } = req.body;
     if (!nombre || !nombre.trim()) return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
     const s = req.session as any;
     const db = getDB();
+
+    // Check business limit
+    const userBusinessesCount = db.businesses.filter((b: any) => b.owner_id === s.owner_id).length;
+    if (userBusinessesCount >= 1) {
+      try {
+        const user = await get(`SELECT multi_business_approved FROM vuttik_users WHERE uid = ?`, [s.owner_id]);
+        if (!user || !user.multi_business_approved) {
+          // Check if there is already a pending request
+          const existingReq = await get(`SELECT status FROM vuttik_business_requests WHERE user_id = ? AND status = 'pending'`, [s.owner_id]);
+          if (existingReq) {
+            return res.status(403).json({ error: 'pending_evaluation', message: 'Tu petición está siendo evaluada por el Mega Guardian.' });
+          }
+          return res.status(403).json({ error: 'needs_request', message: 'Para crear más de un negocio, necesitas aprobación del Mega Guardian.' });
+        }
+      } catch (err) {
+        console.error('Error checking multi_business_approved:', err);
+        return res.status(500).json({ error: 'Error del servidor al verificar permisos.' });
+      }
+    }
+
     const existingCodes = db.businesses.map((b: any) => b.codigo);
     const codigo = generateCode(nombre, existingCodes);
     const newBiz = emptyBusiness('biz-' + Date.now(), nombre.trim(), codigo, s.owner_id);
     db.businesses.push(newBiz);
     saveDB(db);
     res.json({ id: newBiz.id, nombre: newBiz.nombre, codigo: newBiz.codigo, fecha_creacion: newBiz.fecha_creacion });
+  });
+
+  // Request multiple businesses
+  app.post('/api/pos/request-multi-business', requireOwnerAuth, async (req, res) => {
+    const s = req.session as any;
+    try {
+      const existingReq = await get(`SELECT status FROM vuttik_business_requests WHERE user_id = ? AND status = 'pending'`, [s.owner_id]);
+      if (existingReq) {
+        return res.status(400).json({ error: 'Ya tienes una solicitud pendiente.' });
+      }
+      const reqId = 'req-' + Date.now();
+      await run(`INSERT INTO vuttik_business_requests (id, user_id, status, created_at) VALUES (?, ?, 'pending', ?)`, [reqId, s.owner_id, new Date().toISOString()]);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Error submitting business request:', err);
+      res.status(500).json({ error: 'Error al enviar la solicitud.' });
+    }
   });
 
   // Update business name

@@ -210,6 +210,21 @@ export async function initDB() {
     }
     catch (e) { }
     try {
+        await run("ALTER TABLE vuttik_users ADD COLUMN multi_business_approved BOOLEAN DEFAULT 0");
+    }
+    catch (e) { }
+
+    // Business Requests Table
+    await run(`
+    CREATE TABLE IF NOT EXISTS vuttik_business_requests (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      status TEXT DEFAULT 'pending', -- pending, approved, rejected
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES vuttik_users(uid)
+    )
+    `);
+    try {
         await run("ALTER TABLE vuttik_users ADD COLUMN strikes INTEGER DEFAULT 0");
     }
     catch (e) { }

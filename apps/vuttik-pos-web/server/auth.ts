@@ -461,3 +461,50 @@ authRouter.post('/wallet/verify', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Admin: Get Business Requests
+authRouter.get('/business-requests', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    const requests = await all(`
+      SELECT r.id, r.user_id, r.status, r.created_at, u.display_name, u.email 
+      FROM vuttik_business_requests r
+      JOIN vuttik_users u ON r.user_id = u.uid
+      ORDER BY r.created_at DESC
+    `);
+    res.json(requests);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Approve Business Request
+authRouter.post('/business-requests/:id/approve', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    const request: any = await get('SELECT * FROM vuttik_business_requests WHERE id = ?', [req.params.id]);
+    if (!request) return res.status(404).json({ error: 'Solicitud no encontrada' });
+    
+    await run(`UPDATE vuttik_business_requests SET status = 'approved' WHERE id = ?`, [req.params.id]);
+    await run(`UPDATE vuttik_users SET multi_business_approved = 1 WHERE uid = ?`, [request.user_id]);
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Reject Business Request
+authRouter.post('/business-requests/:id/reject', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    const request: any = await get('SELECT * FROM vuttik_business_requests WHERE id = ?', [req.params.id]);
+    if (!request) return res.status(404).json({ error: 'Solicitud no encontrada' });
+    
+    await run(`UPDATE vuttik_business_requests SET status = 'rejected' WHERE id = ?`, [req.params.id]);
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});

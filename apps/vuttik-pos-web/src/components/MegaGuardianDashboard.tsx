@@ -8,7 +8,7 @@ import * as LucideIcons from 'lucide-react';
 import { 
   Shield, TrendingUp, Users, ShoppingBag, Download, Filter, 
   Search, ArrowUpRight, ArrowDownRight, MapPin, Store, BarChart2,
-  Plus, Edit2, Trash2, Check, X, ChevronRight, LayoutGrid,
+  Plus, Edit2, Trash2, Check, X, CheckCircle2, ChevronRight, LayoutGrid,
   ShieldAlert, ShieldCheck, CreditCard, Tag, UserMinus, UserCheck, Mail,
   UserCog, Ban, Unlock, AlertCircle, ClipboardList
 } from 'lucide-react';
@@ -1474,6 +1474,102 @@ export default function MegaGuardianDashboard() {
     );
   };
 
+  const handleApproveBusiness = async (id: string) => {
+    try {
+      const res = await fetch(`/api/auth/business-requests/${id}/approve`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }
+      });
+      if (res.ok) {
+        setNotification({ message: 'Solicitud aprobada', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+        setBusinessRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' } : r));
+      } else {
+        const err = await res.json();
+        setNotification({ message: err.error || 'Error al aprobar', type: 'error' });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (e) {
+      setNotification({ message: 'Error de conexión', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleRejectBusiness = async (id: string) => {
+    try {
+      const res = await fetch(`/api/auth/business-requests/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }
+      });
+      if (res.ok) {
+        setNotification({ message: 'Solicitud rechazada', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+        setBusinessRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' } : r));
+      } else {
+        const err = await res.json();
+        setNotification({ message: err.error || 'Error al rechazar', type: 'error' });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (e) {
+      setNotification({ message: 'Error de conexión', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const renderBusinessRequests = () => {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Solicitudes de Negocios</h2>
+            <p className="text-gray-500 font-bold mt-2 text-sm max-w-2xl">
+              Dueños solicitando crear más de un negocio.
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4">
+          {businessRequests.length === 0 && (
+            <div className="py-20 text-center bg-white border border-gray-100 rounded-[40px]">
+              <Store size={48} className="mx-auto text-gray-200 mb-4" />
+              <p className="text-sm font-bold text-vuttik-text-muted uppercase tracking-widest">No hay solicitudes pendientes</p>
+            </div>
+          )}
+          {businessRequests.map((req: any) => (
+            <div key={req.id} className="bg-white border border-gray-100 rounded-[32px] p-6 hover:shadow-xl hover:shadow-gray-900/5 transition-all">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center shrink-0 ${req.status === 'pending' ? 'bg-amber-50 text-amber-500' : req.status === 'approved' ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>
+                    <Store size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-gray-900 leading-tight mb-1">{req.display_name || req.email}</h3>
+                    <p className="text-gray-500 text-xs font-bold">{new Date(req.created_at).toLocaleDateString()}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${req.status === 'pending' ? 'bg-amber-100 text-amber-700' : req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {req.status === 'pending' ? 'Pendiente' : req.status === 'approved' ? 'Aprobada' : 'Rechazada'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {req.status === 'pending' && (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleApproveBusiness(req.id)} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Aprobar límite ilimitado">
+                      <CheckCircle2 size={20} />
+                    </button>
+                    <button onClick={() => handleRejectBusiness(req.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all" title="Rechazar petición">
+                      <Ban size={20} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 pb-32 px-4 md:px-0">
       <AnimatePresence>
@@ -1493,8 +1589,8 @@ export default function MegaGuardianDashboard() {
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-1 md:gap-2 bg-vuttik-gray p-1 md:p-1.5 rounded-xl md:rounded-2xl self-start max-w-full overflow-x-auto no-scrollbar">
-        {[
           { id: 'overview', label: 'Resumen', icon: BarChart2 },
+          { id: 'business_requests', label: 'Límites POS', icon: Store },
           { id: 'categories', label: 'Categorías', icon: LayoutGrid },
           { id: 'subcategories', label: 'Subcategorías', icon: Tag },
           { id: 'users', label: 'Usuarios', icon: UserCog },
@@ -1517,7 +1613,8 @@ export default function MegaGuardianDashboard() {
         ))}
       </div>
 
-      {activeView === 'categories' ? renderCategories() : 
+      {activeView === 'business_requests' ? renderBusinessRequests() :
+       activeView === 'categories' ? renderCategories() : 
        activeView === 'subcategories' ? renderSubcategories() : 
        activeView === 'users' ? renderUsers() : 
        activeView === 'subscriptions' ? renderSubscriptions() : 
