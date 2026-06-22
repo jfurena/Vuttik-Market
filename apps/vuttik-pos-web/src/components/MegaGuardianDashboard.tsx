@@ -1589,6 +1589,7 @@ export default function MegaGuardianDashboard() {
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-1 md:gap-2 bg-vuttik-gray p-1 md:p-1.5 rounded-xl md:rounded-2xl self-start max-w-full overflow-x-auto no-scrollbar">
+        {[
           { id: 'overview', label: 'Resumen', icon: BarChart2 },
           { id: 'business_requests', label: 'Límites POS', icon: Store },
           { id: 'categories', label: 'Categorías', icon: LayoutGrid },
