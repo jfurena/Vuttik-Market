@@ -58,17 +58,19 @@ jobs:
         run: |
           echo "Starting SSH commands..."
           cat << 'EOF' > run_deploy.sh
+          set -e
           cd /home/sinagjwx/domains/vuttik.com/
+          rm -rf temp_deploy
           mkdir -p temp_deploy
           tar -xzf deploy.tar.gz -C temp_deploy
           
           # Deploy frontend to vuttik.com
-          find public_html/assets -mindepth 1 -delete || true
+          rm -rf public_html/assets
           cp -a temp_deploy/dist/. public_html/
           
           # Deploy frontend to pos.vuttik.com
           mkdir -p ../pos.vuttik.com/public_html
-          find ../pos.vuttik.com/public_html/assets -mindepth 1 -delete || true
+          rm -rf ../pos.vuttik.com/public_html/assets
           cp -a temp_deploy/dist/. ../pos.vuttik.com/public_html/
           
           # Copy backend files
