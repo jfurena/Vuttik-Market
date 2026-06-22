@@ -61,7 +61,6 @@ app.use((req, res, next) => {
 import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.js';
 
 app.use('/api/auth', authRouter);
-app.use('/pos/api/auth', authRouter); // Also mount on /pos/api/auth so POS frontend can use it
 // --- Helpers ---
 async function logAction(userId: string, action: string, targetId: string, targetType: string, metadata: any = {}) {
   try {

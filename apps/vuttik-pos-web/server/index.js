@@ -56,7 +56,6 @@ app.use((req, res, next) => {
 });
 import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.js';
 app.use('/api/auth', authRouter);
-app.use('/pos/api/auth', authRouter);
 // --- Helpers ---
 async function logAction(userId, action, targetId, targetType, metadata = {}) {
     try {
