@@ -4,9 +4,13 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import helmet from 'helmet';
+import { globalCache } from './cache.js';
+import { metricsQueue } from './queue.js';
 import { initDB, run, all, get } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authRouter, authenticateToken } from './auth.js';
+import compression from 'compression';
+import bcrypt from 'bcryptjs';
 const app = express();
 const port = process.env.PORT || 3005;
 const allowedOrigins = [
@@ -16,6 +20,8 @@ const allowedOrigins = [
     'https://www.vuttik.com',
     'https://pos.vuttik.com'
 ];
+// Gzip compression - reduces JSON response size by 70-80%
+app.use(compression());
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin))
@@ -48,9 +54,8 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
-import { posApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.js';
+import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.ts';
 app.use('/api/auth', authRouter);
-app.use('/pos', posApp);
 // --- Helpers ---
 async function logAction(userId, action, targetId, targetType, metadata = {}) {
     try {
@@ -69,6 +74,8 @@ async function startServer() {
         // 1. Initialize Database
         await initDB();
         console.log('Database initialized successfully.');
+        const posApp = await initPosApp();
+        app.use('/pos', posApp);
         // 2. Start Express
         app.listen(port, () => {
             console.log(`SQL Backend running at http://localhost:${port}`);
@@ -85,6 +92,114 @@ async function startServer() {
     }
 }
 startServer();
+// POS Offline Sync endpoint — receives operations from portable POS
+app.post('/api/pos/sync', authenticateToken, async (req, res) => {
+    const { operations } = req.body;
+    if (!Array.isArray(operations))
+        return res.status(400).json({ error: 'operations must be an array' });
+    let synced = 0;
+    let errors = 0;
+    for (const op of operations) {
+        try {
+            const { operation, payload, business_id, user_id, created_at } = op;
+            const timestamp = created_at || new Date().toISOString();
+            if (operation === 'sale') {
+                // Insert sale into the appropriate business in db.json (pos-backend)
+                const db = getDB();
+                const biz = db.businesses.find((b) => b.id === business_id);
+                if (biz) {
+                    if (!biz.sales)
+                        biz.sales = [];
+                    // Avoid duplicates by id
+                    const exists = biz.sales.find((s) => s.id === payload.id);
+                    if (!exists) {
+                        biz.sales.push({ ...payload, synced_from_offline: true, sync_timestamp: timestamp });
+                    }
+                    saveDB(db);
+                    synced++;
+                }
+            }
+            else if (operation === 'expense') {
+                const db = getDB();
+                const biz = db.businesses.find((b) => b.id === business_id);
+                if (biz) {
+                    if (!biz.expenses)
+                        biz.expenses = [];
+                    const exists = biz.expenses.find((e) => e.id === payload.id);
+                    if (!exists) {
+                        biz.expenses.push({ ...payload, synced_from_offline: true });
+                    }
+                    saveDB(db);
+                    synced++;
+                }
+            }
+            else if (operation === 'inventory_movement') {
+                const db = getDB();
+                const biz = db.businesses.find((b) => b.id === business_id);
+                if (biz) {
+                    if (!biz.inventory_movements)
+                        biz.inventory_movements = [];
+                    const exists = biz.inventory_movements.find((m) => m.id === payload.id);
+                    if (!exists) {
+                        biz.inventory_movements.push({ ...payload, synced_from_offline: true });
+                    }
+                    // Update product stock
+                    if (payload.product_id && payload.quantity_change) {
+                        const prod = biz.products?.find((p) => p.id === payload.product_id);
+                        if (prod) {
+                            prod.cantidad_disponible = (prod.cantidad_disponible || 0) + payload.quantity_change;
+                        }
+                    }
+                    saveDB(db);
+                    synced++;
+                }
+            }
+            else {
+                // Generic operation — log it
+                console.log(`[POS Sync] Unknown operation type: ${operation}`, payload);
+                synced++;
+            }
+        }
+        catch (err) {
+            console.error('[POS Sync] Error processing operation:', err);
+            errors++;
+        }
+    }
+    res.json({ synced, errors, total: operations.length });
+});
+// POS businesses endpoint — returns businesses owned by authenticated user
+app.get('/api/pos/businesses', authenticateToken, async (req, res) => {
+    try {
+        const db = getDB();
+        const userBusinesses = db.businesses.filter((b) => b.owner_id === req.user.uid);
+        res.json(userBusinesses);
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// POS employee login endpoint — validates employee credentials
+app.post('/api/pos/employee-login', async (req, res) => {
+    const { business_codigo, username, password } = req.body;
+    if (!business_codigo || !username || !password)
+        return res.status(400).json({ error: 'Missing fields' });
+    try {
+        const db = getDB();
+        const biz = db.businesses.find((b) => b.codigo === business_codigo.toUpperCase().trim());
+        if (!biz)
+            return res.status(404).json({ error: 'Business code not found' });
+        const employee = biz.employees?.find((e) => e.username === username.trim() && e.estado === 'activo');
+        if (!employee)
+            return res.status(404).json({ error: 'Employee not found' });
+        const valid = await bcrypt.compare(password, employee.password_hash);
+        if (!valid)
+            return res.status(401).json({ error: 'Invalid credentials' });
+        res.json({ user: { id: employee.id, nombre: employee.nombre, username: employee.username, rol: employee.rol, business_id: biz.id, business_nombre: biz.nombre, business_codigo: biz.codigo, owner_id: biz.owner_id } });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -93,15 +208,11 @@ app.get('/api/health', (req, res) => {
 // Log a metric/action from the frontend
 app.post('/api/metrics', async (req, res) => {
     const { userId, action, targetId, targetType, metadata } = req.body;
-    if (!userId || !action)
-        return res.status(400).json({ error: 'Missing userId or action' });
-    try {
-        await logAction(userId, action, targetId || 'none', targetType || 'none', metadata || {});
-        res.json({ success: true });
-    }
-    catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    if (!action)
+        return res.status(400).json({ error: 'Missing action' });
+    // Enqueue for async processing instead of blocking
+    metricsQueue.enqueue({ userId, action, targetId, targetType, metadata });
+    res.json({ success: true });
 });
 // Get user specific analytics (Real data)
 app.get('/api/users/:uid/analytics', async (req, res) => {
@@ -295,8 +406,12 @@ app.get('/api/users/:uid', async (req, res) => {
             const followingCount = followingCountRow?.count || 0;
             const mappedUser = {
                 ...user,
-                displayName,
-                photoURL,
+                photo_url: undefined,
+                logo: undefined,
+                uid: user.uid,
+                displayName: user.display_name,
+                photoURL: `/api/images/user/${user.uid}?v=business_fix_1`,
+                email: user.email,
                 bio,
                 location,
                 planId: user.plan_id,
@@ -372,6 +487,7 @@ app.get('/api/users/by-username/:username', async (req, res) => {
                 onboardingCompleted: !!user.onboarding_completed,
                 activeProfileMode: user.active_profile_mode || 'personal',
                 age: user.age,
+                dateOfBirth: user.date_of_birth,
                 gender: user.gender,
                 country: user.country,
                 username: user.username
@@ -977,15 +1093,34 @@ app.put('/api/ean-database/:ean', async (req, res) => {
 });
 // --- Product Routes ---
 app.get('/api/products', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
     const { categoryId, authorId, postedAs } = req.query;
+    // Cache logic for global feed
+    const isGlobalQuery = page === 1 && (!categoryId || categoryId === 'GLOBAL') && !authorId && !postedAs;
+    const cacheKey = 'global_products_page_1';
+    if (isGlobalQuery) {
+        const cached = globalCache.get(cacheKey);
+        if (cached)
+            return res.json(cached);
+    }
     try {
+        // We paginate the products first, then join the rest to ensure we only do heavy work for the 20 rows needed
         let query = `
-        SELECT p.*,
-               u.country as author_country,
-               COALESCE(b.logo, u.photo_url) as author_avatar,
-               (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_votes,
-               (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_votes
-        FROM vuttik_products p
+        SELECT 
+          p.id, p.title, p.price, p.currency, p.category_id, p.type_id,
+          p.author_id, p.author_name, p.location, p.phone, p.lat, p.lng,
+          p.barcode, p.is_on_sale, p.sale_price, p.created_at, p.posted_as,
+          p.chain, p.store_name, p.is_independent, p.country, p.province, p.stock,
+          u.country as author_country,
+          (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_count,
+          (SELECT COUNT(*) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_count
+        FROM (
+          SELECT * FROM vuttik_products p
+          -- CONDITIONS_PLACEHOLDER
+          ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}
+        ) p
         LEFT JOIN vuttik_users u ON p.author_id = u.uid
         LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
         LEFT JOIN vuttik_users owner ON b.owner_uid = owner.uid
@@ -1008,48 +1143,134 @@ app.get('/api/products', async (req, res) => {
         if (!authorId) {
             conditions.push("(p.id NOT LIKE 'pos-%' OR p.stock > 0)");
         }
+        let whereClause = '';
         if (conditions.length > 0) {
-            query += ' WHERE ' + conditions.join(' AND ');
+            whereClause = ' WHERE ' + conditions.join(' AND ');
         }
-        query += ' ORDER BY p.created_at DESC';
+        query = query.replace('-- CONDITIONS_PLACEHOLDER', whereClause);
         const rows = await all(query, params);
-        const products = rows.map(r => {
-            let parsedUpVotes = [];
-            let parsedDownVotes = [];
-            try {
-                parsedUpVotes = r.up_votes ? JSON.parse(r.up_votes).filter((v) => v !== null) : [];
-            }
-            catch (e) { }
-            try {
-                parsedDownVotes = r.down_votes ? JSON.parse(r.down_votes).filter((v) => v !== null) : [];
-            }
-            catch (e) { }
-            return {
-                ...r,
-                typeId: r.type_id,
-                categoryId: r.category_id,
-                authorId: r.author_id,
-                authorName: r.author_name,
-                authorAvatar: r.author_avatar,
-                createdAt: r.created_at,
-                salePrice: r.sale_price,
-                isOnSale: !!r.is_on_sale,
-                authorCountry: r.country || r.author_country,
-                province: r.province,
-                storeName: r.store_name,
-                business: r.store_name || r.chain, // Map store_name or chain to business for frontend
-                chain: r.chain,
-                isIndependent: !!r.is_independent,
-                upVotes: parsedUpVotes,
-                downVotes: parsedDownVotes,
-                images: JSON.parse(r.images || '[]'),
-                customFields: JSON.parse(r.custom_fields || '{}')
-            };
-        });
+        const products = rows.map(r => ({
+            id: r.id,
+            title: r.title,
+            price: r.price,
+            currency: r.currency,
+            typeId: r.type_id,
+            categoryId: r.category_id,
+            authorId: r.author_id,
+            authorName: r.author_name,
+            authorAvatar: `/api/images/user/${r.author_id}?v=business_fix_1`,
+            authorCountry: r.country || r.author_country,
+            location: r.location,
+            phone: r.phone,
+            lat: r.lat,
+            lng: r.lng,
+            barcode: r.barcode,
+            isOnSale: !!r.is_on_sale,
+            salePrice: r.sale_price,
+            createdAt: r.created_at,
+            postedAs: r.posted_as,
+            chain: r.chain,
+            storeName: r.store_name,
+            business: r.store_name || r.chain,
+            isIndependent: !!r.is_independent,
+            country: r.country,
+            province: r.province,
+            stock: r.stock,
+            // Return counts only (not full arrays) to reduce payload size dramatically
+            upVotes: r.up_count || 0,
+            downVotes: r.down_count || 0,
+            // Return URL instead of Base64 to avoid bloating the JSON response
+            images: [`/api/images/product/${r.id}`],
+        }));
+        if (isGlobalQuery) {
+            globalCache.set(cacheKey, products, 30); // Cache for 30 seconds
+        }
+        // ETag for browser-level caching on repeat visits
+        const etag = `"products-p${page}-${products.length}"`;
+        res.set('ETag', etag);
+        res.set('Cache-Control', 'public, max-age=10');
+        if (req.headers['if-none-match'] === etag) {
+            return res.status(304).end();
+        }
         res.json(products);
     }
     catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+// Dedicated binary image endpoint for products - avoids Base64 bloat in list responses
+app.get('/api/images/product/*', async (req, res) => {
+    const id = req.params[0] || '';
+    // Check RAM cache first (images almost never change, cache for 1 hour)
+    const imgCacheKey = `img_product_${id}`;
+    const cachedImg = globalCache.get(imgCacheKey);
+    if (cachedImg) {
+        res.set('Content-Type', cachedImg.mime);
+        res.set('Cache-Control', 'public, max-age=86400');
+        return res.send(cachedImg.buffer);
+    }
+    try {
+        const product = await get('SELECT images FROM vuttik_products WHERE id = ?', [id]);
+        if (!product)
+            return res.status(404).send('Not found');
+        const images = JSON.parse(product.images || '[]');
+        const first = images[0];
+        if (!first)
+            return res.status(404).send('No image');
+        if (typeof first === 'string' && first.startsWith('data:')) {
+            // Strip the data:image/...;base64, prefix
+            const [header, b64] = first.split(',');
+            const mimeMatch = header.match(/data:([^;]+)/);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const buffer = Buffer.from(b64, 'base64');
+            // Cache decoded buffer in RAM for 3600 seconds
+            globalCache.set(imgCacheKey, { buffer, mime }, 3600);
+            res.set('Content-Type', mime);
+            res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24h in browser
+            return res.send(buffer);
+        }
+        // It's already a URL, redirect to it
+        return res.redirect(first);
+    }
+    catch (error) {
+        res.status(500).send('Error');
+    }
+});
+// Dedicated binary image endpoint for user/business avatars
+app.get('/api/images/user/:uid', async (req, res) => {
+    const { uid } = req.params;
+    const imgCacheKey = `img_user_${uid}`;
+    const cachedImg = globalCache.get(imgCacheKey);
+    if (cachedImg) {
+        res.set('Content-Type', cachedImg.mime);
+        res.set('Cache-Control', 'public, max-age=86400');
+        return res.send(cachedImg.buffer);
+    }
+    try {
+        const user = await get(`
+      SELECT COALESCE(b.logo, u.photo_url) as avatar 
+      FROM vuttik_users u 
+      LEFT JOIN vuttik_business_profiles b ON u.uid = b.uid 
+      LEFT JOIN vuttik_users owner ON b.owner_uid = owner.uid 
+      WHERE u.uid = ?
+    `, [uid]);
+        if (!user || !user.avatar)
+            return res.status(404).send('Not found');
+        const avatar = user.avatar;
+        if (typeof avatar === 'string' && avatar.startsWith('data:')) {
+            const [header, b64] = avatar.split(',');
+            const mimeMatch = header.match(/data:([^;]+)/);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const buffer = Buffer.from(b64, 'base64');
+            globalCache.set(imgCacheKey, { buffer, mime }, 3600);
+            res.set('Content-Type', mime);
+            res.set('Cache-Control', 'public, max-age=86400');
+            return res.send(buffer);
+        }
+        return res.redirect(avatar);
+    }
+    catch (error) {
+        res.status(500).send('Error');
     }
 });
 app.get('/api/products/:id', async (req, res) => {
@@ -1058,7 +1279,6 @@ app.get('/api/products/:id', async (req, res) => {
         const product = await get(`
       SELECT p.*,
              u.country as author_country,
-             COALESCE(b.logo, u.photo_url) as author_avatar,
              (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'up') as up_votes,
              (SELECT json_group_array(user_id) FROM vuttik_product_votes WHERE product_id = p.id AND vote_type = 'down') as down_votes
       FROM vuttik_products p
@@ -1068,7 +1288,14 @@ app.get('/api/products/:id', async (req, res) => {
       WHERE p.id = ?
     `, [id]);
         if (!product)
-            return res.status(404).json({ error: 'Product not found' });
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        let images = [];
+        try {
+            images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images || [];
+        }
+        catch {
+            images = typeof product.images === 'string' ? [product.images] : [];
+        }
         let parsedUpVotes = [];
         let parsedDownVotes = [];
         try {
@@ -1081,11 +1308,12 @@ app.get('/api/products/:id', async (req, res) => {
         catch (e) { }
         res.json({
             ...product,
+            images,
             typeId: product.type_id,
             categoryId: product.category_id,
             authorId: product.author_id,
             authorName: product.author_name,
-            authorAvatar: product.author_avatar,
+            authorAvatar: `/api/images/user/${product.author_id}?v=business_fix_1`,
             createdAt: product.created_at,
             salePrice: product.sale_price,
             isOnSale: !!product.is_on_sale,
@@ -1097,7 +1325,6 @@ app.get('/api/products/:id', async (req, res) => {
             isIndependent: !!product.is_independent,
             upVotes: parsedUpVotes,
             downVotes: parsedDownVotes,
-            images: JSON.parse(product.images || '[]'),
             customFields: JSON.parse(product.custom_fields || '{}')
         });
     }
@@ -1151,7 +1378,8 @@ app.post('/api/products', async (req, res) => {
         for (const follower of followers) {
             await run('INSERT INTO vuttik_notifications (id, user_id, title, message, is_read, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?)', [uuidv4(), follower.user_id, 'Nuevo producto de tu interés', `Se ha publicado "${data.title}" y coincide con tus seguimientos.`, 0, new Date().toISOString(), 'price_drop']);
         }
-        res.json({ id, success: true });
+        globalCache.delete('global_products_page_1');
+        res.status(201).json({ id: id, ...data });
     }
     catch (error) {
         console.error('Error in /api/products:', error);
@@ -1170,7 +1398,8 @@ app.delete('/api/products/:id', async (req, res) => {
             return res.status(403).json({ error: 'Not authorized to delete this product' });
         }
         await run('DELETE FROM vuttik_products WHERE id = ?', [id]);
-        res.json({ success: true });
+        globalCache.delete('global_products_page_1');
+        res.json({ message: 'Product deleted successfully' });
         // Log action
         if (userId)
             await logAction(userId, 'DELETE_PRODUCT', id, 'product', { title: product.title });
@@ -1254,7 +1483,7 @@ app.get('/api/posts', async (req, res) => {
     const { authorId, postedAs } = req.query;
     try {
         let query = `
-      SELECT p.*, COALESCE(b.logo, u.photo_url) as author_avatar
+      SELECT p.*
       FROM vuttik_posts p
       LEFT JOIN vuttik_users u ON p.author_id = u.uid
       LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
@@ -1273,15 +1502,16 @@ app.get('/api/posts', async (req, res) => {
         if (conditions.length > 0) {
             query += ' WHERE ' + conditions.join(' AND ');
         }
-        query += ' ORDER BY p.created_at DESC';
+        query += ' ORDER BY p.created_at DESC LIMIT 100';
         const rows = await all(query, params);
         const posts = await Promise.all(rows.map(async (r) => {
             const likes = await all('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
             const verifications = await all('SELECT user_id, is_veracious FROM vuttik_post_verifications WHERE post_id = ?', [r.id]);
             return {
                 ...r,
-                author_name: r.author_name,
-                author_avatar: r.author_avatar,
+                author_id: r.author_id,
+                author_avatar: `/api/images/user/${r.author_id}?v=business_fix_1`,
+                author_name: r.author_name || 'Usuario',
                 likes: likes.map(l => l.user_id),
                 verifications: verifications.map(v => ({ user_id: v.user_id, is_veracious: !!v.is_veracious })),
                 is_verified: !!r.is_verified,
@@ -1431,14 +1661,14 @@ app.put('/api/posts/:id', async (req, res) => {
 // --- User Profile Update ---
 app.put('/api/users/:uid/profile', async (req, res) => {
     const { uid } = req.params;
-    const { displayName, bio, location, photoURL, age, gender, country, language, username } = req.body;
+    const { displayName, bio, location, photoURL, age, dateOfBirth, gender, country, language, username } = req.body;
     try {
         if (username) {
             const existingUsername = await get('SELECT uid FROM vuttik_users WHERE username = ? COLLATE NOCASE AND uid != ?', [username, uid]);
             if (existingUsername)
                 return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
         }
-        await run('UPDATE vuttik_users SET display_name = ?, bio = ?, location = ?, photo_url = COALESCE(?, photo_url), age = COALESCE(?, age), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?', [displayName, bio, location, photoURL || null, age || null, gender || null, country || null, language || null, username || null, uid]);
+        await run('UPDATE vuttik_users SET display_name = ?, bio = ?, location = ?, photo_url = COALESCE(?, photo_url), age = COALESCE(?, age), date_of_birth = COALESCE(?, date_of_birth), gender = COALESCE(?, gender), country = COALESCE(?, country), language = COALESCE(?, language), username = COALESCE(?, username) WHERE uid = ?', [displayName, bio, location, photoURL || null, age || null, dateOfBirth || null, gender || null, country || null, language || null, username || null, uid]);
         await logAction(uid, 'UPDATE_PROFILE', uid, 'user', { displayName });
         res.json({ success: true });
     }
@@ -1606,38 +1836,6 @@ app.post('/api/users/:uid/ban', authenticateToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-// --- Metrics Route ---
-app.post('/api/metrics', async (req, res) => {
-    const { userId, action, targetId, targetType, metadata } = req.body;
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timestamp = now.toISOString();
-    try {
-        await logAction(userId || 'anonymous', action, targetId || 'none', targetType || 'none', metadata || {});
-        // Update Daily Aggregated Stats
-        if (['view', 'search', 'contact'].includes(action)) {
-            const field = action === 'view' ? 'views' : (action === 'search' ? 'searches' : 'contacts');
-            // Calculate volume if it's a contact action
-            let volumeIncrement = 0;
-            if (action === 'contact' && targetId) {
-                const product = await get('SELECT price FROM vuttik_products WHERE id = ?', [targetId]);
-                volumeIncrement = product?.price || 0;
-            }
-            await run(`
-        INSERT INTO vuttik_daily_stats (date, ${field}, total_p2p_volume) 
-        VALUES (?, 1, ?) 
-        ON CONFLICT(date) DO UPDATE SET 
-          ${field} = ${field} + 1,
-          total_p2p_volume = total_p2p_volume + ?
-      `, [dateStr, volumeIncrement, volumeIncrement]);
-        }
-        res.json({ success: true });
-    }
-    catch (error) {
-        console.error('Metrics Error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
 // --- Aggregated Stats Routes ---
 // Mega Guardian Overview
 app.get('/api/stats/mega-guardian', async (req, res) => {
@@ -1715,21 +1913,35 @@ app.get('/api/stats/business/:userId', async (req, res) => {
             d.setDate(d.getDate() - (6 - i));
             return d.toISOString().split('T')[0];
         });
+        // Fetch POS sales to merge into chart
+        const db = getDB();
+        const posBiz = db.businesses.find((b) => b.id === userId);
+        const posSales = posBiz?.sales || [];
         const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
         const chartData = last7Days.map(dateStr => {
             const row = rawDailyStats.find(r => r.day === dateStr);
-            // Ensure we get the correct local day by splitting the date string
             const [year, month, day] = dateStr.split('-');
             const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            // Filter POS sales for this specific day
+            const posSalesCount = posSales.filter((s) => {
+                if (!s.fecha)
+                    return false;
+                if (s.estado === 'cancelada' || s.estado === 'reembolsada')
+                    return false;
+                const sDate = new Date(s.fecha);
+                const sDateStr = sDate.getFullYear() + '-' + String(sDate.getMonth() + 1).padStart(2, '0') + '-' + String(sDate.getDate()).padStart(2, '0');
+                return sDateStr === dateStr;
+            }).length;
             return {
                 name: dayNames[dateObj.getDay()],
                 views: row?.views || 0,
-                sales: row?.sales || 0
+                sales: (row?.sales || 0) + posSalesCount
             };
         });
+        const totalPosSales = posSales.filter((s) => s.estado !== 'cancelada' && s.estado !== 'reembolsada').length;
         res.json({
             views: totalViews?.count || 0,
-            sales: totalContacts?.count || 0, // Using contacts as proxy for sales
+            sales: (totalContacts?.count || 0) + totalPosSales, // Merging POS sales with online contacts
             followers: 0,
             chartData
         });
@@ -1786,13 +1998,16 @@ app.get('/api/follows/:userId/following', async (req, res) => {
 app.get('/api/follows/:userId/followers', async (req, res) => {
     try {
         const rows = await all(`
-      SELECT f.follower_id, u.display_name, u.photo_url, u.username, u.role
+      SELECT f.follower_id, u.display_name, u.username, u.role
       FROM vuttik_follows f
       JOIN vuttik_users u ON f.follower_id = u.uid
       WHERE f.following_id = ?
       ORDER BY f.created_at DESC
     `, [req.params.userId]);
-        res.json(rows);
+        res.json(rows.map((r) => ({
+            ...r,
+            photo_url: `/api/images/user/${r.follower_id}`
+        })));
     }
     catch (error) {
         res.status(500).json({ error: error.message });
@@ -1864,13 +2079,16 @@ app.get('/api/users/:uid/following-products', async (req, res) => {
 // Override /api/posts to support ?filter=following&userId=X&type=X
 app.get('/api/posts/feed', async (req, res) => {
     const { filter, userId, type } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
     try {
         let posts = [];
         let products = [];
         // Fetch posts
         if (!type || type === 'all' || type === 'posts') {
             let query = `
-        SELECT p.*, COALESCE(b.logo, u.photo_url) as author_avatar
+        SELECT p.*
         FROM vuttik_posts p
         LEFT JOIN vuttik_users u ON p.author_id = u.uid
         LEFT JOIN vuttik_business_profiles b ON p.author_id = b.uid
@@ -1888,7 +2106,7 @@ app.get('/api/posts/feed', async (req, res) => {
                     query += ` WHERE 1=0`;
                 }
             }
-            query += ' ORDER BY p.created_at DESC LIMIT 50';
+            query += ` ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
             const rows = await all(query, queryParams);
             posts = await Promise.all(rows.map(async (r) => {
                 const likes = await all('SELECT user_id FROM vuttik_post_likes WHERE post_id = ?', [r.id]);
@@ -1913,10 +2131,11 @@ app.get('/api/posts/feed', async (req, res) => {
           (f.entity_type = 'title' AND LOWER(p.title) = f.entity_value) OR
           (f.product_id = p.id)
         WHERE f.user_id = ?
-        ORDER BY p.created_at DESC LIMIT 50
+        ORDER BY p.created_at DESC LIMIT ${limit} OFFSET ${offset}
       `, [userId]);
             products = pRows.map((p) => ({
                 ...p,
+                images: [`/api/images/product/${p.id}`],
                 feedType: 'product'
             }));
         }
@@ -1948,15 +2167,17 @@ app.get('/api/conversations/:userId', async (req, res) => {
     try {
         const rows = await all(`SELECT c.*, 
         COALESCE(c.p1_name, u1.display_name) as p1_name, 
-        COALESCE(c.p1_photo, u1.photo_url) as p1_photo,
-        COALESCE(c.p2_name, u2.display_name) as p2_name, 
-        COALESCE(c.p2_photo, u2.photo_url) as p2_photo
+        COALESCE(c.p2_name, u2.display_name) as p2_name
        FROM vuttik_conversations c
        LEFT JOIN vuttik_users u1 ON c.participant_1 = u1.uid
        LEFT JOIN vuttik_users u2 ON c.participant_2 = u2.uid
        WHERE c.participant_1 = ? OR c.participant_2 = ?
        ORDER BY c.last_message_at DESC`, [req.params.userId, req.params.userId]);
-        res.json(rows);
+        res.json(rows.map((r) => ({
+            ...r,
+            p1_photo: `/api/images/user/${r.participant_1}`,
+            p2_photo: `/api/images/user/${r.participant_2}`
+        })));
     }
     catch (error) {
         res.status(500).json({ error: error.message });
@@ -2060,5 +2281,61 @@ app.get('/api/audit-logs', authenticateToken, async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ error: 'Failed to fetch audit logs' });
+    }
+});
+// Portfolios API
+app.get('/api/portfolios', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId)
+        return res.status(400).json({ error: 'Missing userId' });
+    try {
+        const portfolios = await all(`SELECT * FROM vuttik_portfolios WHERE user_id = ?`, [userId]);
+        // Parse the JSON string for products
+        const parsed = portfolios.map((p) => ({
+            ...p,
+            isPublic: p.is_public === 1,
+            products: JSON.parse(p.products || '[]')
+        }));
+        res.json(parsed);
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+app.post('/api/portfolios', async (req, res) => {
+    const { userId, name, isPublic } = req.body;
+    if (!userId || !name)
+        return res.status(400).json({ error: 'Missing userId or name' });
+    try {
+        const id = 'port_' + Date.now();
+        const now = new Date().toISOString();
+        await run(`INSERT INTO vuttik_portfolios (id, user_id, name, is_public, products, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, [id, userId, name, isPublic ? 1 : 0, '[]', now, now]);
+        res.json({ id, userId, name, isPublic, products: [], created_at: now, updated_at: now });
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+app.put('/api/portfolios/:id/products', async (req, res) => {
+    const { products } = req.body;
+    const portfolioId = req.params.id;
+    try {
+        const now = new Date().toISOString();
+        await run(`UPDATE vuttik_portfolios SET products = ?, updated_at = ? WHERE id = ?`, [JSON.stringify(products || []), now, portfolioId]);
+        res.json({ success: true });
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+app.delete('/api/portfolios/:id', async (req, res) => {
+    const portfolioId = req.params.id;
+    const userId = req.query.userId;
+    try {
+        await run(`DELETE FROM vuttik_portfolios WHERE id = ? AND user_id = ?`, [portfolioId, userId]);
+        res.json({ success: true });
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });

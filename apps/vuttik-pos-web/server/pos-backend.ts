@@ -15,7 +15,7 @@ const DB_FILE = process.env.VUTTIK_DB_PATH
   || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
 
 // === DB STRUCTURE ===
-const emptyBusiness = (id: string, nombre: string, codigo: string, owner_id: string) => ({
+export const emptyBusiness = (id: string, nombre: string, codigo: string, owner_id: string) => ({
   id,
   codigo,
   nombre,
@@ -43,7 +43,7 @@ const initialDB = {
 };
 
 // === DB HELPERS ===
-const getDB = () => {
+export const getDB = () => {
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
     return JSON.parse(JSON.stringify(initialDB));
@@ -54,7 +54,7 @@ const getDB = () => {
   return db;
 };
 
-const saveDB = (data: any) => {
+export const saveDB = (data: any) => {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 };
 
@@ -68,7 +68,7 @@ const getBiz = (db: any, bizId: string) => {
 };
 
 // Generate a short code like SOL-001
-const generateCode = (nombre: string, existingCodes: string[]) => {
+export const generateCode = (nombre: string, existingCodes: string[]) => {
   const prefix = nombre.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3) || 'NEG';
   let num = 1;
   let code = `${prefix}-${String(num).padStart(3, '0')}`;
@@ -1760,4 +1760,4 @@ async function startServer() {
 
   return app;
 }
-export const posApp = await startServer();
+export const initPosApp = startServer;

@@ -58,7 +58,7 @@ app.use((req, res, next) => {
   next();
 });
 
-import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.ts';
+import { initPosApp, getDB, saveDB, emptyBusiness, generateCode } from './pos-backend.js';
 
 app.use('/api/auth', authRouter);
 // --- Helpers ---

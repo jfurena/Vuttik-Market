@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import session from 'express-session';
 import bcrypt from 'bcryptjs';
 import { get, run } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,13 +13,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_FILE = process.env.VUTTIK_DB_PATH
     || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
 // === DB STRUCTURE ===
-export const emptyBusiness = (id, nombre, codigo, owner_id, ubicacion = '', tipo = '') => ({
+export const emptyBusiness = (id, nombre, codigo, owner_id) => ({
     id,
     codigo,
     nombre,
     owner_id,
-    ubicacion,
-    tipo,
     fecha_creacion: new Date(),
     employees: [],
     products: [],
@@ -120,7 +119,19 @@ const authLimiter = rateLimit({
 async function startServer() {
     const app = express();
     app.use(express.json());
-    // Session is now handled globally in index.ts
+    const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
+    app.use(session({
+        name: 'vuttik_pos_sid',
+        secret: sessionSecret,
+        resave: true,
+        saveUninitialized: true,
+        cookie: {
+            secure: false,
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 24 horas
+        }
+    }));
     // =============================================
     // === AUTH ROUTES ===
     // =============================================
@@ -211,45 +222,36 @@ async function startServer() {
         });
     });
     // Get current session user
-    app.get('/api/auth/me', async (req, res) => {
+    app.get('/api/auth/me', (req, res) => {
         const s = req.session;
         if (!s.owner_id && !s.employee_id)
             return res.json(null);
         const db = getDB();
         if (s.owner_id && !s.business_id) {
             // Owner without business selected → return owner info
-            try {
-                const owner = await get('SELECT uid, email, display_name, role FROM vuttik_users WHERE uid = ?', [s.owner_id]);
-                if (!owner)
-                    return res.json(null);
-                return res.json({ id: owner.uid, nombre: owner.display_name, correo: owner.email, rol: 'admin', estado: 'activo' });
-            }
-            catch (err) {
+            const owner = db.owners.find((o) => o.id === s.owner_id);
+            if (!owner)
                 return res.json(null);
-            }
+            const { password_hash: _, ...safe } = owner;
+            return res.json({ ...safe, rol: 'admin', estado: 'activo' });
         }
         if (s.owner_id && s.business_id) {
             // Owner inside a business
-            try {
-                const owner = await get('SELECT uid, email, display_name, role FROM vuttik_users WHERE uid = ?', [s.owner_id]);
-                const biz = db.businesses.find((b) => b.id === s.business_id);
-                if (!owner || !biz)
-                    return res.json(null);
-                return res.json({
-                    id: owner.uid,
-                    nombre: owner.display_name,
-                    correo: owner.email,
-                    rol: 'admin',
-                    estado: 'activo',
-                    business_id: biz.id,
-                    business_nombre: biz.nombre,
-                    business_codigo: biz.codigo,
-                    owner_id: owner.uid
-                });
-            }
-            catch (err) {
+            const owner = db.owners.find((o) => o.id === s.owner_id);
+            const biz = db.businesses.find((b) => b.id === s.business_id);
+            if (!owner || !biz)
                 return res.json(null);
-            }
+            return res.json({
+                id: owner.id,
+                nombre: owner.nombre,
+                correo: owner.correo,
+                rol: 'admin',
+                estado: 'activo',
+                business_id: biz.id,
+                business_nombre: biz.nombre,
+                business_codigo: biz.codigo,
+                owner_id: owner.id
+            });
         }
         if (s.employee_id && s.business_id) {
             const biz = db.businesses.find((b) => b.id === s.business_id);
@@ -337,36 +339,21 @@ async function startServer() {
         res.json(myBizList);
     });
     // Create business
-    app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
-        const { nombre, ubicacion, tipo } = req.body;
+    app.post('/api/businesses', requireOwnerAuth, (req, res) => {
+        const { nombre } = req.body;
         if (!nombre || !nombre.trim())
             return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
         const s = req.session;
         const db = getDB();
         const existingCodes = db.businesses.map((b) => b.codigo);
         const codigo = generateCode(nombre, existingCodes);
-        const newBizId = 'biz-' + Date.now();
-        const newBiz = emptyBusiness(newBizId, nombre.trim(), codigo, s.owner_id, ubicacion?.trim() || '', tipo || '');
+        const newBiz = emptyBusiness('biz-' + Date.now(), nombre.trim(), codigo, s.owner_id);
         db.businesses.push(newBiz);
         saveDB(db);
-        // Also save it to SQLite so it appears in Vuttik Market
-        try {
-            const now = new Date().toISOString();
-            await run(`
-        INSERT OR IGNORE INTO vuttik_users (uid, email, display_name, role, created_at)
-        VALUES (?, ?, ?, 'business', ?)
-      `, [newBizId, `${newBizId}@business.local`, nombre.trim(), now]);
-            await run(`INSERT INTO vuttik_business_profiles 
-         (uid, owner_uid, name, location, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?, ?)`, [newBizId, s.owner_id, nombre.trim(), ubicacion?.trim() || '', now, now]);
-        }
-        catch (err) {
-            console.error('Error syncing POS business to SQLite:', err);
-        }
         res.json({ id: newBiz.id, nombre: newBiz.nombre, codigo: newBiz.codigo, fecha_creacion: newBiz.fecha_creacion });
     });
     // Update business name
-    app.patch('/api/businesses/:bizId', requireOwnerAuth, async (req, res) => {
+    app.patch('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
         const { bizId } = req.params;
         const { nombre } = req.body;
         const s = req.session;
@@ -377,40 +364,9 @@ async function startServer() {
         if (nombre)
             db.businesses[idx].nombre = nombre.trim();
         saveDB(db);
-        // Sync to SQLite
-        try {
-            const now = new Date().toISOString();
-            await run(`INSERT INTO vuttik_business_profiles 
-         (uid, owner_uid, name, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT(uid) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at`, [bizId, s.owner_id, db.businesses[idx].nombre, db.businesses[idx].fecha_creacion || now, now]);
-        }
-        catch (err) {
-            console.error('Error syncing POS business edit to SQLite:', err);
-        }
         res.json({ id: db.businesses[idx].id, nombre: db.businesses[idx].nombre, codigo: db.businesses[idx].codigo });
     });
-    // Update business location
-    app.patch('/api/businesses/:bizId/location', requireOwnerAuth, async (req, res) => {
-        const { bizId } = req.params;
-        const { location, lat, lng } = req.body;
-        const s = req.session;
-        // Sync to SQLite Vuttik Market
-        try {
-            await run(`UPDATE vuttik_business_profiles 
-         SET location = ?
-         WHERE uid = ? AND owner_uid = ?`, [location, bizId, s.owner_id]);
-            // Update all products belonging to this business
-            await run(`UPDATE vuttik_products
-         SET location = ?, lat = ?, lng = ?
-         WHERE author_id = ?`, [location, lat || null, lng || null, bizId]);
-        }
-        catch (err) {
-            console.error('Error syncing POS business location to SQLite:', err);
-        }
-        res.json({ success: true });
-    });
-    // Check business auth
+    // Delete business
     app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
         const { bizId } = req.params;
         const s = req.session;
@@ -601,42 +557,22 @@ async function startServer() {
         try {
             const sqliteProductId = 'pos-' + newProduct.id;
             const ownerName = biz.nombre || 'Negocio POS';
-            const locationObj = biz.settings?.allowed_location;
-            const location = typeof locationObj === 'object' ? locationObj.address : (locationObj || 'Ubicación no especificada');
-            const lat = typeof locationObj === 'object' ? locationObj.lat : null;
-            const lng = typeof locationObj === 'object' ? locationObj.lng : null;
-            // Resolve category
-            const seccion = newProduct.seccion || 'General';
-            let catId = 'GLOBAL';
-            const existingCat = await get('SELECT id FROM vuttik_categories WHERE name = ? COLLATE NOCASE', [seccion]);
-            if (existingCat) {
-                catId = existingCat.id;
-            }
-            else {
-                catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
-                await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', [catId, seccion, 100, '["sell"]', '[]', '{}']);
-            }
+            const location = biz.settings?.allowed_location || 'Ubicación no especificada';
             await run(`
         INSERT INTO vuttik_products 
-        (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, title, price, author_id, author_name, location, store_name, is_independent, created_at, barcode) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
                 sqliteProductId,
                 newProduct.nombre,
                 Number(newProduct.precio_venta) || 0,
-                s.business_id,
+                biz.owner_id,
                 ownerName,
                 location,
-                lat,
-                lng,
                 ownerName,
                 1, // is_independent
                 new Date().toISOString(),
-                newProduct.codigo_barras || '',
-                'business',
-                catId,
-                'sell',
-                Number(newProduct.cantidad_disponible) || 0
+                newProduct.codigo_barras || ''
             ]);
         }
         catch (err) {
@@ -757,29 +693,16 @@ async function startServer() {
         try {
             const sqliteProductId = 'pos-' + id;
             const product = biz.products[index];
-            // Resolve category
-            const seccion = product.seccion || 'General';
-            let catId = 'GLOBAL';
-            const existingCat = await get('SELECT id FROM vuttik_categories WHERE name = ? COLLATE NOCASE', [seccion]);
-            if (existingCat) {
-                catId = existingCat.id;
-            }
-            else {
-                catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
-                await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', [catId, seccion, 100, '["sell"]', '[]', '{}']);
-            }
             await run(`
         UPDATE vuttik_products 
-        SET title = ?, price = ?, barcode = ?, category_id = ?, stock = ?
+        SET title = ?, price = ?, barcode = ?
         WHERE id = ? AND author_id = ?
       `, [
                 product.nombre,
                 Number(product.precio_venta) || 0,
                 product.codigo_barras || '',
-                catId,
-                Number(product.cantidad_disponible) || 0,
                 sqliteProductId,
-                s.business_id
+                biz.owner_id
             ]);
         }
         catch (err) {
@@ -803,7 +726,7 @@ async function startServer() {
         // Sync delete to Vuttik SQLite
         try {
             const sqliteProductId = 'pos-' + id;
-            await run('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, s.business_id]);
+            await run('DELETE FROM vuttik_products WHERE id = ? AND author_id = ?', [sqliteProductId, biz.owner_id]);
         }
         catch (err) {
             console.error('Error deleting POS product in Vuttik SQLite:', err);
@@ -1007,8 +930,6 @@ async function startServer() {
                 biz.products[pIndex].cantidad_disponible -= item.cantidad;
                 biz.products[pIndex].fecha_actualizacion = new Date();
                 costoTotal += (biz.products[pIndex].costo_compra || 0) * item.cantidad;
-                // Sync new stock to Vuttik SQLite Market
-                run(`UPDATE vuttik_products SET stock = ? WHERE id = ?`, [biz.products[pIndex].cantidad_disponible, 'pos-' + item.producto_id]).catch(e => console.error('Error updating stock on sale:', e));
             }
             if (!biz.inventory_movements)
                 biz.inventory_movements = [];
@@ -1082,19 +1003,8 @@ async function startServer() {
         const db = getDB();
         const biz = getBiz(db, s.business_id);
         // Validate using owner password
-        let valid = false;
-        try {
-            const owner = await get('SELECT password_hash, oauth_provider FROM vuttik_users WHERE uid = ?', [biz.owner_id]);
-            if (owner) {
-                if (!owner.password_hash) {
-                    return res.status(401).json({ error: 'La cuenta del dueño está vinculada a Google sin contraseña. No se puede validar la clave.' });
-                }
-                valid = await bcrypt.compare(password, owner.password_hash);
-            }
-        }
-        catch (err) {
-            console.error(err);
-        }
+        const owner = db.owners.find((o) => o.id === biz.owner_id);
+        const valid = owner ? await bcrypt.compare(password, owner.password_hash) : false;
         if (!valid)
             return res.status(401).json({ error: 'La clave de seguridad ingresada es incorrecta.' });
         if (!motivo || motivo.trim().length === 0)
@@ -1122,18 +1032,11 @@ async function startServer() {
         }
         logActivity(biz, { usuario_id: usuario_id || s.owner_id, usuario_nombre: usuario_nombre || 'Dueño', accion: 'Reembolso de Venta', detalles: `Venta #${sale.codigo_recibo} reembolsada. Monto: ${sale.total}. Motivo: ${motivo}`, modulo: 'Ventas' });
         if (sale.items) {
-            sale.items.forEach((item) => {
-                const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id);
-                if (pIndex !== -1) {
-                    biz.products[pIndex].cantidad_disponible += item.cantidad;
-                    biz.products[pIndex].fecha_actualizacion = new Date();
-                    // Sync new stock to Vuttik SQLite Market
-                    run(`UPDATE vuttik_products SET stock = ? WHERE id = ?`, [biz.products[pIndex].cantidad_disponible, 'pos-' + item.producto_id]).catch(e => console.error('Error updating stock on refund:', e));
-                }
-                if (!biz.inventory_movements)
-                    biz.inventory_movements = [];
-                biz.inventory_movements.push({ id: 'mov-' + Date.now() + Math.random(), producto_id: item.producto_id, tipo_movimiento: 'Reembolso', cantidad: item.cantidad, usuario_id: sale.usuario_id, fecha: new Date(), motivo: `Reembolso Venta ${sale.codigo_recibo}` });
-            });
+            sale.items.forEach((item) => { const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id); if (pIndex !== -1) {
+                biz.products[pIndex].cantidad_disponible += item.cantidad;
+                biz.products[pIndex].fecha_actualizacion = new Date();
+            } if (!biz.inventory_movements)
+                biz.inventory_movements = []; biz.inventory_movements.push({ id: 'mov-' + Date.now() + Math.random(), producto_id: item.producto_id, tipo_movimiento: 'Reembolso', cantidad: item.cantidad, usuario_id: sale.usuario_id, fecha: new Date(), motivo: `Reembolso Venta ${sale.codigo_recibo}` }); });
         }
         const shiftIndex = (biz.shifts || []).findIndex((sh) => sh.id === sale.turno_id);
         if (shiftIndex !== -1) {
@@ -1179,15 +1082,10 @@ async function startServer() {
         }
         logActivity(biz, { usuario_id: s.owner_id || s.employee_id, usuario_nombre: 'Administrador', accion: 'Cancelación de Venta', detalles: `Venta #${sale.codigo_recibo} cancelada. Monto: ${sale.total}`, modulo: 'Ventas' });
         if (sale.items) {
-            sale.items.forEach((item) => {
-                const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id);
-                if (pIndex !== -1) {
-                    biz.products[pIndex].cantidad_disponible += item.cantidad;
-                    biz.products[pIndex].fecha_actualizacion = new Date();
-                    // Sync new stock to Vuttik SQLite Market
-                    run(`UPDATE vuttik_products SET stock = ? WHERE id = ?`, [biz.products[pIndex].cantidad_disponible, 'pos-' + item.producto_id]).catch(e => console.error('Error updating stock on cancel:', e));
-                }
-            });
+            sale.items.forEach((item) => { const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id); if (pIndex !== -1) {
+                biz.products[pIndex].cantidad_disponible += item.cantidad;
+                biz.products[pIndex].fecha_actualizacion = new Date();
+            } });
         }
         const shiftIndex = (biz.shifts || []).findIndex((sh) => sh.id === sale.turno_id);
         if (shiftIndex !== -1) {
@@ -1851,15 +1749,10 @@ async function startServer() {
         });
     }
     else {
-        // En desarrollo, intentar usar Vite si está instalado
-        try {
-            const { createServer: createViteServer } = await import('vite');
-            const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
-            app.use(vite.middlewares);
-        }
-        catch (e) {
-            console.warn("Vite no está instalado, ejecutando sin middleware de desarrollo.");
-        }
+        // En desarrollo, usar Vite
+        const { createServer: createViteServer } = await import('vite');
+        const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
+        app.use(vite.middlewares);
     }
     // === SYNC ENGINE (BACKGROUND) ===
     const SYNC_SERVER_URL = process.env.SYNC_SERVER_URL || null;
@@ -1884,4 +1777,4 @@ async function startServer() {
     }, 10000);
     return app;
 }
-export const posApp = await startServer();
+export const initPosApp = startServer;
