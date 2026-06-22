@@ -127,12 +127,14 @@ export default function MegaGuardianDashboard() {
           api.getCategories(),
           api.getTransactionTypes(),
           api.getAllUsers(),
-          api.getSubscriptionPlans()
+          api.getSubscriptionPlans(),
+          fetch('/api/business-requests', { headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }}).then(r => r.ok ? r.json() : [])
         ]);
         setCategories(cats);
         setTransactionTypes(txTypes);
         setUsers(usrs);
         setPlans(pls);
+        setBusinessRequests(bReqs || []);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
       }
