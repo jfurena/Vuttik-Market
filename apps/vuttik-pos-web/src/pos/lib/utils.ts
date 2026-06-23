@@ -9,7 +9,9 @@ export function formatCurrency(amount: number) {
   return new Intl.NumberFormat('es-DO', {
     style: 'currency',
     currency: 'DOP',
-  }).format(amount);
+  }).format(amount)
+    .replace(/\s+/g, '\u00A0')
+    .replace(/-/g, '\u2011');
 }
 
 export function generateReceiptCode() {
