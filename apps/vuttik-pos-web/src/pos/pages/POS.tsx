@@ -569,7 +569,7 @@ export default function POS() {
             La caja actual fue abierta un día anterior. Para mantener tus cuentas claras y evitar mezclar el dinero, debes realizar el cierre de caja de ayer y abrir una nueva para hoy.
           </p>
           <button 
-            onClick={() => navigate('/pos/shifts')}
+            onClick={() => navigate('/shifts')}
             className="w-full bg-red-600 text-white py-4 mt-4 rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-red-700 transition-all shadow-xl shadow-red-500/20"
           >
             Ir a Cuadre de Caja
