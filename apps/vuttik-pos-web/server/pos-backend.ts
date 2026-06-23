@@ -237,6 +237,7 @@ async function startServer() {
         estado: employee.estado,
         business_id: biz.id,
         business_nombre: biz.nombre,
+      }
     });
   });
 
