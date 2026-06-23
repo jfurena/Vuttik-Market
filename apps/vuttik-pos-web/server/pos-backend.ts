@@ -1035,6 +1035,19 @@ async function startServer() {
     const s = req.session as any;
     const db = getDB();
     const biz = getBiz(db, s.business_id);
+
+    // SECURITY FIX: Prevent sales if the shift is from a previous day
+    if (sale.turno_id) {
+      const shift = (biz.shifts || []).find((sh: any) => sh.id === sale.turno_id);
+      if (shift && shift.fecha_apertura) {
+        const shiftDate = new Date(shift.fecha_apertura).toDateString();
+        const serverDate = new Date().toDateString();
+        if (shiftDate !== serverDate) {
+          return res.status(400).json({ error: 'El turno activo pertenece a un día anterior. Por favor cierra la caja y abre una nueva.' });
+        }
+      }
+    }
+
     // BIZ-001 FIX: Validate stock on the server before processing — prevents negative inventory
     // from direct API calls that bypass frontend validation
     for (const item of items) {

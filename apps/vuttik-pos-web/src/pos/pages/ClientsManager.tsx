@@ -148,8 +148,16 @@ export default function ClientsManager() {
     }
   };
 
+  const isShiftExpired = React.useMemo(() => {
+    if (!activeShift) return false;
+    const shiftDate = new Date(activeShift.fecha_apertura).toDateString();
+    const todayDate = new Date().toDateString();
+    return shiftDate !== todayDate;
+  }, [activeShift]);
+
   const handleRegisterPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedCliente || !payForm.monto || isShiftExpired) return;
     if (!selectedCliente || !payForm.monto) return;
 
     try {
@@ -805,7 +813,17 @@ export default function ClientsManager() {
               </div>
 
               {/* Shift validation warning */}
-              {!activeShift ? (
+              {isShiftExpired ? (
+                <div className="bg-red-950/20 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-black text-red-400 uppercase tracking-wide">Día Vencido</h4>
+                    <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
+                      La caja actual fue abierta un día anterior. Para mantener tus cuentas claras, debes ir a la sección de Turnos, realizar el cierre de caja de ayer y abrir una nueva para hoy. No podrás registrar abonos hasta entonces.
+                    </p>
+                  </div>
+                </div>
+              ) : !activeShift ? (
                 <div className="bg-amber-950/20 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3">
                   <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
                   <div>

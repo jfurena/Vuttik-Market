@@ -551,6 +551,34 @@ export default function POS() {
     }
   };
 
+  const isShiftExpired = React.useMemo(() => {
+    if (!shift) return false;
+    const shiftDate = new Date(shift.fecha_apertura).toDateString();
+    const todayDate = new Date().toDateString();
+    return shiftDate !== todayDate;
+  }, [shift]);
+
+  if (isShiftExpired) {
+    return (
+      <div className="h-full flex items-center justify-center p-4">
+        <div className="bg-red-50 p-8 rounded-[2rem] shadow-xl border border-red-100 max-w-md w-full text-center space-y-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
+          <AlertCircle className="h-16 w-16 text-red-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-black text-red-900 uppercase tracking-tight font-sans">Día Vencido</h2>
+          <p className="text-red-700 font-sans text-sm font-medium leading-relaxed">
+            La caja actual fue abierta un día anterior. Para mantener tus cuentas claras y evitar mezclar el dinero, debes realizar el cierre de caja de ayer y abrir una nueva para hoy.
+          </p>
+          <button 
+            onClick={() => navigate('/pos/shifts')}
+            className="w-full bg-red-600 text-white py-4 mt-4 rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-red-700 transition-all shadow-xl shadow-red-500/20"
+          >
+            Ir a Cuadre de Caja
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!shift) {
     return (
       <div className="h-full flex items-center justify-center p-4">
