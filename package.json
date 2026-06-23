@@ -10,11 +10,5 @@
     "dev:pos": "npm run dev --workspace=vuttik-pos-web",
     "build:web": "npm run build --workspace=vuttik-web",
     "build:pos": "npm run build --workspace=vuttik-pos-web"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.108.2"
-  },
-  "devDependencies": {
-    "supabase": "^2.107.0"
   }
 }
