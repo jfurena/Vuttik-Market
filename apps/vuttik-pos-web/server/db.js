@@ -718,7 +718,6 @@ export async function initDB() {
 
     // Nuevos índices de rendimiento
     await run('CREATE INDEX IF NOT EXISTS idx_products_owner ON vuttik_products(author_id)');
-    await run('CREATE INDEX IF NOT EXISTS idx_products_status ON vuttik_products(status)');
     await run('CREATE INDEX IF NOT EXISTS idx_posts_author ON vuttik_posts(author_id)');
     await run('CREATE INDEX IF NOT EXISTS idx_posts_created ON vuttik_posts(created_at)');
     await run('CREATE INDEX IF NOT EXISTS idx_reports_target ON vuttik_reports(target_id)');
