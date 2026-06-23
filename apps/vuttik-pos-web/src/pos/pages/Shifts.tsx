@@ -822,7 +822,7 @@ export default function Shifts() {
                   </h3>
                   <p className="text-gray-500 font-medium text-sm">
                     Apertura: {format(new Date(selectedShift.fecha_apertura), "PPP 'a las' p", { locale: es })}
-                    {selectedShift.fecha_cierre && ` | Cierre: ${format(new Date(selectedShift.fecha_cierre), "p", { locale: es })}`}
+                    {selectedShift.fecha_cierre && ` | Cierre: ${format(new Date(selectedShift.fecha_cierre), "PPP 'a las' p", { locale: es })}`}
                   </p>
                 </div>
                 <button 
