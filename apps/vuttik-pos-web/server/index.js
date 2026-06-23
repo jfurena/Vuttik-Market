@@ -740,6 +740,12 @@ app.post('/api/users', async (req, res) => {
 // --- Category Routes ---
 app.get('/api/categories', async (req, res) => {
     try {
+        const cacheKey = 'global_categories_list';
+        const cached = globalCache.get(cacheKey);
+        if (cached) {
+            return res.json(cached);
+        }
+
         const rows = await all('SELECT * FROM vuttik_categories ORDER BY order_index ASC');
         const categories = rows.map(r => ({
             ...r,
@@ -749,6 +755,8 @@ app.get('/api/categories', async (req, res) => {
             isService: Boolean(r.is_service),
             requiresEan: Boolean(r.requires_ean)
         }));
+        
+        globalCache.set(cacheKey, categories, 60); // Cache for 60 seconds
         res.json(categories);
     }
     catch (error) {

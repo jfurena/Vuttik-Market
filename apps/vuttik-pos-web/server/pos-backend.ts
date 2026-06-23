@@ -54,8 +54,24 @@ export const getDB = () => {
   return db;
 };
 
+let isSaving = false;
+let pendingSaveData: any = null;
+
 export const saveDB = (data: any) => {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  if (isSaving) {
+    pendingSaveData = data;
+    return;
+  }
+  isSaving = true;
+  fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), (err) => {
+    isSaving = false;
+    if (err) console.error("Error saving DB_FILE:", err);
+    if (pendingSaveData) {
+      const nextData = pendingSaveData;
+      pendingSaveData = null;
+      saveDB(nextData);
+    }
+  });
 };
 
 // Get the business data object (throws if not found)

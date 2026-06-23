@@ -12,6 +12,13 @@ const all = promisify(db.all.bind(db));
 const get = promisify(db.get.bind(db));
 export async function initDB() {
     console.log('Initializing SQL database at:', dbPath);
+    try {
+        await run('PRAGMA journal_mode = WAL;');
+        await run('PRAGMA synchronous = NORMAL;');
+        console.log('SQLite WAL mode enabled for maximum performance.');
+    } catch (e) {
+        console.error('Failed to enable WAL mode:', e);
+    }
     // Auto-migration to new table prefixes
     const tables_to_migrate = [
         "users", "categories", "transaction_types", "subscription_plans",
@@ -708,6 +715,15 @@ export async function initDB() {
     await run('CREATE INDEX IF NOT EXISTS idx_follows_following ON vuttik_follows(following_id)');
     await run('CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON vuttik_conversations(participant_1)');
     await run('CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON vuttik_conversations(participant_2)');
+
+    // Nuevos índices de rendimiento
+    await run('CREATE INDEX IF NOT EXISTS idx_products_owner ON vuttik_products(author_id)');
+    await run('CREATE INDEX IF NOT EXISTS idx_products_status ON vuttik_products(status)');
+    await run('CREATE INDEX IF NOT EXISTS idx_posts_author ON vuttik_posts(author_id)');
+    await run('CREATE INDEX IF NOT EXISTS idx_posts_created ON vuttik_posts(created_at)');
+    await run('CREATE INDEX IF NOT EXISTS idx_reports_target ON vuttik_reports(target_id)');
+
+    console.log('Database indexes verified.');
     console.log('Database schema created successfully.');
     // Seed initial categories if empty
     try {
