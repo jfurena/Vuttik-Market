@@ -725,7 +725,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{card.title}</p>
-              <p className={cn("text-3xl font-black tracking-tight truncate", card.color)}>{card.value}</p>
+              <p className={cn("text-2xl md:text-3xl font-black tracking-tighter", card.color)}>{card.value}</p>
               <p className="text-xs font-bold text-gray-400 mt-2 flex items-center gap-1">
                 {card.description}
               </p>
@@ -885,8 +885,8 @@ export default function Dashboard() {
               <p className="text-xs font-black text-orange-600 uppercase tracking-widest">Inversión en Productos</p>
               <p className="text-sm text-orange-800 font-medium">Dinero gastado comprando mercancía este mes</p>
             </div>
-            <div className="text-2xl font-black text-orange-900 font-mono">
-              -{formatCurrency(stats.profitStats?.totalComprasMercancia || 0)}
+            <div className="text-xl md:text-2xl font-black text-orange-900 font-mono tracking-tighter">
+              {formatCurrency(-(stats.profitStats?.totalComprasMercancia || 0))}
             </div>
           </div>
 
@@ -905,7 +905,7 @@ export default function Dashboard() {
               <p className="text-xs font-black text-red-600 uppercase tracking-widest">Otros Gastos</p>
               <p className="text-sm text-red-800 font-medium">Luz, renta, salarios y otros pagos</p>
             </div>
-            <div className="text-2xl font-black text-red-900 font-mono truncate">
+            <div className="text-xl md:text-2xl lg:text-3xl font-black text-red-900 font-mono">
               {formatCurrency(-(stats.profitStats?.totalGastos || 0))}
             </div>
           </div>
@@ -916,12 +916,12 @@ export default function Dashboard() {
                 <div className="h-16 w-16 bg-white text-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
                   <CheckCircle2 className="h-10 w-10" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-black text-emerald-200 uppercase tracking-widest truncate">Tu Ganancia Limpia</p>
-                  <p className="text-2xl font-black tracking-tight truncate">DINERO LIBRE PARA TI</p>
+                <div>
+                  <p className="text-xs font-black text-emerald-200 uppercase tracking-widest">Tu Ganancia Limpia</p>
+                  <p className="text-lg md:text-2xl font-black tracking-tighter">DINERO LIBRE PARA TI</p>
                 </div>
               </div>
-              <div className="text-5xl font-black font-mono mt-4 md:mt-0 truncate">
+              <div className="text-3xl md:text-4xl lg:text-5xl font-black font-mono mt-4 md:mt-0 tracking-tighter">
                 {formatCurrency(stats.profitStats?.gananciaNeta || 0)}
               </div>
             </div>
