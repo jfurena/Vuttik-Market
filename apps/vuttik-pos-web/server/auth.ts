@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { get, run } from './db.js';
+import { getDB, saveDB } from './pos-backend.js';
 import { ethers } from 'ethers';
 
 import dotenv from 'dotenv';
@@ -502,6 +503,102 @@ authRouter.post('/business-requests/:id/reject', authenticateToken, async (req: 
     if (!request) return res.status(404).json({ error: 'Solicitud no encontrada' });
     
     await run(`UPDATE vuttik_business_requests SET status = 'rejected' WHERE id = ?`, [req.params.id]);
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Enable multi-business for user
+authRouter.post('/users/:id/enable-multi-business', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    await run(`UPDATE vuttik_users SET multi_business_approved = 1 WHERE uid = ? OR id = ?`, [req.params.id, req.params.id]);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Get POS Businesses for user
+authRouter.get('/users/:id/pos-businesses', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    // get uid from id or uid
+    const user: any = await get('SELECT uid FROM vuttik_users WHERE uid = ? OR id = ?', [req.params.id, req.params.id]);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    
+    const db = getDB();
+    const userBiz = db.businesses.filter((b: any) => b.owner_id === user.uid).map((b: any) => ({
+      id: b.id,
+      nombre: b.nombre,
+      codigo: b.codigo,
+      fecha_creacion: b.fecha_creacion,
+      is_suspended: b.is_suspended || false
+    }));
+    
+    res.json(userBiz);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Suspend POS Business
+authRouter.post('/pos-businesses/:id/suspend', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    const db = getDB();
+    const idx = db.businesses.findIndex((b: any) => b.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado' });
+    
+    db.businesses[idx].is_suspended = !db.businesses[idx].is_suspended;
+    saveDB(db);
+    res.json({ success: true, is_suspended: db.businesses[idx].is_suspended });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Delete POS Business
+authRouter.delete('/pos-businesses/:id', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    const db = getDB();
+    const idx = db.businesses.findIndex((b: any) => b.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado' });
+    
+    const owner_id = db.businesses[idx].owner_id;
+    db.businesses.splice(idx, 1);
+    saveDB(db);
+    
+    // Also delete any public market products associated with this business (they have author_id = owner_id but no explicit business_id)
+    // Wait, the user said "si quiero poder traspasarle" and "eliminarlo".
+    // I will delete products from Market where pos_product_id IS NOT NULL? Actually, the POS sync sets pos_product_id in SQLite? No, POS sync just creates products with author_id.
+    // It's safer just to let them be or delete only if explicitly requested. I'll ask in open questions, user said "adelante". So I'll delete products that were created by this user if they only had 1 business. Or maybe just don't touch market products since they are global. I'll just delete the POS business.
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Transfer POS Business
+authRouter.post('/pos-businesses/:id/transfer', authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'mega_guardian') return res.status(403).json({ error: 'Acceso denegado' });
+  try {
+    const { newOwnerEmail } = req.body;
+    if (!newOwnerEmail) return res.status(400).json({ error: 'Email requerido' });
+    
+    const newUser: any = await get('SELECT uid FROM vuttik_users WHERE email = ?', [newOwnerEmail.toLowerCase().trim()]);
+    if (!newUser) return res.status(404).json({ error: 'Usuario destino no encontrado' });
+    
+    const db = getDB();
+    const idx = db.businesses.findIndex((b: any) => b.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado' });
+    
+    db.businesses[idx].owner_id = newUser.uid;
+    saveDB(db);
     
     res.json({ success: true });
   } catch (error: any) {

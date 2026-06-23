@@ -120,6 +120,12 @@ export default function MegaGuardianDashboard() {
   const [trends, setTrends] = useState<any[]>([]);
   const [businessRequests, setBusinessRequests] = useState<any[]>([]);
 
+  const [selectedUserForBiz, setSelectedUserForBiz] = useState<any | null>(null);
+  const [userPOSBusinesses, setUserPOSBusinesses] = useState<any[]>([]);
+  const [loadingPOSBiz, setLoadingPOSBiz] = useState(false);
+  const [transferringBiz, setTransferringBiz] = useState<string | null>(null);
+  const [newOwnerEmail, setNewOwnerEmail] = useState('');
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -482,6 +488,109 @@ export default function MegaGuardianDashboard() {
     }
   };
 
+  const loadUserPOSBusinesses = async (user: any) => {
+    setSelectedUserForBiz(user);
+    setLoadingPOSBiz(true);
+    try {
+      const res = await fetch(`/api/auth/users/${user.id}/pos-businesses`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }});
+      if (res.ok) {
+        setUserPOSBusinesses(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingPOSBiz(false);
+    }
+  };
+
+  const handleEnableMultiBiz = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/auth/users/${userId}/enable-multi-business`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }
+      });
+      if (res.ok) {
+        setUsers(users.map(u => u.id === userId ? { ...u, multi_business_approved: 1 } : u));
+        if (selectedUserForBiz?.id === userId) setSelectedUserForBiz({ ...selectedUserForBiz, multi_business_approved: 1 });
+        setNotification({ message: 'Slot múltiple habilitado.', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      setNotification({ message: 'Error al habilitar slot.', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleSuspendBiz = async (bizId: string) => {
+    try {
+      const res = await fetch(`/api/auth/pos-businesses/${bizId}/suspend`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUserPOSBusinesses(userPOSBusinesses.map(b => b.id === bizId ? { ...b, is_suspended: data.is_suspended } : b));
+        setNotification({ message: data.is_suspended ? 'Negocio suspendido' : 'Negocio reactivado', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      setNotification({ message: 'Error al suspender', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleDeleteBiz = async (bizId: string) => {
+    if (!confirm('¿Estás SEGURO de eliminar este negocio permanentemente? Toda la data se perderá.')) return;
+    try {
+      const res = await fetch(`/api/auth/pos-businesses/${bizId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}` }
+      });
+      if (res.ok) {
+        setUserPOSBusinesses(userPOSBusinesses.filter(b => b.id !== bizId));
+        setNotification({ message: 'Negocio eliminado', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      setNotification({ message: 'Error al eliminar', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleTransferBiz = async (bizId: string) => {
+    if (!newOwnerEmail.trim()) {
+      setNotification({ message: 'Ingresa el email del nuevo dueño', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    if (!confirm(`¿Transferir negocio a ${newOwnerEmail}?`)) return;
+    try {
+      const res = await fetch(`/api/auth/pos-businesses/${bizId}/transfer`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('vuttik_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ newOwnerEmail })
+      });
+      if (res.ok) {
+        setUserPOSBusinesses(userPOSBusinesses.filter(b => b.id !== bizId));
+        setTransferringBiz(null);
+        setNewOwnerEmail('');
+        setNotification({ message: 'Negocio transferido', type: 'success' });
+        setTimeout(() => setNotification(null), 3000);
+      } else {
+        const data = await res.json();
+        setNotification({ message: data.error || 'Error al transferir', type: 'error' });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      setNotification({ message: 'Error al transferir', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+
   const renderUsers = () => {
     const filteredUsers = users.filter(u => 
       u.email?.toLowerCase().includes(userSearch.toLowerCase()) || 
@@ -556,6 +665,13 @@ export default function MegaGuardianDashboard() {
                     <ShieldCheck size={18} />
                   </button>
                   <button 
+                    onClick={() => loadUserPOSBusinesses(u)}
+                    className="p-2.5 md:p-3 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-xl transition-all"
+                    title="Gestionar Negocios POS"
+                  >
+                    <Store size={18} />
+                  </button>
+                  <button 
                     onClick={() => handleResetPassword(u.email)}
                     className="p-2.5 md:p-3 text-vuttik-blue hover:bg-vuttik-blue/10 rounded-xl transition-all"
                     title="Resetear Contraseña"
@@ -574,6 +690,128 @@ export default function MegaGuardianDashboard() {
             </div>
           ))}
         </div>
+
+        {/* Modal Gestión POS */}
+        <AnimatePresence>
+          {selectedUserForBiz && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 z-[60]"
+              onClick={(e) => { if (e.target === e.currentTarget) setSelectedUserForBiz(null); }}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-[32px] p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-xl font-display font-black text-vuttik-navy flex items-center gap-2">
+                      <Store className="text-vuttik-blue" />
+                      Negocios POS
+                    </h3>
+                    <p className="text-sm text-vuttik-text-muted mt-1">
+                      Gestionando negocios de: <span className="font-bold text-vuttik-navy">{selectedUserForBiz.email}</span>
+                    </p>
+                  </div>
+                  <button onClick={() => setSelectedUserForBiz(null)} className="p-2 bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-xl transition-all">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl mb-6 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-blue-900">Slot Múltiple</h4>
+                    <p className="text-xs text-blue-700">Permite crear más de un negocio sin aprobación previa.</p>
+                  </div>
+                  {selectedUserForBiz.multi_business_approved ? (
+                    <span className="flex items-center gap-1 bg-blue-100 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
+                      <CheckCircle2 size={14} /> Habilitado
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleEnableMultiBiz(selectedUserForBiz.id)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20"
+                    >
+                      Habilitar
+                    </button>
+                  )}
+                </div>
+
+                <h4 className="text-sm font-black text-vuttik-navy uppercase tracking-widest mb-4">Lista de Negocios</h4>
+                {loadingPOSBiz ? (
+                  <div className="p-8 text-center text-vuttik-text-muted text-sm font-bold animate-pulse">
+                    Cargando negocios...
+                  </div>
+                ) : userPOSBusinesses.length === 0 ? (
+                  <div className="p-8 text-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl">
+                    <Store className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500 font-bold">Este usuario no tiene negocios POS.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {userPOSBusinesses.map(biz => (
+                      <div key={biz.id} className={`border p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${biz.is_suspended ? 'bg-red-50/50 border-red-100' : 'bg-white border-gray-100 hover:border-blue-200 shadow-sm'}`}>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h5 className="font-black text-vuttik-navy">{biz.nombre}</h5>
+                            {biz.is_suspended && <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">Suspendido</span>}
+                          </div>
+                          <p className="text-xs text-vuttik-text-muted font-mono mt-1">ID: {biz.id.slice(-8)} | Cód: {biz.codigo}</p>
+                          <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest">Creado: {new Date(biz.fecha_creacion).toLocaleDateString()}</p>
+                        </div>
+
+                        {transferringBiz === biz.id ? (
+                          <div className="flex flex-col gap-2 w-full sm:w-auto bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <input
+                              type="email"
+                              placeholder="Email del nuevo dueño"
+                              value={newOwnerEmail}
+                              onChange={e => setNewOwnerEmail(e.target.value)}
+                              className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-none focus:border-vuttik-blue"
+                              autoFocus
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={() => setTransferringBiz(null)} className="text-xs font-bold text-gray-500 hover:text-gray-700">Cancelar</button>
+                              <button onClick={() => handleTransferBiz(biz.id)} className="text-xs font-bold text-blue-600 hover:text-blue-800">Confirmar</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <button
+                              onClick={() => handleSuspendBiz(biz.id)}
+                              className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${biz.is_suspended ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}
+                              title={biz.is_suspended ? "Reactivar Negocio" : "Suspender Negocio"}
+                            >
+                              {biz.is_suspended ? <CheckCircle2 size={16} /> : <Ban size={16} />}
+                            </button>
+                            <button
+                              onClick={() => { setTransferringBiz(biz.id); setNewOwnerEmail(''); }}
+                              className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition-all"
+                              title="Traspasar Negocio"
+                            >
+                              <UserCog size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBiz(biz.id)}
+                              className="p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-xs font-bold transition-all"
+                              title="Eliminar Negocio"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };

@@ -257,7 +257,14 @@ export default function BusinessSelector() {
                     <Store size={22} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-gray-900 font-black text-lg leading-tight truncate">{biz.nombre}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-gray-900 font-black text-lg leading-tight truncate">{biz.nombre}</h3>
+                      {biz.is_suspended && (
+                        <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest">
+                          Suspendido
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 mt-1">
                       <Hash size={12} className="text-gray-400" />
                       <span className="text-gray-500 text-xs font-mono font-bold uppercase tracking-wider">{biz.codigo}</span>
@@ -291,11 +298,17 @@ export default function BusinessSelector() {
                 {/* Enter button */}
                 <button
                   onClick={() => handleEnter(biz.id)}
-                  disabled={selecting === biz.id}
-                  className="mt-auto w-full py-3.5 bg-gray-900 hover:bg-black text-white font-black rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-60 group/btn text-xs uppercase tracking-widest"
+                  disabled={selecting === biz.id || biz.is_suspended}
+                  className={`mt-auto w-full py-3.5 font-black rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md text-xs uppercase tracking-widest ${
+                    biz.is_suspended 
+                      ? 'bg-red-50 text-red-400 cursor-not-allowed opacity-80' 
+                      : 'bg-gray-900 hover:bg-black text-white group/btn disabled:opacity-60'
+                  }`}
                 >
                   {selecting === biz.id ? (
                     <Loader2 className="animate-spin" size={16} />
+                  ) : biz.is_suspended ? (
+                    'Acceso Bloqueado'
                   ) : (
                     <>
                       Gestionar

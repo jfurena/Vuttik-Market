@@ -99,6 +99,11 @@ const requireOwnerAuth = (req: any, res: any, next: any) => {
 const requireBizAccess = (req: any, res: any, next: any) => {
   const s = req.session as any;
   if (!s.business_id) return res.status(401).json({ error: 'Selecciona un negocio primero.' });
+  
+  const db = getDB();
+  const biz = db.businesses.find((b: any) => b.id === s.business_id);
+  if (biz?.is_suspended) return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
+
   // If owner, give access. If employee, verify business matches.
   if (s.owner_id || s.employee_id) return next();
   return res.status(401).json({ error: 'No autorizado.' });
@@ -107,6 +112,11 @@ const requireBizAccess = (req: any, res: any, next: any) => {
 const requireOwnerBizAccess = (req: any, res: any, next: any) => {
   const s = req.session as any;
   if (!s.owner_id || !s.business_id) return res.status(403).json({ error: 'Solo el dueño puede realizar esta acción.' });
+  
+  const db = getDB();
+  const biz = db.businesses.find((b: any) => b.id === s.business_id);
+  if (biz?.is_suspended) return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
+  
   next();
 };
 
@@ -362,7 +372,8 @@ async function startServer() {
           employee_count: (b.employees || []).length,
           product_count: (b.products || []).length,
           sales_count: (b.sales || []).length,
-          ganancia_neta: gananciaNeta
+          ganancia_neta: gananciaNeta,
+          is_suspended: b.is_suspended || false
         };
       });
     res.json(myBizList);
