@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const DB_FILE = process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(process.cwd(), 'db.json');
-const sqlitePath = path.join(process.cwd(), 'vuttik.db');
+const sqlitePath = path.join(process.cwd(), '..', 'vuttik.db');
 
 const sqliteDb = new sqlite3.Database(sqlitePath);
 sqliteDb.all('SELECT * FROM vuttik_business_profiles', (err, rows) => {
