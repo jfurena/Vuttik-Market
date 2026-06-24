@@ -525,7 +525,16 @@ export default function Quotations() {
     };
 
     let newHistory;
+    let changes: string[] = [];
+    
     if (isUpdate) {
+      const oldQuote = savedQuotes.find(q => q.id === quoteId);
+      if (oldQuote) {
+        if (oldQuote.clientName !== newSaved.clientName) changes.push(`Cliente: '${oldQuote.clientName}' -> '${newSaved.clientName}'`);
+        if (oldQuote.total !== newSaved.total) changes.push(`Total: ${formatCurrency(oldQuote.total)} -> ${formatCurrency(newSaved.total)}`);
+        if (oldQuote.discount !== newSaved.discount) changes.push(`Desc.: ${formatCurrency(oldQuote.discount || 0)} -> ${formatCurrency(newSaved.discount || 0)}`);
+        if (oldQuote.items.length !== newSaved.items.length) changes.push(`Items: ${oldQuote.items.length} -> ${newSaved.items.length}`);
+      }
       newHistory = savedQuotes.map(q => q.id === quoteId ? newSaved : q);
     } else {
       newHistory = [newSaved, ...savedQuotes];
@@ -539,12 +548,15 @@ export default function Quotations() {
     try {
       const userStr = localStorage.getItem('invuttarik_session');
       const user = userStr ? JSON.parse(userStr) : null;
+      
+      const detallesLog = isUpdate
+        ? `Se modificó la cotización ${quoteId}. Cambios: ${changes.length > 0 ? changes.join(' | ') : 'Actualización de productos o precios sin alterar el total'}`
+        : `Se guardó la cotización ${quoteId} por ${formatCurrency(total)} para el cliente ${newSaved.clientName}`;
+
       ApiService.postActivityLog({
         usuario_nombre: user?.nombre || 'Dueño',
         accion: isUpdate ? 'Cotización Modificada' : 'Cotización Guardada',
-        detalles: isUpdate
-          ? `Se modificó la cotización ${quoteId} (Total: ${formatCurrency(total)}) para el cliente ${newSaved.clientName}`
-          : `Se guardó la cotización ${quoteId} por ${formatCurrency(total)} para el cliente ${newSaved.clientName}`,
+        detalles: detallesLog,
         modulo: 'Cotizador'
       });
     } catch(e) {
