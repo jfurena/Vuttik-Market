@@ -97,6 +97,10 @@ jobs:
           npx tsc restore_products.ts || true
           node restore_products.js || true
           
+          # Clean up orphaned products
+          npx tsc cleanup_orphaned_products.ts || true
+          node cleanup_orphaned_products.js || true
+          
           # Start server manually (Passenger is disabled in .htaccess)
           export NODE_ENV=production
           nohup node index.js >> backend.log 2>&1 < /dev/null &
