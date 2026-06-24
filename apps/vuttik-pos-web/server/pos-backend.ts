@@ -43,10 +43,15 @@ const initialDB = {
 };
 
 // === DB HELPERS ===
+let inMemoryDB: any = null;
+
 export const getDB = () => {
+  if (inMemoryDB) return inMemoryDB;
+
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
-    return JSON.parse(JSON.stringify(initialDB));
+    inMemoryDB = JSON.parse(JSON.stringify(initialDB));
+    return inMemoryDB;
   }
   let db;
   let raw = '';
@@ -76,6 +81,7 @@ export const getDB = () => {
   }
   if (!db.owners) db.owners = [];
   if (!db.businesses) db.businesses = [];
+  inMemoryDB = db;
   return db;
 };
 

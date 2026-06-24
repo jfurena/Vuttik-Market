@@ -2,16 +2,26 @@ import fs from 'fs';
 import path from 'path';
 import { jsonrepair } from 'jsonrepair';
 
-const DB_FILE = process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json');
+const DB_FILE = process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(process.cwd(), 'db.json');
 const dir = path.dirname(DB_FILE);
 
 try {
   const files = fs.readdirSync(dir);
-  const corruptedFiles = files.filter(f => f.startsWith('db.json.corrupted.')).sort();
+  const corruptedFiles = files.filter(f => f.startsWith('db.json.corrupted.'));
 
   if (corruptedFiles.length > 0) {
-    const latestCorrupted = path.join(dir, corruptedFiles[corruptedFiles.length - 1]);
-    console.log(`[Recovery] Found corrupted backup: ${latestCorrupted}`);
+    // Find the largest corrupted file (the original one with data)
+    let largestFile = '';
+    let maxSize = -1;
+    for (const f of corruptedFiles) {
+      const stats = fs.statSync(path.join(dir, f));
+      if (stats.size > maxSize) {
+        maxSize = stats.size;
+        largestFile = f;
+      }
+    }
+    const latestCorrupted = path.join(dir, largestFile);
+    console.log(`[Recovery] Found corrupted backup: ${latestCorrupted} (${maxSize} bytes)`);
     
     const raw = fs.readFileSync(latestCorrupted, 'utf8');
     
