@@ -82,6 +82,38 @@ export default function Quotations() {
   // History of saved quotes
   const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [historyDateFilter, setHistoryDateFilter] = useState<'all' | 'today' | '7d' | '30d'>('all');
+
+  const filteredHistoryQuotes = savedQuotes.filter(q => {
+    // text search
+    if (historySearchQuery) {
+      const searchLower = historySearchQuery.toLowerCase();
+      const matchesSearch = q.id.toLowerCase().includes(searchLower) || q.clientName.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+    }
+
+    // date filter
+    if (historyDateFilter === 'all') return true;
+
+    // q.date format is roughly "24/6/2026, 8:44:58 a.m."
+    const dateStr = q.date.split(',')[0].trim();
+    const [day, month, year] = dateStr.split('/').map(Number);
+    if (!day || !month || !year) return true; // fallback if parsing fails
+
+    const quoteDate = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = today.getTime() - quoteDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (historyDateFilter === 'today') return diffDays <= 0;
+    if (historyDateFilter === '7d') return diffDays <= 7;
+    if (historyDateFilter === '30d') return diffDays <= 30;
+
+    return true;
+  });
   
   // UI States
   const [copySuccess, setCopySuccess] = useState(false);
@@ -1382,15 +1414,49 @@ export default function Quotations() {
                 </button>
               </div>
 
+              {/* Filtros de Búsqueda */}
+              <div className="p-4 bg-gray-50 border-b border-gray-150 space-y-3 shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por ID (ej. COT-123) o Cliente..."
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1 flex items-center gap-1"><Calendar className="h-3 w-3" /> Fecha:</span>
+                  {(['all', 'today', '7d', '30d'] as const).map(filter => (
+                    <button
+                      key={filter}
+                      onClick={() => setHistoryDateFilter(filter)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                        historyDateFilter === filter 
+                          ? 'bg-emerald-600 text-white shadow-sm' 
+                          : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      {filter === 'all' && 'Todas'}
+                      {filter === 'today' && 'Hoy'}
+                      {filter === '7d' && 'Últimos 7 días'}
+                      {filter === '30d' && 'Último mes'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Saved list loop */}
               <div className="p-6 space-y-3 overflow-y-auto max-h-[60vh] bg-gray-50 text-left">
-                {savedQuotes.length === 0 ? (
+                {filteredHistoryQuotes.length === 0 ? (
                   <div className="h-48 flex flex-col items-center justify-center text-center p-6 space-y-2">
                     <FileText className="h-10 w-10 text-gray-300" />
-                    <p className="text-xs font-bold text-gray-450">Aún no has guardado ninguna cotización en esta terminal</p>
+                    <p className="text-xs font-bold text-gray-450">No hay cotizaciones que coincidan con la búsqueda</p>
                   </div>
                 ) : (
-                  savedQuotes.map((q) => (
+                  filteredHistoryQuotes.map((q) => (
                     <div
                       key={q.id}
                       onClick={() => handleLoadSavedQuote(q)}
