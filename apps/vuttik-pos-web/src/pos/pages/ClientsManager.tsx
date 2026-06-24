@@ -943,11 +943,11 @@ export default function ClientsManager() {
                 </div>
               </div>
 
-              {selectedHistoryItem.tipo === 'venta' && selectedHistoryItem.detalles && (
+              {selectedHistoryItem.tipo === 'venta' && (selectedHistoryItem.items || selectedHistoryItem.detalles) && (
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Productos Fiados</p>
                   <div className="space-y-3">
-                    {selectedHistoryItem.detalles.map((prod: any, idx: number) => (
+                    {(selectedHistoryItem.items || selectedHistoryItem.detalles).map((prod: any, idx: number) => (
                       <div key={idx} className="bg-gray-50 p-3 rounded-2xl flex justify-between items-center border border-gray-100">
                         <div>
                           <p className="font-bold text-sm text-gray-900">{prod.nombre || prod.producto_nombre || 'Producto'}</p>
