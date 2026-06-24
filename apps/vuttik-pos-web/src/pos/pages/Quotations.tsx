@@ -76,6 +76,7 @@ export default function Quotations() {
   const [drafts, setDrafts] = useState<QuoteDraft[]>([]);
   const [activeDraftId, setActiveDraftId] = useState<string>('');
   const [isSwitching, setIsSwitching] = useState(false);
+  const [activeSavedQuoteId, setActiveSavedQuoteId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   
   // History of saved quotes
@@ -212,6 +213,7 @@ export default function Quotations() {
   // Select another draft and map state variables
   const selectDraft = (draft: QuoteDraft) => {
     setIsSwitching(true);
+    setActiveSavedQuoteId(null);
     setQuoteItems(draft.items);
     setClientName(draft.clientName);
     setClientPhone(draft.clientPhone);
@@ -494,8 +496,11 @@ export default function Quotations() {
       return;
     }
     
+    const isUpdate = !!activeSavedQuoteId;
+    const quoteId = isUpdate ? activeSavedQuoteId : `COT-${Date.now().toString().slice(-6)}`;
+    
     const newSaved: SavedQuote = {
-      id: `COT-${Date.now().toString().slice(-6)}`,
+      id: quoteId,
       clientName: clientName || 'Cliente General',
       clientPhone: clientPhone || '',
       items: quoteItems.map(item => {
@@ -519,7 +524,14 @@ export default function Quotations() {
       notes: notes
     };
 
-    const newHistory = [newSaved, ...savedQuotes];
+    let newHistory;
+    if (isUpdate) {
+      newHistory = savedQuotes.map(q => q.id === quoteId ? newSaved : q);
+    } else {
+      newHistory = [newSaved, ...savedQuotes];
+      setActiveSavedQuoteId(quoteId);
+    }
+    
     setSavedQuotes(newHistory);
     localStorage.setItem(QUOTE_HISTORY_KEY, JSON.stringify(newHistory));
     
@@ -529,23 +541,26 @@ export default function Quotations() {
       const user = userStr ? JSON.parse(userStr) : null;
       ApiService.postActivityLog({
         usuario_nombre: user?.nombre || 'Dueño',
-        accion: 'Cotización Guardada',
-        detalles: `Se guardó la cotización ${newSaved.id} por ${formatCurrency(total)} para el cliente ${newSaved.clientName}`,
+        accion: isUpdate ? 'Cotización Modificada' : 'Cotización Guardada',
+        detalles: isUpdate
+          ? `Se modificó la cotización ${quoteId} (Total: ${formatCurrency(total)}) para el cliente ${newSaved.clientName}`
+          : `Se guardó la cotización ${quoteId} por ${formatCurrency(total)} para el cliente ${newSaved.clientName}`,
         modulo: 'Cotizador'
       });
     } catch(e) {
       console.warn('[Quotations] Error en operación secundaria (no crítico):', e);
     }
 
-    showFeedback("¡Cotización guardada en el historial!");
+    showFeedback(isUpdate ? "¡Cotización actualizada!" : "¡Cotización guardada en el historial!");
 
-    if (window.confirm("¡Cotización guardada en el historial! ¿Deseas vaciar este borrador para empezar una nueva cotización?")) {
+    if (window.confirm(isUpdate ? "¡Cotización actualizada! ¿Deseas vaciar este borrador para empezar una nueva cotización?" : "¡Cotización guardada en el historial! ¿Deseas vaciar este borrador para empezar una nueva cotización?")) {
       setQuoteItems([]);
       setClientName('');
       setClientPhone('');
       setDiscountValue('0');
       setTaxRate(0);
       setNotes('');
+      setActiveSavedQuoteId(null);
     }
   };
 
@@ -576,6 +591,7 @@ export default function Quotations() {
   const handleLoadSavedQuote = (quote: SavedQuote) => {
     // Reconstruct quoteItems state
     // Fetch products list or build temp product elements
+    setActiveSavedQuoteId(quote.id);
     const reconstructedItems: QuoteItem[] = quote.items.map(savedItem => {
       // Find matching actual product
       const actualP = products.find(p => p.id === savedItem.productId);
