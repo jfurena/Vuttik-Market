@@ -21,6 +21,7 @@ export default function ClientsManager() {
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<any | null>(null);
 
   // Active Shift Checking
   const [activeShift, setActiveShift] = useState<any | null>(null);
@@ -522,10 +523,11 @@ export default function ClientsManager() {
                         return (
                           <div 
                             key={item.id || idx}
-                            className={`p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs ${
+                            onClick={() => setSelectedHistoryItem(item)}
+                            className={`p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all ${
                               isPayment 
                                 ? 'bg-emerald-950/15 border-emerald-500/20' 
-                                : 'bg-white/40 border-gray-100'
+                                : 'bg-white/40 border-gray-100 hover:border-blue-200'
                             }`}
                           >
                             <div className="space-y-1">
@@ -899,6 +901,76 @@ export default function ClientsManager() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* History Detail Modal */}
+      {selectedHistoryItem && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                {selectedHistoryItem.tipo === 'pago' ? 'Detalle de Abono' : 'Detalle de Venta Fiada'}
+              </h2>
+              <button onClick={() => setSelectedHistoryItem(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Fecha</p>
+                  <p className="font-bold text-gray-700">
+                    <ClickableDate date={selectedHistoryItem.fecha || selectedHistoryItem.fecha_creacion} />
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Monto Total</p>
+                  <p className={`text-xl font-black ${selectedHistoryItem.tipo === 'pago' ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {formatCurrency(selectedHistoryItem.monto || selectedHistoryItem.total)}
+                  </p>
+                </div>
+              </div>
+
+              {selectedHistoryItem.tipo === 'venta' && selectedHistoryItem.detalles && (
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Productos Fiados</p>
+                  <div className="space-y-3">
+                    {selectedHistoryItem.detalles.map((prod: any, idx: number) => (
+                      <div key={idx} className="bg-gray-50 p-3 rounded-2xl flex justify-between items-center border border-gray-100">
+                        <div>
+                          <p className="font-bold text-sm text-gray-900">{prod.nombre || prod.producto_nombre || 'Producto'}</p>
+                          <p className="text-xs text-gray-500">{prod.cantidad}x {formatCurrency(prod.precio_unitario || prod.precio_venta || 0)}</p>
+                        </div>
+                        <p className="font-black text-gray-900 font-mono text-sm">
+                          {formatCurrency(prod.total_linea || ((prod.cantidad || 1) * (prod.precio_unitario || prod.precio_venta || 0)))}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedHistoryItem.tipo === 'pago' && selectedHistoryItem.motivo && (
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Motivo / Concepto</p>
+                  <div className="bg-emerald-50 text-emerald-800 p-4 rounded-2xl border border-emerald-100/50 text-sm font-semibold">
+                    {selectedHistoryItem.motivo}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 bg-gray-50 border-t border-gray-100">
+              <button
+                onClick={() => setSelectedHistoryItem(null)}
+                className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                CERRAR
+              </button>
+            </div>
           </div>
         </div>
       )}
