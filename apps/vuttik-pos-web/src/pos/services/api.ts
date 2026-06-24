@@ -129,7 +129,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre, correo, password })
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al registrar.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al registrar.'); }
     return res.json();
   },
 
@@ -139,7 +139,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ correo, password, location })
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Credenciales inválidas.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Credenciales inválidas.'); }
     return res.json();
   },
 
@@ -149,7 +149,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ business_codigo, username, password })
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Credenciales incorrectas.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Credenciales incorrectas.'); }
     return res.json();
   },
 
@@ -159,7 +159,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error en Google Callback.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error en Google Callback.'); }
     return res.json();
   },
 
@@ -169,7 +169,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error en Facebook Callback.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error en Facebook Callback.'); }
     return res.json();
   },
 
@@ -198,7 +198,7 @@ export const ApiService = {
       body: JSON.stringify({ nombre })
     });
     if (!res.ok) { 
-      const err = await res.json(); 
+      const err = await res.json().catch(() => ({})); 
       if (err.error === 'needs_request' || err.error === 'pending_evaluation') {
         throw new Error(`MULTI_BIZ_ERROR:${err.error}:${err.message}`);
       }
@@ -212,7 +212,7 @@ export const ApiService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al solicitar permiso.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al solicitar permiso.'); }
     return res.json();
   },
 
@@ -222,13 +222,13 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre })
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al actualizar negocio.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al actualizar negocio.'); }
     return res.json();
   },
 
   async deleteBusiness(id: string) {
     const res = await fetch(`${API_BASE}/businesses/${id}`, { method: 'DELETE' });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al eliminar negocio.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al eliminar negocio.'); }
     return res.json();
   },
   async selectBusiness(business_id: string) {
@@ -237,7 +237,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ business_id })
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al seleccionar negocio.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al seleccionar negocio.'); }
     return res.json();
   },
 
@@ -259,7 +259,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al agregar empleado.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al agregar empleado.'); }
     return res.json();
   },
 
@@ -269,7 +269,7 @@ export const ApiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Error al actualizar empleado.'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Error al actualizar empleado.'); }
     return res.json();
   },
 
