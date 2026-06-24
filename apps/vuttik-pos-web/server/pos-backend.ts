@@ -966,7 +966,7 @@ async function startServer() {
     const s = req.session as any;
     const db = getDB();
     const biz = getBiz(db, s.business_id);
-    const owner = db.users.find((u: any) => u.id === biz.propietario_id);
+    const owner = (db.owners || db.users || []).find((u: any) => u.id === biz.propietario_id || u.id === biz.owner_id);
     const employees = biz.empleados || [];
     
     const expenses = (biz.expenses || []).map((exp: any) => {
