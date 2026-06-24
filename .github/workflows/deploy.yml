@@ -93,6 +93,10 @@ jobs:
           npx tsc recover.ts || true
           node recover.js || true
           
+          # Run SQLite recovery script
+          npx tsc recover_sqlite.ts || true
+          node recover_sqlite.js || true
+          
           # Start server manually (Passenger is disabled in .htaccess)
           export NODE_ENV=production
           nohup node index.js >> backend.log 2>&1 < /dev/null &
