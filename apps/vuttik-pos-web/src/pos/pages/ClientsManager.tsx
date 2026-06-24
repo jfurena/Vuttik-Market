@@ -524,7 +524,7 @@ export default function ClientsManager() {
                           <div 
                             key={item.id || idx}
                             onClick={() => setSelectedHistoryItem(item)}
-                            className={`p-3 rounded-2xl border flex items-center justify-between gap-3 text-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all ${
+                            className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group ${
                               isPayment 
                                 ? 'bg-emerald-950/15 border-emerald-500/20' 
                                 : 'bg-white/40 border-gray-100 hover:border-blue-200'
@@ -535,13 +535,13 @@ export default function ClientsManager() {
                                 <span className={`p-1 rounded-md ${isPayment ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                                   {isPayment ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                                 </span>
-                                <span className="font-bold text-gray-900">
+                                <span className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
                                   {isPayment ? 'Abono / Pago' : 'Venta Fiada'}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-gray-500">
+                              <div className="text-[10px] text-gray-500">
                                 <ClickableDate date={item.fecha || item.fecha_creacion} />
-                              </p>
+                              </div>
                               {!isPayment && (
                                 <p className="text-[10px] font-black text-blue-400">
                                   Código: {item.codigo_recibo || 'Factura'}
@@ -554,10 +554,19 @@ export default function ClientsManager() {
                               )}
                             </div>
 
-                            <div className="text-right">
+                            <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between mt-2 sm:mt-0 border-t sm:border-t-0 border-gray-100 pt-2 sm:pt-0">
                               <span className={`font-black text-sm block ${isPayment ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {isPayment ? '-' : '+'}{formatCurrency(item.monto || item.total)}
                               </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedHistoryItem(item);
+                                }}
+                                className="mt-1 text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg transition-colors border border-blue-100"
+                              >
+                                Ver Detalles
+                              </button>
                             </div>
                           </div>
                         );
