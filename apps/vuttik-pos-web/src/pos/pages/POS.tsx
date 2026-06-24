@@ -117,7 +117,7 @@ export default function POS() {
   const [clienteRnc, setClienteRnc] = useState<string>('');
   const [tipoComprobante, setTipoComprobante] = useState<string>('Consumidor Final');
   const [ncfCode, setNcfCode] = useState<string>('');
-  const [aplicarItbis, setAplicarItbis] = useState<boolean>(true); // Default Dominican 18% ITBIS
+  const [aplicarItbis, setAplicarItbis] = useState<boolean>(false); // Default Dominican 18% ITBIS
 
   const generateNcfCodeForType = (type: string) => {
     if (type === 'Consumidor Final') {
@@ -1748,7 +1748,7 @@ export default function POS() {
                     setClienteRnc('');
                     setTipoComprobante('Consumidor Final');
                     setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                    setAplicarItbis(true);
+
                     setShowPayModal(true);
                   }}
                   className="col-span-2 flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-400 text-white py-6 rounded-2xl font-black text-xl transition-all shadow-xl shadow-emerald-500/15 disabled:opacity-40 select-none group"
@@ -1766,7 +1766,7 @@ export default function POS() {
                     setClienteRnc('');
                     setTipoComprobante('Consumidor Final');
                     setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                    setAplicarItbis(true);
+
                     setShowPayModal(true);
                   }}
                   className="flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 hover:bg-emerald-500 hover:border-emerald-600 text-slate-300 hover:text-white py-4 rounded-xl font-black text-[10px] tracking-wider uppercase transition-all disabled:opacity-30 select-none"
@@ -1785,7 +1785,7 @@ export default function POS() {
                     setClienteRnc('');
                     setTipoComprobante('Consumidor Final');
                     setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                    setAplicarItbis(true);
+
                     setShowPayModal(true);
                   }}
                 >
@@ -2059,7 +2059,7 @@ export default function POS() {
                   setClienteRnc('');
                   setTipoComprobante('Consumidor Final');
                   setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                  setAplicarItbis(true);
+
                   setShowPayModal(true);
                 }}
                 className="col-span-2 flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-400 text-white py-5 rounded-[1.5rem] font-black text-xl transition-all shadow-xl shadow-emerald-500/10 disabled:opacity-40 select-none group"
@@ -2077,7 +2077,7 @@ export default function POS() {
                   setClienteRnc('');
                   setTipoComprobante('Consumidor Final');
                   setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                  setAplicarItbis(true);
+
                   setShowPayModal(true);
                 }}
                 className="flex items-center justify-center gap-2 bg-white/10 hover:bg-blue-600 text-white py-3.5 rounded-xl font-black text-[9px] tracking-wider uppercase transition-all disabled:opacity-30 select-none"
@@ -2096,7 +2096,7 @@ export default function POS() {
                   setClienteRnc('');
                   setTipoComprobante('Consumidor Final');
                   setNcfCode(generateNcfCodeForType('Consumidor Final'));
-                  setAplicarItbis(true);
+
                   setShowPayModal(true);
                 }}
               >
