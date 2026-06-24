@@ -287,8 +287,24 @@ async function startServer() {
       }
     });
   });
+    
+    // DEBUG endpoint to see server files
+    app.get('/api/debug-files', (req, res) => {
+      const fs = require('fs');
+      const path = require('path');
+      const dir = process.env.USER_DATA_PATH || process.cwd();
+      try {
+        const files = fs.readdirSync(dir).map((f: string) => {
+          const stats = fs.statSync(path.join(dir, f));
+          return `${f} (${stats.size} bytes)`;
+        });
+        res.json(files);
+      } catch (e: any) {
+        res.status(500).json({ error: e.message });
+      }
+    });
 
-  // Get current session user
+    // Get current session user
   app.get('/api/auth/me', async (req, res) => {
     const s = req.session as any;
     if (!s.owner_id && !s.employee_id) return res.json(null);

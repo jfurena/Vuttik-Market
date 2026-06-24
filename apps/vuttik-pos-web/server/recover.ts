@@ -15,6 +15,7 @@ try {
     let maxSize = -1;
     for (const f of corruptedFiles) {
       const stats = fs.statSync(path.join(dir, f));
+      console.log(`[Recovery] File ${f} is ${stats.size} bytes.`);
       if (stats.size > maxSize) {
         maxSize = stats.size;
         largestFile = f;
