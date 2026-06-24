@@ -382,9 +382,10 @@ export default function POS() {
     setCart(current => current.filter(item => item.id !== id));
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0);
-  const itbis = aplicarItbis ? subtotal * 0.18 : 0;
-  const total = subtotal + itbis;
+  const rawTotal = cart.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0);
+  const total = rawTotal;
+  const subtotal = aplicarItbis ? rawTotal / 1.18 : rawTotal;
+  const itbis = aplicarItbis ? rawTotal - subtotal : 0;
 
   const handleOpenShift = async () => {
     if (!profile) return;

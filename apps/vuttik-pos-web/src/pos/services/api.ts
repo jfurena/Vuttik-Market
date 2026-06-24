@@ -933,7 +933,7 @@ export const ApiService = {
     if (isPracticeModeActive()) {
       return getSimData<Expense[]>('v_sim_expenses', []);
     }
-    const res = await fetch(`${API_BASE}/expenses`);
+    const res = await fetch(`${API_BASE}/expenses`, { cache: 'no-store' });
     return res.json();
   },
 
