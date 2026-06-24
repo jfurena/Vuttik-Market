@@ -1,4 +1,5 @@
 import express from 'express';
+import 'express-async-errors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -1881,6 +1882,9 @@ async function startServer() {
   app.use((err: any, req: any, res: any, next: any) => {
     console.error('Unhandled server error:', err);
     if (res.headersSent) return next(err);
+    if (err?.message === 'Negocio no encontrado') {
+      return res.status(401).json({ error: 'Negocio no encontrado o sesión inválida.' });
+    }
     res.status(500).json({ error: err?.message || 'Error interno del servidor.' });
   });
 
