@@ -77,8 +77,8 @@ async function startServer() {
         const posApp = await initPosApp();
         app.use('/pos', posApp);
         // 2. Start Express
-        app.listen(port, () => {
-            console.log(`SQL Backend running at http://localhost:${port}`);
+        app.listen(port, '0.0.0.0', () => {
+            console.log(`SQL Backend running at http://0.0.0.0:${port}`);
             console.log('--- Server Ready ---');
             // Run the expiration check every hour (3600000 ms)
             setInterval(checkExpiredProposals, 3600000);
@@ -740,12 +740,6 @@ app.post('/api/users', async (req, res) => {
 // --- Category Routes ---
 app.get('/api/categories', async (req, res) => {
     try {
-        const cacheKey = 'global_categories_list';
-        const cached = globalCache.get(cacheKey);
-        if (cached) {
-            return res.json(cached);
-        }
-
         const rows = await all('SELECT * FROM vuttik_categories ORDER BY order_index ASC');
         const categories = rows.map(r => ({
             ...r,
@@ -755,8 +749,6 @@ app.get('/api/categories', async (req, res) => {
             isService: Boolean(r.is_service),
             requiresEan: Boolean(r.requires_ean)
         }));
-        
-        globalCache.set(cacheKey, categories, 60); // Cache for 60 seconds
         res.json(categories);
     }
     catch (error) {

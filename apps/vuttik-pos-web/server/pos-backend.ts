@@ -48,7 +48,32 @@ export const getDB = () => {
     fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
     return JSON.parse(JSON.stringify(initialDB));
   }
-  const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  let db;
+  let raw = '';
+  try {
+    raw = fs.readFileSync(DB_FILE, 'utf8');
+    db = JSON.parse(raw);
+  } catch (err) {
+    console.error('FATAL: db.json is corrupted!', err);
+    // Try to repair a truncated JSON file
+    let repaired = false;
+    const appendOptions = ['}', ']}', ']}}', '}]}', '}}]}', '"]}', '"}'];
+    for (const suffix of appendOptions) {
+      try {
+        db = JSON.parse(raw + suffix);
+        repaired = true;
+        console.error('SUCCESS: Repaired db.json by appending: ' + suffix);
+        fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+        break;
+      } catch (e) {}
+    }
+    if (!repaired) {
+       console.error('RAW CORRUPTED JSON TAIL:', raw.slice(-200));
+       fs.copyFileSync(DB_FILE, `${DB_FILE}.corrupted.${Date.now()}`);
+       db = JSON.parse(JSON.stringify(initialDB));
+       fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+    }
+  }
   if (!db.owners) db.owners = [];
   if (!db.businesses) db.businesses = [];
   return db;

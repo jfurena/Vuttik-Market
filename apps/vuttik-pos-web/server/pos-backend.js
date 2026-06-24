@@ -51,8 +51,24 @@ export const getDB = () => {
         db.businesses = [];
     return db;
 };
+let isSaving = false;
+let pendingSaveData = null;
 export const saveDB = (data) => {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    if (isSaving) {
+        pendingSaveData = data;
+        return;
+    }
+    isSaving = true;
+    fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), (err) => {
+        isSaving = false;
+        if (err)
+            console.error("Error saving DB_FILE:", err);
+        if (pendingSaveData) {
+            const nextData = pendingSaveData;
+            pendingSaveData = null;
+            saveDB(nextData);
+        }
+    });
 };
 // Get the business data object (throws if not found)
 const getBiz = (db, bizId) => {
@@ -97,6 +113,10 @@ const requireBizAccess = (req, res, next) => {
     const s = req.session;
     if (!s.business_id)
         return res.status(401).json({ error: 'Selecciona un negocio primero.' });
+    const db = getDB();
+    const biz = db.businesses.find((b) => b.id === s.business_id);
+    if (biz?.is_suspended)
+        return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
     // If owner, give access. If employee, verify business matches.
     if (s.owner_id || s.employee_id)
         return next();
@@ -106,6 +126,10 @@ const requireOwnerBizAccess = (req, res, next) => {
     const s = req.session;
     if (!s.owner_id || !s.business_id)
         return res.status(403).json({ error: 'Solo el dueño puede realizar esta acción.' });
+    const db = getDB();
+    const biz = db.businesses.find((b) => b.id === s.business_id);
+    if (biz?.is_suspended)
+        return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
     next();
 };
 // SEC-007 FIX: Rate limiting to prevent brute-force attacks on authentication endpoints
@@ -216,8 +240,6 @@ async function startServer() {
                 estado: employee.estado,
                 business_id: biz.id,
                 business_nombre: biz.nombre,
-                business_codigo: biz.codigo,
-                owner_id: biz.owner_id
             }
         });
     });
@@ -228,23 +250,27 @@ async function startServer() {
             return res.json(null);
         const db = getDB();
         if (s.owner_id && !s.business_id) {
-            // Owner without business selected → return owner info
+            // Owner without business selected -> return owner info
             let owner = db.owners.find((o) => o.id === s.owner_id);
             if (!owner) {
-                const sqlUser = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
-                if (sqlUser) owner = { id: sqlUser.uid, nombre: sqlUser.display_name, correo: sqlUser.email, password_hash: '' };
+                // Fallback to SQLite (Vuttik Market DB)
+                const user = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+                if (user) {
+                    owner = { id: user.uid, nombre: user.display_name, correo: user.email };
+                }
             }
             if (!owner)
                 return res.json(null);
-            const { password_hash: _, ...safe } = owner;
-            return res.json({ ...safe, rol: 'admin', estado: 'activo' });
+            return res.json({ id: owner.id, nombre: owner.nombre, correo: owner.correo, rol: 'admin', estado: 'activo' });
         }
         if (s.owner_id && s.business_id) {
             // Owner inside a business
             let owner = db.owners.find((o) => o.id === s.owner_id);
             if (!owner) {
-                const sqlUser = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
-                if (sqlUser) owner = { id: sqlUser.uid, nombre: sqlUser.display_name, correo: sqlUser.email, password_hash: '' };
+                const user = await get('SELECT * FROM vuttik_users WHERE uid = ?', [s.owner_id]);
+                if (user) {
+                    owner = { id: user.uid, nombre: user.display_name, correo: user.email };
+                }
             }
             const biz = db.businesses.find((b) => b.id === s.business_id);
             if (!owner || !biz)
@@ -341,24 +367,61 @@ async function startServer() {
                 employee_count: (b.employees || []).length,
                 product_count: (b.products || []).length,
                 sales_count: (b.sales || []).length,
-                ganancia_neta: gananciaNeta
+                ganancia_neta: gananciaNeta,
+                is_suspended: b.is_suspended || false
             };
         });
         res.json(myBizList);
     });
     // Create business
-    app.post('/api/businesses', requireOwnerAuth, (req, res) => {
+    app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
         const { nombre } = req.body;
         if (!nombre || !nombre.trim())
             return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
         const s = req.session;
         const db = getDB();
+        // Check business limit
+        const userBusinessesCount = db.businesses.filter((b) => b.owner_id === s.owner_id).length;
+        if (userBusinessesCount >= 1) {
+            try {
+                const user = await get(`SELECT multi_business_approved FROM vuttik_users WHERE uid = ?`, [s.owner_id]);
+                if (!user || !user.multi_business_approved) {
+                    // Check if there is already a pending request
+                    const existingReq = await get(`SELECT status FROM vuttik_business_requests WHERE user_id = ? AND status = 'pending'`, [s.owner_id]);
+                    if (existingReq) {
+                        return res.status(403).json({ error: 'pending_evaluation', message: 'Tu petición está siendo evaluada por el Mega Guardian.' });
+                    }
+                    return res.status(403).json({ error: 'needs_request', message: 'Para crear más de un negocio, necesitas aprobación del Mega Guardian.' });
+                }
+            }
+            catch (err) {
+                console.error('Error checking multi_business_approved:', err);
+                return res.status(500).json({ error: 'Error del servidor al verificar permisos.' });
+            }
+        }
         const existingCodes = db.businesses.map((b) => b.codigo);
         const codigo = generateCode(nombre, existingCodes);
         const newBiz = emptyBusiness('biz-' + Date.now(), nombre.trim(), codigo, s.owner_id);
         db.businesses.push(newBiz);
         saveDB(db);
         res.json({ id: newBiz.id, nombre: newBiz.nombre, codigo: newBiz.codigo, fecha_creacion: newBiz.fecha_creacion });
+    });
+    // Request multiple businesses
+    app.post('/api/pos/request-multi-business', requireOwnerAuth, async (req, res) => {
+        const s = req.session;
+        try {
+            const existingReq = await get(`SELECT status FROM vuttik_business_requests WHERE user_id = ? AND status = 'pending'`, [s.owner_id]);
+            if (existingReq) {
+                return res.status(400).json({ error: 'Ya tienes una solicitud pendiente.' });
+            }
+            const reqId = 'req-' + Date.now();
+            await run(`INSERT INTO vuttik_business_requests (id, user_id, status, created_at) VALUES (?, ?, 'pending', ?)`, [reqId, s.owner_id, new Date().toISOString()]);
+            res.json({ success: true });
+        }
+        catch (err) {
+            console.error('Error submitting business request:', err);
+            res.status(500).json({ error: 'Error al enviar la solicitud.' });
+        }
     });
     // Update business name
     app.patch('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
@@ -373,6 +436,21 @@ async function startServer() {
             db.businesses[idx].nombre = nombre.trim();
         saveDB(db);
         res.json({ id: db.businesses[idx].id, nombre: db.businesses[idx].nombre, codigo: db.businesses[idx].codigo });
+    });
+    // Update a business
+    app.put('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
+        const { bizId } = req.params;
+        const { nombre } = req.body;
+        if (!nombre || !nombre.trim())
+            return res.status(400).json({ error: 'Nombre inválido.' });
+        const s = req.session;
+        const db = getDB();
+        const idx = db.businesses.findIndex((b) => b.id === bizId && b.owner_id === s.owner_id);
+        if (idx === -1)
+            return res.status(404).json({ error: 'Negocio no encontrado.' });
+        db.businesses[idx].nombre = nombre.trim();
+        saveDB(db);
+        res.json(db.businesses[idx]);
     });
     // Delete business
     app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
@@ -846,7 +924,7 @@ async function startServer() {
         const s = req.session;
         const db = getDB();
         const biz = getBiz(db, s.business_id);
-        const owner = db.users.find((u) => u.id === biz.propietario_id);
+        const owner = (db.owners || db.users || []).find((u) => u.id === biz.propietario_id || u.id === biz.owner_id);
         const employees = biz.empleados || [];
         const expenses = (biz.expenses || []).map((exp) => {
             let usuario_nombre = exp.usuario_nombre;
@@ -918,6 +996,17 @@ async function startServer() {
         const s = req.session;
         const db = getDB();
         const biz = getBiz(db, s.business_id);
+        // SECURITY FIX: Prevent sales if the shift is from a previous day
+        if (sale.turno_id) {
+            const shift = (biz.shifts || []).find((sh) => sh.id === sale.turno_id);
+            if (shift && shift.fecha_apertura) {
+                const shiftDate = new Date(shift.fecha_apertura).toDateString();
+                const serverDate = new Date().toDateString();
+                if (shiftDate !== serverDate) {
+                    return res.status(400).json({ error: 'El turno activo pertenece a un día anterior. Por favor cierra la caja y abre una nueva.' });
+                }
+            }
+        }
         // BIZ-001 FIX: Validate stock on the server before processing — prevents negative inventory
         // from direct API calls that bypass frontend validation
         for (const item of items) {

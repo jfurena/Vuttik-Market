@@ -88,8 +88,8 @@ async function startServer() {
     app.use('/pos', posApp);
 
     // 2. Start Express
-    app.listen(port, () => {
-      console.log(`SQL Backend running at http://localhost:${port}`);
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`SQL Backend running at http://0.0.0.0:${port}`);
       console.log('--- Server Ready ---');
       // Run the expiration check every hour (3600000 ms)
       setInterval(checkExpiredProposals, 3600000);
