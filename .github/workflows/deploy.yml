@@ -93,9 +93,9 @@ jobs:
           npx tsc recover.ts || true
           node recover.js || true
           
-          # Run SQLite recovery script
-          npx tsc recover_sqlite.ts || true
-          node recover_sqlite.js || true
+          # Restore products from SQLite
+          npx tsc restore_products.ts || true
+          node restore_products.js || true
           
           # Start server manually (Passenger is disabled in .htaccess)
           export NODE_ENV=production
