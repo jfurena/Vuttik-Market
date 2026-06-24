@@ -134,12 +134,6 @@ export const ApiService = {
   },
 
   async login(correo: string, password: string, location?: { lat: number, lng: number, address?: string }) {
-    if (isPracticeModeActive()) {
-      initSimulation();
-      return {
-        owner: { id: 'user-sim-01', nombre: 'Usuario de Práctica', correo: 'practica@colmado.com', rol: 'admin' }
-      };
-    }
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -180,19 +174,12 @@ export const ApiService = {
   },
 
   async loginMe() {
-    if (isPracticeModeActive()) {
-      initSimulation();
-      return { id: 'user-sim-01', nombre: 'Usuario de Práctica', correo: 'practica@colmado.com', rol: 'admin' };
-    }
     const res = await fetch(`${API_BASE}/auth/me?t=${Date.now()}`);
     if (!res.ok) return null;
     return res.json();
   },
 
   async logout() {
-    if (isPracticeModeActive()) {
-      return { success: true };
-    }
     const res = await fetch(`${API_BASE}/auth/logout`, { method: 'POST' });
     return res.json();
   },
@@ -245,9 +232,6 @@ export const ApiService = {
     return res.json();
   },
   async selectBusiness(business_id: string) {
-    if (isPracticeModeActive()) {
-      return { success: true, business_id: 'sim-biz-1' };
-    }
     const res = await fetch(`${API_BASE}/auth/select-business`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
