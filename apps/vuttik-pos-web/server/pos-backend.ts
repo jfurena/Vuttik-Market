@@ -524,14 +524,24 @@ async function startServer() {
   });
 
   // Delete business
-  app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
+  app.delete('/api/businesses/:bizId', requireOwnerAuth, async (req, res) => {
     const { bizId } = req.params;
     const s = req.session as any;
     const db = getDB();
     const idx = db.businesses.findIndex((b: any) => b.id === bizId && b.owner_id === s.owner_id);
     if (idx === -1) return res.status(404).json({ error: 'Negocio no encontrado.' });
+    
     db.businesses.splice(idx, 1);
     saveDB(db);
+
+    // Remove products and business profile from vuttik market
+    try {
+      await run('DELETE FROM vuttik_products WHERE author_id = ?', [bizId]);
+      await run('DELETE FROM vuttik_business_profiles WHERE uid = ?', [bizId]);
+    } catch (err) {
+      console.error('Error deleting business info from Vuttik SQLite:', err);
+    }
+
     res.json({ success: true });
   });
 

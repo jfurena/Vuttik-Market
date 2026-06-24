@@ -424,18 +424,7 @@ export default function Layout() {
         </div>
         
         <div className="mt-auto p-6 space-y-4">
-          <button 
-            onClick={() => setShowTour(true)}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-[1.25rem] text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] text-white transition-all shadow-md shadow-amber-500/10 cursor-pointer text-left border-0 outline-none"
-          >
-            <div className="flex items-center gap-2.5">
-              <BookOpen className="h-5 w-5 shrink-0 text-white" />
-              <div className="flex flex-col">
-                <span className="leading-tight">Entrenar Personal</span>
-                <span className="text-[9px] font-bold text-amber-50 leading-none mt-0.5">Recorrido Completo →</span>
-              </div>
-            </div>
-          </button>
+
 
           {isPractice && (
             <div className="p-4 bg-amber-50 rounded-3xl border border-amber-200 space-y-2 text-amber-950">
@@ -590,16 +579,7 @@ export default function Layout() {
                 ))}
               </nav>
               <div className="mt-6 pt-6 border-t border-gray-105 flex flex-col gap-2">
-                <button 
-                  onClick={() => {
-                    setIsOpen(false);
-                    setShowTour(true);
-                  }}
-                  className="flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-2xl text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/10 cursor-pointer text-left border-0"
-                >
-                  <BookOpen className="h-4.5 w-4.5 text-white shrink-0" />
-                  Entrenar Personal
-                </button>
+
                 <button onClick={() => logout()} className="flex items-center gap-3 px-4 py-3 text-red-500 font-extrabold text-xs tracking-wider uppercase">
                   <LogOut className="h-5 w-5" />
                   Cerrar Sesión
@@ -616,7 +596,7 @@ export default function Layout() {
           <Outlet />
         </main>
 
-        <TrainingTour isOpen={showTour} onClose={() => setShowTour(false)} />
+
 
         {/* Mobile Bottom Nav */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around p-3 z-40 pb-safe">
