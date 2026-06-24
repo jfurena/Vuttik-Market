@@ -245,6 +245,9 @@ export const ApiService = {
     return res.json();
   },
   async selectBusiness(business_id: string) {
+    if (isPracticeModeActive()) {
+      return { success: true, business_id: 'sim-biz-1' };
+    }
     const res = await fetch(`${API_BASE}/auth/select-business`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
