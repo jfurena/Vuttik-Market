@@ -147,15 +147,20 @@ const requireOwnerAuth = (req: any, res: any, next: any) => {
 const requireBizAccess = (req: any, res: any, next: any) => {
   const s = req.session as any;
   if (!s.business_id) return res.status(401).json({ error: 'Selecciona un negocio primero.' });
-  
+  if (!s.owner_id && !s.employee_id) return res.status(401).json({ error: 'No autorizado.' });
+
   const db = getDB();
   const biz = db.businesses.find((b: any) => b.id === s.business_id);
-  if (biz?.is_suspended) return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
+  if (!biz) {
+    // Stale session — the business no longer exists in the DB
+    s.business_id = null;
+    return res.status(401).json({ error: 'Tu sesión de negocio ya no es válida. Por favor selecciona el negocio nuevamente.' });
+  }
+  if (biz.is_suspended) return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
 
-  // If owner, give access. If employee, verify business matches.
-  if (s.owner_id || s.employee_id) return next();
-  return res.status(401).json({ error: 'No autorizado.' });
+  return next();
 };
+
 
 const requireOwnerBizAccess = (req: any, res: any, next: any) => {
   const s = req.session as any;
@@ -163,10 +168,15 @@ const requireOwnerBizAccess = (req: any, res: any, next: any) => {
   
   const db = getDB();
   const biz = db.businesses.find((b: any) => b.id === s.business_id);
-  if (biz?.is_suspended) return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
+  if (!biz) {
+    s.business_id = null;
+    return res.status(401).json({ error: 'Tu sesión de negocio ya no es válida. Por favor selecciona el negocio nuevamente.' });
+  }
+  if (biz.is_suspended) return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
   
   next();
 };
+
 
 // SEC-007 FIX: Rate limiting to prevent brute-force attacks on authentication endpoints
 const authLimiter = rateLimit({
@@ -193,7 +203,8 @@ async function startServer() {
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 horas
     }
-  }));
+  }) as any);
+
 
   // =============================================
   // === AUTH ROUTES ===
@@ -1120,6 +1131,20 @@ async function startServer() {
       }
     }
 
+    // BIZ-004 FIX: Validate credit limit on the server BEFORE saving the sale
+    if (sale.metodo_pago === 'A Crédito (Fiao)' && sale.cliente_id) {
+      if (!biz.clientes) biz.clientes = [];
+      const creditCliente = biz.clientes.find((c: any) => c.id === sale.cliente_id);
+      if (creditCliente && creditCliente.limite_credito > 0) {
+        const newDebt = (creditCliente.deuda_actual || 0) + sale.total;
+        if (newDebt > creditCliente.limite_credito) {
+          return res.status(400).json({
+            error: `Límite de crédito excedido para "${creditCliente.nombre}". Deuda actual: RD$${creditCliente.deuda_actual}, Límite: RD$${creditCliente.limite_credito}, Venta: RD$${sale.total}.`
+          });
+        }
+      }
+    }
+
     let costoTotal = 0;
     items.forEach((item: any) => {
       const pIndex = (biz.products || []).findIndex((p: any) => p.id === item.producto_id);
@@ -1142,20 +1167,6 @@ async function startServer() {
 
     if (!biz.sales) biz.sales = [];
     biz.sales.push(newSale);
-
-    // BIZ-004 FIX: Validate credit limit on the server — prevents employees from exceeding admin-set limits
-    if (sale.metodo_pago === 'A Crédito (Fiao)' && sale.cliente_id) {
-      if (!biz.clientes) biz.clientes = [];
-      const creditCliente = biz.clientes.find((c: any) => c.id === sale.cliente_id);
-      if (creditCliente && creditCliente.limite_credito > 0) {
-        const newDebt = (creditCliente.deuda_actual || 0) + sale.total;
-        if (newDebt > creditCliente.limite_credito) {
-          return res.status(400).json({
-            error: `Límite de crédito excedido para "${creditCliente.nombre}". Deuda actual: RD$${creditCliente.deuda_actual}, Límite: RD$${creditCliente.limite_credito}, Venta: RD$${sale.total}.`
-          });
-        }
-      }
-    }
 
     // Increment client debt if fiao
     if (sale.metodo_pago === 'A Crédito (Fiao)' && sale.cliente_id) {
@@ -1180,15 +1191,25 @@ async function startServer() {
     res.json(newSale);
   });
 
+
   app.post('/api/sales/refund/:saleId', requireBizAccess, async (req, res) => {
     const { saleId } = req.params;
     const { password, motivo, usuario_nombre, usuario_id } = req.body;
     const s = req.session as any;
     const db = getDB();
     const biz = getBiz(db, s.business_id);
-    // Validate using owner password
+    // Validate using owner password — check db.owners first, then fall back to SQLite
+    let valid = false;
     const owner = db.owners.find((o: any) => o.id === biz.owner_id);
-    const valid = owner ? await bcrypt.compare(password, owner.password_hash) : false;
+    if (owner && owner.password_hash) {
+      valid = await bcrypt.compare(password, owner.password_hash);
+    } else {
+      // Owner is stored in SQLite (new system)
+      const sqliteOwner: any = await get('SELECT password_hash FROM vuttik_users WHERE uid = ?', [biz.owner_id]);
+      if (sqliteOwner && sqliteOwner.password_hash) {
+        valid = await bcrypt.compare(password, sqliteOwner.password_hash);
+      }
+    }
     if (!valid) return res.status(401).json({ error: 'La clave de seguridad ingresada es incorrecta.' });
     if (!motivo || motivo.trim().length === 0) return res.status(400).json({ error: 'El motivo del reembolso es obligatorio' });
     const saleIndex = (biz.sales || []).findIndex((sale: any) => sale.id === saleId);

@@ -204,8 +204,12 @@ export default function POS() {
 
   useEffect(() => {
     if (profile) {
-      ApiService.getActiveShift(profile.id).then(setShift);
-      ApiService.getProducts().then(setProducts);
+      ApiService.getActiveShift(profile.id)
+        .then(shift => { if (shift && !(shift as any).error) setShift(shift); })
+        .catch(err => console.error("Error loading shift in POS:", err));
+      ApiService.getProducts()
+        .then(data => { if (Array.isArray(data)) setProducts(data); })
+        .catch(err => console.error("Error loading products in POS:", err));
       ApiService.getClientes().then(data => {
         if (Array.isArray(data)) {
           setClientes(data.filter((c: any) => c.estado === 'activo'));

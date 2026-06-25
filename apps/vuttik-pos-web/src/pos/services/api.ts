@@ -3,6 +3,24 @@ import { Product, Sale, Shift, Expense, CashMovement, UnitType, ShiftStatus } fr
 const isPosDomain = window.location.hostname.startsWith('pos.') || window.location.pathname.startsWith('/pos');
 const API_BASE = '/api';
 
+// Global fetch wrapper: intercepts 401 "negocio inválido" and redirects to business selector
+async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    // Clone so we can read body and still return original response
+    const cloned = res.clone();
+    try {
+      const data = await cloned.json();
+      if (typeof data?.error === 'string' && data.error.includes('sesi\u00f3n de negocio')) {
+        // Stale business session — redirect to business selector
+        window.location.href = '/businesses';
+      }
+    } catch (_) {}
+  }
+  return res;
+}
+
+
 async function translateText(text: string, from: string, to: string): Promise<string> {
   if (!text || text.trim() === '') return '';
   try {
@@ -282,9 +300,10 @@ export const ApiService = {
     if (isPracticeModeActive()) {
       return getSimData<Product[]>('v_sim_products', []);
     }
-    const res = await fetch(`${API_BASE}/products`);
+    const res = await apiFetch(`${API_BASE}/products`);
     return res.json();
   },
+
 
   async addProduct(product: any) {
     if (isPracticeModeActive()) {
@@ -318,7 +337,7 @@ export const ApiService = {
       setSimData('v_sim_activity_log', logs);
       return newProd;
     }
-    const res = await fetch(`${API_BASE}/products`, {
+    const res = await apiFetch(`${API_BASE}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(product)
@@ -352,7 +371,7 @@ export const ApiService = {
       }
       return products[idx];
     }
-    const res = await fetch(`${API_BASE}/products/${id}`, {
+    const res = await apiFetch(`${API_BASE}/products/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(product)
@@ -440,7 +459,7 @@ export const ApiService = {
       setSimData('v_sim_activity_log', logs);
       return { success: true };
     }
-    const res = await fetch(`${API_BASE}/products/${id}`, {
+    const res = await apiFetch(`${API_BASE}/products/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id, usuario_nombre })

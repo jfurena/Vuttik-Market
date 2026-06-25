@@ -13,7 +13,7 @@ import compression from 'compression';
 import bcrypt from 'bcryptjs';
 
 const app = express();
-const port = process.env.PORT || 3005;
+const port = parseInt(process.env.PORT || '3005', 10);
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -39,18 +39,19 @@ app.use(helmet({
 }));
 
 const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
-app.use(session({
-  name: 'vuttik_pos_sid',
-  secret: sessionSecret,
-  resave: true,
-  saveUninitialized: true,
-  cookie: {
-    secure: false,
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
-  }
-}));
+  app.use(session({
+    name: 'vuttik_pos_sid',
+    secret: sessionSecret,
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    }
+  }) as any);
+
 
 // Global request logger
 app.use((req, res, next) => {

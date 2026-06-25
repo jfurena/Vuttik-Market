@@ -10,6 +10,7 @@ export default function Inventory() {
   const { profile } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -92,9 +93,23 @@ export default function Inventory() {
   }, []);
 
   const loadProducts = async () => {
-    const data = await ApiService.getProducts();
-    setProducts(data);
-    setLoading(false);
+    setLoadError(null);
+    try {
+      const data = await ApiService.getProducts();
+      if (!Array.isArray(data)) {
+        // Server returned an error object (e.g. 401 session expired)
+        const errMsg = (data as any)?.error || 'Respuesta inesperada del servidor.';
+        setLoadError(errMsg);
+        setProducts([]);
+      } else {
+        setProducts(data);
+      }
+    } catch (err: any) {
+      setLoadError('No se pudo conectar con el servidor. Verifica tu conexión.');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -144,16 +159,22 @@ export default function Inventory() {
     if (!profile) return;
 
     try {
+      let result;
       if (editingProduct) {
-        await ApiService.updateProduct(editingProduct.id, { ...formData, usuario_id: profile.id, usuario_nombre: profile.nombre });
+        result = await ApiService.updateProduct(editingProduct.id, { ...formData, usuario_id: profile.id, usuario_nombre: profile.nombre });
       } else {
-        await ApiService.addProduct({ ...formData, usuario_id: profile.id, usuario_nombre: profile.nombre } as any);
+        result = await ApiService.addProduct({ ...formData, usuario_id: profile.id, usuario_nombre: profile.nombre } as any);
+      }
+      if (result && (result as any).error) {
+        alert('Error al guardar: ' + (result as any).error);
+        return;
       }
       setShowAddModal(false);
       resetForm();
       loadProducts();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving product:", error);
+      alert('Error al guardar el producto: ' + (error?.message || 'Verifica tu conexión.'));
     }
   };
 
@@ -382,6 +403,18 @@ export default function Inventory() {
         </div>
       </div>
 
+      {/* Error Banner */}
+      {loadError && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl px-6 py-4 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+          <div className="flex-1">
+            <p className="font-bold text-red-700 text-sm">Error al cargar productos</p>
+            <p className="text-red-600 text-xs mt-0.5">{loadError}</p>
+          </div>
+          <button onClick={loadProducts} className="text-xs font-black text-red-600 underline hover:no-underline">Reintentar</button>
+        </div>
+      )}
+
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -396,7 +429,26 @@ export default function Inventory() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map(product => {
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-20 text-gray-400">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                      <span className="text-sm font-medium">Cargando productos...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.length === 0 && !loadError ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-20">
+                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                      <Package className="h-12 w-12 opacity-20" />
+                      <p className="font-bold text-gray-500">No hay productos registrados</p>
+                      <p className="text-sm">Pulsa en "+ Guardar Producto Nuevo" para comenzar</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.map(product => {
                 const isLowStock = product.cantidad_disponible <= product.stock_minimo;
                 return (
                   <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group cursor-pointer" onClick={() => handleOpenHistory(product)}>
