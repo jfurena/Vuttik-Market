@@ -734,7 +734,7 @@ async function startServer() {
       const biz = getBiz(db, s.business_id);
       
       // Fetch from SQLite as the primary source of truth to avoid db.json wipe issues
-      const sqliteProducts = await all('SELECT * FROM vuttik_products WHERE author_id = ?', [s.business_id]);
+      const sqliteProducts = await all('SELECT * FROM vuttik_products WHERE author_id = ? AND id LIKE "pos-%"', [biz.owner_id]);
       
       // Map SQLite products back to POS format
       const mappedProducts = sqliteProducts.map((p: any) => ({
