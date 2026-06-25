@@ -1,7 +1,7 @@
 import { Product, Sale, Shift, Expense, CashMovement, UnitType, ShiftStatus } from '../types';
 
 const isPosDomain = window.location.hostname.startsWith('pos.') || window.location.pathname.startsWith('/pos');
-const API_BASE = '/api';
+const API_BASE = '/pos/api';
 
 // Global fetch wrapper: intercepts 401 "negocio inválido" and redirects to business selector
 async function apiFetch(url: string, options?: RequestInit): Promise<Response> {

@@ -736,39 +736,13 @@ async function startServer() {
     }));
     res.json(safe);
   });
-  // Products
-  app.get('/api/products', requireBizAccess, async (req, res) => {
+  // Products - Read directly from db.json which is the POS source of truth
+  app.get('/api/products', requireBizAccess, (req, res) => {
     try {
       const s = req.session as any;
       const db = getDB();
       const biz = getBiz(db, s.business_id);
-      
-      // Fetch from SQLite as the primary source of truth to avoid db.json wipe issues
-      const sqliteProducts = await all('SELECT * FROM vuttik_products WHERE author_id = ? AND id LIKE "pos-%"', [biz.owner_id]);
-      
-      // Map SQLite products back to POS format
-      const mappedProducts = sqliteProducts.map((p: any) => ({
-        id: p.id.replace('pos-', ''), // Remove prefix
-        nombre: p.title,
-        precio_venta: p.price,
-        costo_compra: p.price, // SQLite doesn't store cost natively in this table, fallback to price
-        cantidad_disponible: p.stock || 0,
-        codigo_barras: p.barcode || '',
-        seccion: p.category_id || 'General',
-        estado: 'activo'
-      }));
-
-      // Combine with db.json products in case some aren't synced, preferring SQLite
-      const jsonProducts = biz.products || [];
-      const combined = [...jsonProducts]; // Prefer jsonProducts (which has costo_compra, etc)
-      
-      for (const sp of mappedProducts) {
-        if (!combined.find(cp => cp.id === sp.id)) {
-          combined.push(sp); // Fallback to SQLite if missing from db.json
-        }
-      }
-
-      res.json(combined);
+      res.json(biz.products || []);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
