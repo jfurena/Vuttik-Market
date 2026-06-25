@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
 import bcrypt from 'bcryptjs';
-import { get, run } from './db.js';
+import { get, run, all } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
@@ -727,10 +727,41 @@ async function startServer() {
     res.json(safe);
   });
   // Products
-  app.get('/api/products', requireBizAccess, (req, res) => {
-    const s = req.session as any;
-    const db = getDB();
-    res.json(getBiz(db, s.business_id).products || []);
+  app.get('/api/products', requireBizAccess, async (req, res) => {
+    try {
+      const s = req.session as any;
+      const db = getDB();
+      const biz = getBiz(db, s.business_id);
+      
+      // Fetch from SQLite as the primary source of truth to avoid db.json wipe issues
+      const sqliteProducts = await all('SELECT * FROM vuttik_products WHERE author_id = ?', [s.business_id]);
+      
+      // Map SQLite products back to POS format
+      const mappedProducts = sqliteProducts.map((p: any) => ({
+        id: p.id.replace('pos-', ''), // Remove prefix
+        nombre: p.title,
+        precio_venta: p.price,
+        costo_compra: p.price, // SQLite doesn't store cost natively in this table, fallback to price
+        cantidad_disponible: p.stock || 0,
+        codigo_barras: p.barcode || '',
+        seccion: p.category_id || 'General',
+        estado: 'activo'
+      }));
+
+      // Combine with db.json products in case some aren't synced, preferring SQLite
+      const jsonProducts = biz.products || [];
+      const combined = [...jsonProducts]; // Prefer jsonProducts (which has costo_compra, etc)
+      
+      for (const sp of mappedProducts) {
+        if (!combined.find(cp => cp.id === sp.id)) {
+          combined.push(sp); // Fallback to SQLite if missing from db.json
+        }
+      }
+
+      res.json(combined);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.post('/api/products', requireBizAccess, async (req, res) => {
