@@ -2,9 +2,10 @@ PassengerEnabled off
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
-# Proxy /api/ requests to Node.js backend on port 3005
-RewriteCond %{REQUEST_URI} ^/api/
-RewriteRule ^api/(.*)$ http://127.0.0.1:3005/api/$1 [P,L]
+# Proxy /api/ and /pos/ requests to Node.js backend on port 3005
+RewriteCond %{REQUEST_URI} ^/api/ [OR]
+RewriteCond %{REQUEST_URI} ^/pos/
+RewriteRule ^(.*)$ http://127.0.0.1:3005/$1 [P,L]
 # SPA fallback: all other non-file requests go to index.html
 RewriteRule ^index\.html$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f

@@ -1,0 +1,1 @@
+put .htaccess_remote /home/sinagjwx/domains/vuttik.com/public_html/.htaccess  
