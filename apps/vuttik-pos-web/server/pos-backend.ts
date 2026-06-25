@@ -112,6 +112,16 @@ const getBiz = (db: any, bizId: string) => {
   if (!biz) throw new Error('Negocio no encontrado');
   if (!biz.clientes) biz.clientes = [];
   if (!biz.pagos_clientes) biz.pagos_clientes = [];
+  if (!biz.products) biz.products = [];
+  if (!biz.employees) biz.employees = [];
+  if (!biz.sales) biz.sales = [];
+  if (!biz.shifts) biz.shifts = [];
+  if (!biz.expenses) biz.expenses = [];
+  if (!biz.cash_movements) biz.cash_movements = [];
+  if (!biz.inventory_movements) biz.inventory_movements = [];
+  if (!biz.activity_log) biz.activity_log = [];
+  if (!biz.approval_requests) biz.approval_requests = [];
+  if (!biz.transfers) biz.transfers = [];
   return biz;
 };
 
