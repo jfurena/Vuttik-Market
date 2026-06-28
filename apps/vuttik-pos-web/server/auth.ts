@@ -74,6 +74,15 @@ authRouter.post('/register', async (req, res) => {
     }
 
     const token = jwt.sign({ uid, email, role: 'user' }, JWT_SECRET(), { expiresIn: '30d' });
+    
+    // Set POS session explicitly so POS dashboard can authenticate via cookie
+    const s = (req as any).session;
+    if (s) {
+      s.owner_id = uid;
+      s.rol = 'admin';
+      if (typeof s.save === 'function') s.save();
+    }
+    
     res.json({ token, user: { uid, email, displayName: name, role: 'user', planId: 'free', isBanned: false, onboardingCompleted: false, emailVerified: emailVerifiedFrontend } });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -99,6 +108,14 @@ authRouter.post('/login', async (req, res) => {
 
     const token = jwt.sign({ uid: user.uid, email: user.email, role: user.role }, JWT_SECRET(), { expiresIn: '30d' });
     delete user.password_hash;
+    
+    // Set POS session explicitly so POS dashboard can authenticate via cookie
+    const s = (req as any).session;
+    if (s) {
+      s.owner_id = user.uid;
+      s.rol = 'admin';
+      if (typeof s.save === 'function') s.save();
+    }
     
     res.json({ 
         token, 
@@ -281,7 +298,10 @@ authRouter.post('/google/callback', async (req, res) => {
       }),
     });
     const tokenData = await tokenResponse.json();
-    if (!tokenResponse.ok) return res.status(400).json({ error: 'Google Token Error', details: tokenData });
+    if (!tokenResponse.ok) {
+      console.error('Google Token Error details:', tokenData, { sentRedirectUri: redirect_uri });
+      return res.status(400).json({ error: 'Google Token Error', details: tokenData });
+    }
 
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },

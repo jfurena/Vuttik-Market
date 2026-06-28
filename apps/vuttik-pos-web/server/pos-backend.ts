@@ -201,6 +201,10 @@ async function startServer() {
   const app = express();
   app.use(express.json());
 
+  // Use global unified auth router to support Google Auth and JWT in POS
+  const { authRouter } = await import('./auth.js');
+  app.use('/api/auth', authRouter);
+
   const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
   app.use(session({
     name: 'vuttik_pos_sid',
