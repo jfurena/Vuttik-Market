@@ -37,101 +37,25 @@ jobs:
           cp -r apps/vuttik-pos-web/server deploy_package/
           tar -czf deploy.tar.gz -C deploy_package .
 
-      - name: Create Deployment Scripts
-        run: |
-          mkdir -p ftp_upload/public_html
-          cp deploy.tar.gz ftp_upload/
-          
-          # Create a PHP script to trigger the bash deployment securely
-          cat << 'EOF' > ftp_upload/public_html/deploy_script.php
-          <?php
-          ini_set('display_errors', 1);
-          error_reporting(E_ALL);
-          if (!isset($_GET['key']) || $_GET['key'] !== 'vuttik_deploy_2026_xyz') {
-              http_response_code(403);
-              die('Unauthorized');
-          }
-          echo "Starting deployment...<br>\n";
-          echo "<pre>";
-          if (function_exists('shell_exec')) {
-              $output = shell_exec('cd ../ && bash run_deploy.sh 2>&1');
-              echo htmlspecialchars($output);
-          } else {
-              echo "ERROR: shell_exec is disabled.";
-          }
-          echo "</pre>";
-          echo "Deployment triggered.";
-          ?>
-          EOF
-          
-          # Create the bash deployment script
-          cat << 'EOF' > ftp_upload/run_deploy.sh
-          set -e
-          echo "Running deployment in $(pwd)"
-          cd /home/sinagjwx/domains/vuttik.com/
-          rm -rf temp_deploy
-          mkdir -p temp_deploy
-          tar -xzf deploy.tar.gz -C temp_deploy
-          
-          echo "Deploying frontend to vuttik.com..."
-          rm -rf public_html/assets
-          cp -a temp_deploy/dist/. public_html/
-          
-          echo "Deploying frontend to pos.vuttik.com..."
-          mkdir -p ../pos.vuttik.com/public_html
-          rm -rf ../pos.vuttik.com/public_html/assets
-          cp -a temp_deploy/dist/. ../pos.vuttik.com/public_html/
-          
-          echo "Copying backend files..."
-          cp -r temp_deploy/server/* server/
-          rm -rf temp_deploy deploy.tar.gz run_deploy.sh public_html/deploy_script.php
-          
-          cd server
-          export NODE_HOME="/home/sinagjwx/nodejs"
-          export PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
-          echo "Running npm install..."
-          npm install --production
-          
-          echo "Stopping old server processes..."
-          pkill -f "node index.js" || true
-          pkill -f "npx tsx" || true
-          pkill -9 lsnode || true
-          fuser -k 3005/tcp || true
-          sleep 2
-          
-          echo "Running database recovery scripts..."
-          npx tsc recover.ts || true
-          node recover.js || true
-          npx tsc restore_products.ts || true
-          node restore_products.js || true
-          npx tsc cleanup_orphaned_products.ts || true
-          node cleanup_orphaned_products.js || true
-          
-          echo "Starting backend server..."
-          export NODE_ENV=production
-          nohup node index.js >> backend.log 2>&1 < /dev/null &
-          echo "Server started with PID $!"
-          sleep 3
-          echo "=== TAIL BACKEND.LOG ==="
-          tail -n 10 backend.log
-          echo "Deployment successful."
-          EOF
-
-      - name: Upload via FTP
+      - name: Deploy Frontend via FTP
         run: |
           sudo apt-get update && sudo apt-get install -y lftp
-          # Set up FTP upload with SSL verification disabled in case of self-signed certs
+          
+          echo "Deploying to vuttik.com/public_html..."
           cat << 'EOF' > lftp_script.txt
           set ssl:verify-certificate no
           open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ftp.vuttik.com
-          put -O / ftp_upload/deploy.tar.gz
-          put -O / ftp_upload/run_deploy.sh
-          put -O /public_html/ ftp_upload/public_html/deploy_script.php
+          mirror -R apps/vuttik-pos-web/dist /public_html
           bye
           EOF
           lftp -f lftp_script.txt
-
-      - name: Trigger Deployment Script
-        run: |
-          echo "Triggering deployment webhook..."
-          curl -sS -i "https://vuttik.com/deploy_script.php?key=vuttik_deploy_2026_xyz"
+          
+          # We try to deploy to pos.vuttik.com if accessible (might fail if jailed)
+          echo "Attempting to deploy to pos.vuttik.com..."
+          cat << 'EOF' > lftp_script_pos.txt
+          set ssl:verify-certificate no
+          open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ftp.vuttik.com
+          mirror -R apps/vuttik-pos-web/dist /pos.vuttik.com/public_html || echo "Could not access pos.vuttik.com folder via this FTP account"
+          bye
+          EOF
+          lftp -f lftp_script_pos.txt || true
