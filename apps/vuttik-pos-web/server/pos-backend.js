@@ -1,4 +1,5 @@
 import express from 'express';
+import 'express-async-errors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,7 +11,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import rateLimit from 'express-rate-limit';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_FILE = process.env.VUTTIK_DB_PATH
+const DB_FILE = process.env.VUTTIK_DB_JSON_PATH
     || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
 // === DB STRUCTURE ===
 export const emptyBusiness = (id, nombre, codigo, owner_id) => ({
@@ -39,16 +40,48 @@ const initialDB = {
     businesses: []
 };
 // === DB HELPERS ===
+let inMemoryDB = null;
 export const getDB = () => {
+    if (inMemoryDB)
+        return inMemoryDB;
     if (!fs.existsSync(DB_FILE)) {
         fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2));
-        return JSON.parse(JSON.stringify(initialDB));
+        inMemoryDB = JSON.parse(JSON.stringify(initialDB));
+        return inMemoryDB;
     }
-    const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    let db;
+    let raw = '';
+    try {
+        raw = fs.readFileSync(DB_FILE, 'utf8');
+        db = JSON.parse(raw);
+    }
+    catch (err) {
+        console.error('FATAL: db.json is corrupted!', err);
+        // Try to repair a truncated JSON file
+        let repaired = false;
+        const appendOptions = ['}', ']}', ']}}', '}]}', '}}]}', '"]}', '"}'];
+        for (const suffix of appendOptions) {
+            try {
+                db = JSON.parse(raw + suffix);
+                repaired = true;
+                console.error('SUCCESS: Repaired db.json by appending: ' + suffix);
+                fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+                break;
+            }
+            catch (e) { }
+        }
+        if (!repaired) {
+            console.error('RAW CORRUPTED JSON TAIL:', raw.slice(-200));
+            fs.copyFileSync(DB_FILE, `${DB_FILE}.corrupted.${Date.now()}`);
+            db = JSON.parse(JSON.stringify(initialDB));
+            fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+        }
+    }
     if (!db.owners)
         db.owners = [];
     if (!db.businesses)
         db.businesses = [];
+    inMemoryDB = db;
     return db;
 };
 let isSaving = false;
@@ -79,6 +112,26 @@ const getBiz = (db, bizId) => {
         biz.clientes = [];
     if (!biz.pagos_clientes)
         biz.pagos_clientes = [];
+    if (!biz.products)
+        biz.products = [];
+    if (!biz.employees)
+        biz.employees = [];
+    if (!biz.sales)
+        biz.sales = [];
+    if (!biz.shifts)
+        biz.shifts = [];
+    if (!biz.expenses)
+        biz.expenses = [];
+    if (!biz.cash_movements)
+        biz.cash_movements = [];
+    if (!biz.inventory_movements)
+        biz.inventory_movements = [];
+    if (!biz.activity_log)
+        biz.activity_log = [];
+    if (!biz.approval_requests)
+        biz.approval_requests = [];
+    if (!biz.transfers)
+        biz.transfers = [];
     return biz;
 };
 // Generate a short code like SOL-001
@@ -113,14 +166,18 @@ const requireBizAccess = (req, res, next) => {
     const s = req.session;
     if (!s.business_id)
         return res.status(401).json({ error: 'Selecciona un negocio primero.' });
+    if (!s.owner_id && !s.employee_id)
+        return res.status(401).json({ error: 'No autorizado.' });
     const db = getDB();
     const biz = db.businesses.find((b) => b.id === s.business_id);
-    if (biz?.is_suspended)
+    if (!biz) {
+        // Stale session — the business no longer exists in the DB
+        s.business_id = null;
+        return res.status(401).json({ error: 'Tu sesión de negocio ya no es válida. Por favor selecciona el negocio nuevamente.' });
+    }
+    if (biz.is_suspended)
         return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
-    // If owner, give access. If employee, verify business matches.
-    if (s.owner_id || s.employee_id)
-        return next();
-    return res.status(401).json({ error: 'No autorizado.' });
+    return next();
 };
 const requireOwnerBizAccess = (req, res, next) => {
     const s = req.session;
@@ -128,7 +185,11 @@ const requireOwnerBizAccess = (req, res, next) => {
         return res.status(403).json({ error: 'Solo el dueño puede realizar esta acción.' });
     const db = getDB();
     const biz = db.businesses.find((b) => b.id === s.business_id);
-    if (biz?.is_suspended)
+    if (!biz) {
+        s.business_id = null;
+        return res.status(401).json({ error: 'Tu sesión de negocio ya no es válida. Por favor selecciona el negocio nuevamente.' });
+    }
+    if (biz.is_suspended)
         return res.status(403).json({ error: 'Este negocio ha sido suspendido por administración.' });
     next();
 };
@@ -143,6 +204,9 @@ const authLimiter = rateLimit({
 async function startServer() {
     const app = express();
     app.use(express.json());
+    // Use global unified auth router to support Google Auth and JWT in POS
+    const { authRouter } = await import('./auth.js');
+    app.use('/api/auth', authRouter);
     const sessionSecret = process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production';
     app.use(session({
         name: 'vuttik_pos_sid',
@@ -242,6 +306,22 @@ async function startServer() {
                 business_nombre: biz.nombre,
             }
         });
+    });
+    // DEBUG endpoint to see server files
+    app.get('/api/debug-files', (req, res) => {
+        const fs = require('fs');
+        const path = require('path');
+        const dir = process.env.USER_DATA_PATH || process.cwd();
+        try {
+            const files = fs.readdirSync(dir).map((f) => {
+                const stats = fs.statSync(path.join(dir, f));
+                return `${f} (${stats.size} bytes)`;
+            });
+            res.json(files);
+        }
+        catch (e) {
+            res.status(500).json({ error: e.message });
+        }
     });
     // Get current session user
     app.get('/api/auth/me', async (req, res) => {
@@ -453,7 +533,7 @@ async function startServer() {
         res.json(db.businesses[idx]);
     });
     // Delete business
-    app.delete('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
+    app.delete('/api/businesses/:bizId', requireOwnerAuth, async (req, res) => {
         const { bizId } = req.params;
         const s = req.session;
         const db = getDB();
@@ -462,6 +542,14 @@ async function startServer() {
             return res.status(404).json({ error: 'Negocio no encontrado.' });
         db.businesses.splice(idx, 1);
         saveDB(db);
+        // Remove products and business profile from vuttik market
+        try {
+            await run('DELETE FROM vuttik_products WHERE author_id = ?', [bizId]);
+            await run('DELETE FROM vuttik_business_profiles WHERE uid = ?', [bizId]);
+        }
+        catch (err) {
+            console.error('Error deleting business info from Vuttik SQLite:', err);
+        }
         res.json({ success: true });
     });
     // =============================================
@@ -626,11 +714,17 @@ async function startServer() {
         }));
         res.json(safe);
     });
-    // Products
+    // Products - Read directly from db.json which is the POS source of truth
     app.get('/api/products', requireBizAccess, (req, res) => {
-        const s = req.session;
-        const db = getDB();
-        res.json(getBiz(db, s.business_id).products || []);
+        try {
+            const s = req.session;
+            const db = getDB();
+            const biz = getBiz(db, s.business_id);
+            res.json(biz.products || []);
+        }
+        catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     });
     app.post('/api/products', requireBizAccess, async (req, res) => {
         const s = req.session;
@@ -1020,6 +1114,20 @@ async function startServer() {
                 });
             }
         }
+        // BIZ-004 FIX: Validate credit limit on the server BEFORE saving the sale
+        if (sale.metodo_pago === 'A Crédito (Fiao)' && sale.cliente_id) {
+            if (!biz.clientes)
+                biz.clientes = [];
+            const creditCliente = biz.clientes.find((c) => c.id === sale.cliente_id);
+            if (creditCliente && creditCliente.limite_credito > 0) {
+                const newDebt = (creditCliente.deuda_actual || 0) + sale.total;
+                if (newDebt > creditCliente.limite_credito) {
+                    return res.status(400).json({
+                        error: `Límite de crédito excedido para "${creditCliente.nombre}". Deuda actual: RD$${creditCliente.deuda_actual}, Límite: RD$${creditCliente.limite_credito}, Venta: RD$${sale.total}.`
+                    });
+                }
+            }
+        }
         let costoTotal = 0;
         items.forEach((item) => {
             const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id);
@@ -1043,20 +1151,6 @@ async function startServer() {
         if (!biz.sales)
             biz.sales = [];
         biz.sales.push(newSale);
-        // BIZ-004 FIX: Validate credit limit on the server — prevents employees from exceeding admin-set limits
-        if (sale.metodo_pago === 'A Crédito (Fiao)' && sale.cliente_id) {
-            if (!biz.clientes)
-                biz.clientes = [];
-            const creditCliente = biz.clientes.find((c) => c.id === sale.cliente_id);
-            if (creditCliente && creditCliente.limite_credito > 0) {
-                const newDebt = (creditCliente.deuda_actual || 0) + sale.total;
-                if (newDebt > creditCliente.limite_credito) {
-                    return res.status(400).json({
-                        error: `Límite de crédito excedido para "${creditCliente.nombre}". Deuda actual: RD$${creditCliente.deuda_actual}, Límite: RD$${creditCliente.limite_credito}, Venta: RD$${sale.total}.`
-                    });
-                }
-            }
-        }
         // Increment client debt if fiao
         if (sale.metodo_pago === 'A Crédito (Fiao)' && sale.cliente_id) {
             if (!biz.clientes)
@@ -1099,9 +1193,19 @@ async function startServer() {
         const s = req.session;
         const db = getDB();
         const biz = getBiz(db, s.business_id);
-        // Validate using owner password
+        // Validate using owner password — check db.owners first, then fall back to SQLite
+        let valid = false;
         const owner = db.owners.find((o) => o.id === biz.owner_id);
-        const valid = owner ? await bcrypt.compare(password, owner.password_hash) : false;
+        if (owner && owner.password_hash) {
+            valid = await bcrypt.compare(password, owner.password_hash);
+        }
+        else {
+            // Owner is stored in SQLite (new system)
+            const sqliteOwner = await get('SELECT password_hash FROM vuttik_users WHERE uid = ?', [biz.owner_id]);
+            if (sqliteOwner && sqliteOwner.password_hash) {
+                valid = await bcrypt.compare(password, sqliteOwner.password_hash);
+            }
+        }
         if (!valid)
             return res.status(401).json({ error: 'La clave de seguridad ingresada es incorrecta.' });
         if (!motivo || motivo.trim().length === 0)
@@ -1835,6 +1939,9 @@ async function startServer() {
         console.error('Unhandled server error:', err);
         if (res.headersSent)
             return next(err);
+        if (err?.message === 'Negocio no encontrado') {
+            return res.status(401).json({ error: 'Negocio no encontrado o sesión inválida.' });
+        }
         res.status(500).json({ error: err?.message || 'Error interno del servidor.' });
     });
     if (process.env.NODE_ENV === 'production') {

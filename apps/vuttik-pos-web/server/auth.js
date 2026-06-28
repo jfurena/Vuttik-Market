@@ -60,6 +60,14 @@ authRouter.post('/register', async (req, res) => {
             console.log(`\n\n=== MODO LOCAL: CORREO AUTO-VERIFICADO ===\nPara: ${email}\nEl sistema saltó la verificación porque estás en entorno local.\n==========================================\n\n`);
         }
         const token = jwt.sign({ uid, email, role: 'user' }, JWT_SECRET(), { expiresIn: '30d' });
+        // Set POS session explicitly so POS dashboard can authenticate via cookie
+        const s = req.session;
+        if (s) {
+            s.owner_id = uid;
+            s.rol = 'admin';
+            if (typeof s.save === 'function')
+                s.save();
+        }
         res.json({ token, user: { uid, email, displayName: name, role: 'user', planId: 'free', isBanned: false, onboardingCompleted: false, emailVerified: emailVerifiedFrontend } });
     }
     catch (err) {
@@ -84,6 +92,14 @@ authRouter.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         const token = jwt.sign({ uid: user.uid, email: user.email, role: user.role }, JWT_SECRET(), { expiresIn: '30d' });
         delete user.password_hash;
+        // Set POS session explicitly so POS dashboard can authenticate via cookie
+        const s = req.session;
+        if (s) {
+            s.owner_id = user.uid;
+            s.rol = 'admin';
+            if (typeof s.save === 'function')
+                s.save();
+        }
         res.json({
             token,
             user: {
@@ -237,6 +253,13 @@ authRouter.post('/reset-password', async (req, res) => {
 export const generateOAuthJWT = (uid, email, role) => {
     return jwt.sign({ uid, email, role }, JWT_SECRET(), { expiresIn: '30d' });
 };
+authRouter.post('/logout', (req, res) => {
+    const s = req.session;
+    if (s) {
+        s.destroy();
+    }
+    res.json({ success: true, message: 'Logged out successfully' });
+});
 authRouter.post('/google/callback', async (req, res) => {
     const { code, redirect_uri } = req.body;
     if (!code)
@@ -254,8 +277,10 @@ authRouter.post('/google/callback', async (req, res) => {
             }),
         });
         const tokenData = await tokenResponse.json();
-        if (!tokenResponse.ok)
+        if (!tokenResponse.ok) {
+            console.error('Google Token Error details:', tokenData, { sentRedirectUri: redirect_uri });
             return res.status(400).json({ error: 'Google Token Error', details: tokenData });
+        }
         const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
             headers: { Authorization: `Bearer ${tokenData.access_token}` },
         });

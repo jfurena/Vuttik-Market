@@ -12,7 +12,7 @@ import { authRouter, authenticateToken } from './auth.js';
 import compression from 'compression';
 import bcrypt from 'bcryptjs';
 const app = express();
-const port = process.env.PORT || 3005;
+const port = parseInt(process.env.PORT || '3005', 10);
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
