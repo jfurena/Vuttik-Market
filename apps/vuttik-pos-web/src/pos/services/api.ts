@@ -194,7 +194,12 @@ export const ApiService = {
   },
 
   async loginMe() {
-    const res = await fetch(`${API_BASE}/auth/me?t=${Date.now()}`);
+    const token = localStorage.getItem('vuttik_token');
+    const res = await fetch(`${API_BASE}/auth/me?t=${Date.now()}`, {
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    });
     if (!res.ok) return null;
     return res.json();
   },

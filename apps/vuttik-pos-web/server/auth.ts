@@ -281,6 +281,14 @@ export const generateOAuthJWT = (uid: string, email: string, role: string) => {
     return jwt.sign({ uid, email, role }, JWT_SECRET(), { expiresIn: '30d' });
 };
 
+authRouter.post('/logout', (req, res) => {
+  const s = (req as any).session;
+  if (s) {
+    s.destroy();
+  }
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
 authRouter.post('/google/callback', async (req, res) => {
   const { code, redirect_uri } = req.body;
   if (!code) return res.status(400).json({ error: 'Authorization code is required' });
