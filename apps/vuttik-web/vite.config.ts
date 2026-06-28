@@ -16,9 +16,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       dedupe: ['react', 'react-dom'],
       alias: {
-        '@': path.resolve(__dirname, 'src'),
-        'framer-motion': path.resolve(__dirname, 'src/lib/framer-motion-mock.tsx'),
-        'motion/react': path.resolve(__dirname, 'src/lib/framer-motion-mock.tsx')
+        '@': path.resolve(__dirname, 'src')
       },
     },
     build: {
