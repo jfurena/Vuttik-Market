@@ -45,15 +45,20 @@ jobs:
           # Create a PHP script to trigger the bash deployment securely
           cat << 'EOF' > ftp_upload/public_html/deploy_script.php
           <?php
+          ini_set('display_errors', 1);
+          error_reporting(E_ALL);
           if (!isset($_GET['key']) || $_GET['key'] !== 'vuttik_deploy_2026_xyz') {
               http_response_code(403);
               die('Unauthorized');
           }
           echo "Starting deployment...<br>\n";
           echo "<pre>";
-          // Run the bash script located one level above public_html
-          $output = shell_exec('cd ../ && bash run_deploy.sh 2>&1');
-          echo htmlspecialchars($output);
+          if (function_exists('shell_exec')) {
+              $output = shell_exec('cd ../ && bash run_deploy.sh 2>&1');
+              echo htmlspecialchars($output);
+          } else {
+              echo "ERROR: shell_exec is disabled.";
+          }
           echo "</pre>";
           echo "Deployment triggered.";
           ?>
@@ -129,4 +134,4 @@ jobs:
       - name: Trigger Deployment Script
         run: |
           echo "Triggering deployment webhook..."
-          curl -sS --fail "https://vuttik.com/deploy_script.php?key=vuttik_deploy_2026_xyz"
+          curl -sS -i "https://vuttik.com/deploy_script.php?key=vuttik_deploy_2026_xyz"
