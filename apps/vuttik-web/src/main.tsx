@@ -13,9 +13,8 @@ const params = new URLSearchParams(window.location.search);
 if (params.get('state') === 'pos_google' && !window.location.hostname.startsWith('pos.')) {
   params.set('state', 'google');
   window.location.href = `https://pos.vuttik.com/login?${params.toString()}`;
-}
-
-createRoot(document.getElementById('root')!).render(
+} else {
+  createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ErrorBoundary>
         <AuthProvider>
@@ -30,3 +29,4 @@ createRoot(document.getElementById('root')!).render(
       </ErrorBoundary>
     </StrictMode>,
   );
+}

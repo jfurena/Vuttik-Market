@@ -1,0 +1,509 @@
+deploy	Set up job	﻿2026-06-28T00:33:20.7980492Z Current runner version: '2.335.1'
+deploy	Set up job	2026-06-28T00:33:20.8019001Z ##[group]Runner Image Provisioner
+deploy	Set up job	2026-06-28T00:33:20.8020408Z Hosted Compute Agent
+deploy	Set up job	2026-06-28T00:33:20.8021440Z Version: 20260611.554
+deploy	Set up job	2026-06-28T00:33:20.8022518Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+deploy	Set up job	2026-06-28T00:33:20.8024206Z Build Date: 2026-06-11T21:40:46Z
+deploy	Set up job	2026-06-28T00:33:20.8025436Z Worker ID: {489ecc1e-0b3f-4ede-9361-b014e1124af0}
+deploy	Set up job	2026-06-28T00:33:20.8026758Z Azure Region: eastus
+deploy	Set up job	2026-06-28T00:33:20.8027758Z ##[endgroup]
+deploy	Set up job	2026-06-28T00:33:20.8030153Z ##[group]Operating System
+deploy	Set up job	2026-06-28T00:33:20.8031523Z Ubuntu
+deploy	Set up job	2026-06-28T00:33:20.8032395Z 24.04.4
+deploy	Set up job	2026-06-28T00:33:20.8033794Z LTS
+deploy	Set up job	2026-06-28T00:33:20.8034762Z ##[endgroup]
+deploy	Set up job	2026-06-28T00:33:20.8036226Z ##[group]Runner Image
+deploy	Set up job	2026-06-28T00:33:20.8037490Z Image: ubuntu-24.04
+deploy	Set up job	2026-06-28T00:33:20.8038491Z Version: 20260622.220.1
+deploy	Set up job	2026-06-28T00:33:20.8040472Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260622.220/images/ubuntu/Ubuntu2404-Readme.md
+deploy	Set up job	2026-06-28T00:33:20.8043955Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260622.220
+deploy	Set up job	2026-06-28T00:33:20.8045695Z ##[endgroup]
+deploy	Set up job	2026-06-28T00:33:20.8047834Z ##[group]GITHUB_TOKEN Permissions
+deploy	Set up job	2026-06-28T00:33:20.8051004Z Contents: read
+deploy	Set up job	2026-06-28T00:33:20.8052089Z Metadata: read
+deploy	Set up job	2026-06-28T00:33:20.8053004Z Packages: read
+deploy	Set up job	2026-06-28T00:33:20.8054228Z ##[endgroup]
+deploy	Set up job	2026-06-28T00:33:20.8057512Z Secret source: Actions
+deploy	Set up job	2026-06-28T00:33:20.8059282Z Prepare workflow directory
+deploy	Set up job	2026-06-28T00:33:20.8550970Z Prepare all required actions
+deploy	Set up job	2026-06-28T00:33:20.8609271Z Getting action download info
+deploy	Set up job	2026-06-28T00:33:21.0384948Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+deploy	Set up job	2026-06-28T00:33:21.1257230Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+deploy	Set up job	2026-06-28T00:33:21.3195185Z Complete job name: deploy
+deploy	Checkout Code	﻿2026-06-28T00:33:21.3995928Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+deploy	Checkout Code	2026-06-28T00:33:21.4005149Z ##[group]Run actions/checkout@v4
+deploy	Checkout Code	2026-06-28T00:33:21.4005934Z with:
+deploy	Checkout Code	2026-06-28T00:33:21.4006410Z   repository: jfurena/Vuttik-Market
+deploy	Checkout Code	2026-06-28T00:33:21.4010791Z   token: ***
+deploy	Checkout Code	2026-06-28T00:33:21.4011245Z   ssh-strict: true
+deploy	Checkout Code	2026-06-28T00:33:21.4011704Z   ssh-user: git
+deploy	Checkout Code	2026-06-28T00:33:21.4012166Z   persist-credentials: true
+deploy	Checkout Code	2026-06-28T00:33:21.4012669Z   clean: true
+deploy	Checkout Code	2026-06-28T00:33:21.4013350Z   sparse-checkout-cone-mode: true
+deploy	Checkout Code	2026-06-28T00:33:21.4013932Z   fetch-depth: 1
+deploy	Checkout Code	2026-06-28T00:33:21.4014384Z   fetch-tags: false
+deploy	Checkout Code	2026-06-28T00:33:21.4014851Z   show-progress: true
+deploy	Checkout Code	2026-06-28T00:33:21.4015309Z   lfs: false
+deploy	Checkout Code	2026-06-28T00:33:21.4015733Z   submodules: false
+deploy	Checkout Code	2026-06-28T00:33:21.4016253Z   set-safe-directory: true
+deploy	Checkout Code	2026-06-28T00:33:21.4017034Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:21.5046798Z Syncing repository: jfurena/Vuttik-Market
+deploy	Checkout Code	2026-06-28T00:33:21.5048777Z ##[group]Getting Git version info
+deploy	Checkout Code	2026-06-28T00:33:21.5049616Z Working directory is '/home/runner/work/Vuttik-Market/Vuttik-Market'
+deploy	Checkout Code	2026-06-28T00:33:21.5050771Z [command]/usr/bin/git version
+deploy	Checkout Code	2026-06-28T00:33:21.5157623Z git version 2.54.0
+deploy	Checkout Code	2026-06-28T00:33:21.5213559Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:21.5228551Z Temporarily overriding HOME='/home/runner/work/_temp/82e797b8-0d39-430c-bd51-42620f3964c9' before making global git config changes
+deploy	Checkout Code	2026-06-28T00:33:21.5230190Z Adding repository directory to the temporary git global config as a safe directory
+deploy	Checkout Code	2026-06-28T00:33:21.5234329Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Vuttik-Market/Vuttik-Market
+deploy	Checkout Code	2026-06-28T00:33:21.5289693Z Deleting the contents of '/home/runner/work/Vuttik-Market/Vuttik-Market'
+deploy	Checkout Code	2026-06-28T00:33:21.5295387Z ##[group]Initializing the repository
+deploy	Checkout Code	2026-06-28T00:33:21.5300347Z [command]/usr/bin/git init /home/runner/work/Vuttik-Market/Vuttik-Market
+deploy	Checkout Code	2026-06-28T00:33:21.5432151Z hint: Using 'master' as the name for the initial branch. This default branch name
+deploy	Checkout Code	2026-06-28T00:33:21.5434057Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+deploy	Checkout Code	2026-06-28T00:33:21.5435267Z hint: to use in all of your new repositories, which will suppress this warning,
+deploy	Checkout Code	2026-06-28T00:33:21.5436681Z hint: call:
+deploy	Checkout Code	2026-06-28T00:33:21.5437440Z hint:
+deploy	Checkout Code	2026-06-28T00:33:21.5438348Z hint: 	git config --global init.defaultBranch <name>
+deploy	Checkout Code	2026-06-28T00:33:21.5439523Z hint:
+deploy	Checkout Code	2026-06-28T00:33:21.5440438Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+deploy	Checkout Code	2026-06-28T00:33:21.5441969Z hint: 'development'. The just-created branch can be renamed via this command:
+deploy	Checkout Code	2026-06-28T00:33:21.5442793Z hint:
+deploy	Checkout Code	2026-06-28T00:33:21.5443520Z hint: 	git branch -m <name>
+deploy	Checkout Code	2026-06-28T00:33:21.5444094Z hint:
+deploy	Checkout Code	2026-06-28T00:33:21.5444768Z hint: Disable this message with "git config set advice.defaultBranchName false"
+deploy	Checkout Code	2026-06-28T00:33:21.5446422Z Initialized empty Git repository in /home/runner/work/Vuttik-Market/Vuttik-Market/.git/
+deploy	Checkout Code	2026-06-28T00:33:21.5451286Z [command]/usr/bin/git remote add origin https://github.com/jfurena/Vuttik-Market
+deploy	Checkout Code	2026-06-28T00:33:21.5500413Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:21.5501476Z ##[group]Disabling automatic garbage collection
+deploy	Checkout Code	2026-06-28T00:33:21.5504209Z [command]/usr/bin/git config --local gc.auto 0
+deploy	Checkout Code	2026-06-28T00:33:21.5537951Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:21.5538740Z ##[group]Setting up auth
+deploy	Checkout Code	2026-06-28T00:33:21.5545555Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+deploy	Checkout Code	2026-06-28T00:33:21.5584072Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+deploy	Checkout Code	2026-06-28T00:33:21.5960560Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+deploy	Checkout Code	2026-06-28T00:33:21.5997675Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+deploy	Checkout Code	2026-06-28T00:33:21.6227723Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+deploy	Checkout Code	2026-06-28T00:33:21.6261247Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+deploy	Checkout Code	2026-06-28T00:33:21.6492796Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+deploy	Checkout Code	2026-06-28T00:33:21.6529947Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:21.6531474Z ##[group]Fetching the repository
+deploy	Checkout Code	2026-06-28T00:33:21.6541588Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +5a70cdcea1b0c9319fff4b8d914d89efa1de0b63:refs/remotes/origin/main
+deploy	Checkout Code	2026-06-28T00:33:22.4492284Z From https://github.com/jfurena/Vuttik-Market
+deploy	Checkout Code	2026-06-28T00:33:22.4494782Z  * [new ref]         5a70cdcea1b0c9319fff4b8d914d89efa1de0b63 -> origin/main
+deploy	Checkout Code	2026-06-28T00:33:22.4530731Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:22.4532717Z ##[group]Determining the checkout info
+deploy	Checkout Code	2026-06-28T00:33:22.4534885Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:22.4539169Z [command]/usr/bin/git sparse-checkout disable
+deploy	Checkout Code	2026-06-28T00:33:22.4587394Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+deploy	Checkout Code	2026-06-28T00:33:22.4618465Z ##[group]Checking out the ref
+deploy	Checkout Code	2026-06-28T00:33:22.4623065Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+deploy	Checkout Code	2026-06-28T00:33:22.5906821Z Switched to a new branch 'main'
+deploy	Checkout Code	2026-06-28T00:33:22.5909520Z branch 'main' set up to track 'origin/main'.
+deploy	Checkout Code	2026-06-28T00:33:22.5928993Z ##[endgroup]
+deploy	Checkout Code	2026-06-28T00:33:22.5975769Z [command]/usr/bin/git log -1 --format=%H
+deploy	Checkout Code	2026-06-28T00:33:22.5999552Z 5a70cdcea1b0c9319fff4b8d914d89efa1de0b63
+deploy	Setup Node.js	﻿2026-06-28T00:33:22.6395636Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+deploy	Setup Node.js	2026-06-28T00:33:22.6402345Z ##[group]Run actions/setup-node@v4
+deploy	Setup Node.js	2026-06-28T00:33:22.6403955Z with:
+deploy	Setup Node.js	2026-06-28T00:33:22.6404949Z   node-version: 20
+deploy	Setup Node.js	2026-06-28T00:33:22.6405962Z   always-auth: false
+deploy	Setup Node.js	2026-06-28T00:33:22.6407008Z   check-latest: false
+deploy	Setup Node.js	2026-06-28T00:33:22.6419069Z   token: ***
+deploy	Setup Node.js	2026-06-28T00:33:22.6420069Z ##[endgroup]
+deploy	Setup Node.js	2026-06-28T00:33:22.7912874Z Attempting to download 20...
+deploy	Setup Node.js	2026-06-28T00:33:22.8023366Z (node:2297) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+deploy	Setup Node.js	2026-06-28T00:33:22.8024671Z (Use `node --trace-deprecation ...` to show where the warning was created)
+deploy	Setup Node.js	2026-06-28T00:33:23.3011306Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+deploy	Setup Node.js	2026-06-28T00:33:23.5869632Z Extracting ...
+deploy	Setup Node.js	2026-06-28T00:33:23.6027148Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/7b7ff561-f0e8-494c-a469-f503e3800572 -f /home/runner/work/_temp/2b89f0b5-ae6b-4d53-bf5e-65bc65910d8a
+deploy	Setup Node.js	2026-06-28T00:33:24.6586013Z Adding to the cache ...
+deploy	Setup Node.js	2026-06-28T00:33:26.5861599Z ##[group]Environment details
+deploy	Setup Node.js	2026-06-28T00:33:26.8184236Z node: v20.20.2
+deploy	Setup Node.js	2026-06-28T00:33:26.8184662Z npm: 10.8.2
+deploy	Setup Node.js	2026-06-28T00:33:26.8184977Z yarn: 1.22.22
+deploy	Setup Node.js	2026-06-28T00:33:26.8185923Z ##[endgroup]
+deploy	Install and Build Frontend	﻿2026-06-28T00:33:26.8372047Z ##[group]Run cd apps/vuttik-pos-web
+deploy	Install and Build Frontend	2026-06-28T00:33:26.8372509Z [36;1mcd apps/vuttik-pos-web[0m
+deploy	Install and Build Frontend	2026-06-28T00:33:26.8372819Z [36;1mnpm install --no-package-lock[0m
+deploy	Install and Build Frontend	2026-06-28T00:33:26.8373420Z [36;1mnpm run build[0m
+deploy	Install and Build Frontend	2026-06-28T00:33:26.8576543Z shell: /usr/bin/bash -e {0}
+deploy	Install and Build Frontend	2026-06-28T00:33:26.8576962Z ##[endgroup]
+deploy	Install and Build Frontend	2026-06-28T00:33:27.1878399Z npm warn workspaces vuttik-pos-web in filter set, but no workspace folder present
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9302390Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9303560Z npm warn EBADENGINE   package: 'concurrently@10.0.3',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9304661Z npm warn EBADENGINE   required: { node: '>=22' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9305810Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9306837Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9307876Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9309010Z npm warn EBADENGINE   package: 'electron@42.5.0',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9310115Z npm warn EBADENGINE   required: { node: '>= 22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9311361Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9312444Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9313583Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9314619Z npm warn EBADENGINE   package: 'puppeteer@25.2.1',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9315715Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9317007Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9318122Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9328304Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9329674Z npm warn EBADENGINE   package: '@electron-internal/extract-zip@1.0.4',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9331038Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9332542Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9334079Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9335062Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9337010Z npm warn EBADENGINE   package: '@electron/get@5.0.0',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9337898Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9338908Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9339755Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9340422Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9341290Z npm warn EBADENGINE   package: '@electron/rebuild@4.0.5',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9342707Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9344125Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9344947Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9345808Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9346824Z npm warn EBADENGINE   package: 'node-abi@4.31.0',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9347932Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9349080Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9350009Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9366974Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9367836Z npm warn EBADENGINE   package: '@puppeteer/browsers@3.0.5',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9368734Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9369625Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9370326Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9370904Z npm warn EBADENGINE Unsupported engine {
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9371669Z npm warn EBADENGINE   package: 'puppeteer-core@25.2.1',
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9372458Z npm warn EBADENGINE   required: { node: '>=22.12.0' },
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9373564Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+deploy	Install and Build Frontend	2026-06-28T00:33:56.9374234Z npm warn EBADENGINE }
+deploy	Install and Build Frontend	2026-06-28T00:33:58.7749514Z npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+deploy	Install and Build Frontend	2026-06-28T00:33:59.7320709Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1336359Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1337778Z added 509 packages, and audited 511 packages in 47s
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1338382Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1338825Z 82 packages are looking for funding
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1339242Z   run `npm fund` for details
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1368170Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1368503Z 1 high severity vulnerability
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1369039Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1369554Z To address all issues (including breaking changes), run:
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1370291Z   npm audit fix --force
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1370499Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.1370660Z Run `npm audit` for details.
+deploy	Install and Build Frontend	2026-06-28T00:34:14.3046786Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.3047486Z > vuttik-pos-web@0.0.0 build
+deploy	Install and Build Frontend	2026-06-28T00:34:14.3048035Z > vite build
+deploy	Install and Build Frontend	2026-06-28T00:34:14.3048262Z 
+deploy	Install and Build Frontend	2026-06-28T00:34:14.7085322Z [36mvite v6.4.3 [32mbuilding for production...[36m[39m
+deploy	Install and Build Frontend	2026-06-28T00:34:14.7796601Z transforming...
+deploy	Install and Build Frontend	2026-06-28T00:34:22.0441193Z [32m✓[39m 3216 modules transformed.
+deploy	Install and Build Frontend	2026-06-28T00:34:23.0245527Z rendering chunks...
+deploy	Install and Build Frontend	2026-06-28T00:34:23.2644695Z [33m[plugin vite:reporter] 
+deploy	Install and Build Frontend	2026-06-28T00:34:23.2650194Z (!) /home/runner/work/Vuttik-Market/Vuttik-Market/apps/vuttik-pos-web/src/components/LemonSqueezyMockCheckout.tsx is dynamically imported by /home/runner/work/Vuttik-Market/Vuttik-Market/apps/vuttik-pos-web/src/App.tsx but also statically imported by /home/runner/work/Vuttik-Market/Vuttik-Market/apps/vuttik-pos-web/src/components/MyPlan.tsx, /home/runner/work/Vuttik-Market/Vuttik-Market/apps/vuttik-pos-web/src/components/OnboardingModal.tsx, /home/runner/work/Vuttik-Market/Vuttik-Market/apps/vuttik-pos-web/src/components/PromotionModal.tsx, dynamic import will not move module into another chunk.
+deploy	Install and Build Frontend	2026-06-28T00:34:23.2654804Z [39m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3174638Z computing gzip size...
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3479445Z [2mdist/[22m[32mindex.html                                 [39m[1m[2m  1.05 kB[22m[1m[22m[2m │ gzip:   0.50 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3481402Z [2mdist/[22m[2massets/[22m[35mleaflet-CIGW-MKW.css                [39m[1m[2m 15.61 kB[22m[1m[22m[2m │ gzip:   6.46 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3483628Z [2mdist/[22m[2massets/[22m[35mindex-B7V8aPGm.css                  [39m[1m[2m183.57 kB[22m[1m[22m[2m │ gzip:  25.21 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3485548Z [2mdist/[22m[2massets/[22m[36mimageCompressor-UN6DOEwP.js         [39m[1m[2m  0.46 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3487682Z [2mdist/[22m[2massets/[22m[36mVerifyEmail-CBnOKxTl.js             [39m[1m[2m  2.09 kB[22m[1m[22m[2m │ gzip:   0.88 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3489481Z [2mdist/[22m[2massets/[22m[36mPublishSelection-BYHDmr8B.js        [39m[1m[2m  2.50 kB[22m[1m[22m[2m │ gzip:   0.85 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3491369Z [2mdist/[22m[2massets/[22m[36mCameraModal-CF5zeU-y.js             [39m[1m[2m  3.08 kB[22m[1m[22m[2m │ gzip:   1.33 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3493405Z [2mdist/[22m[2massets/[22m[36mNotificationsPage-D8E-10Ak.js       [39m[1m[2m  3.37 kB[22m[1m[22m[2m │ gzip:   1.37 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3495312Z [2mdist/[22m[2massets/[22m[36mGlobalBusinessSelector-B76r6a0z.js  [39m[1m[2m  3.41 kB[22m[1m[22m[2m │ gzip:   1.37 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3497112Z [2mdist/[22m[2massets/[22m[36mCategoryExplorer-BXGaPoUZ.js        [39m[1m[2m  3.93 kB[22m[1m[22m[2m │ gzip:   1.68 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3498955Z [2mdist/[22m[2massets/[22m[36mResetPassword-Cj7aIouh.js           [39m[1m[2m  4.14 kB[22m[1m[22m[2m │ gzip:   1.55 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3500684Z [2mdist/[22m[2massets/[22m[36mHerramientas-DwQnqvmb.js            [39m[1m[2m  4.59 kB[22m[1m[22m[2m │ gzip:   1.49 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3515324Z [2mdist/[22m[2massets/[22m[36mMyPlan-Ler9dhU5.js                  [39m[1m[2m  5.56 kB[22m[1m[22m[2m │ gzip:   2.18 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3516458Z [2mdist/[22m[2massets/[22m[36mLocationInput-COVhpGrl.js           [39m[1m[2m  8.82 kB[22m[1m[22m[2m │ gzip:   3.05 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3517858Z [2mdist/[22m[2massets/[22m[36mEanRecollector-BUffnCBx.js          [39m[1m[2m  9.76 kB[22m[1m[22m[2m │ gzip:   2.79 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3519570Z [2mdist/[22m[2massets/[22m[36mChat-CXQe5tLD.js                    [39m[1m[2m 11.32 kB[22m[1m[22m[2m │ gzip:   3.70 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3521453Z [2mdist/[22m[2massets/[22m[36mPromotionModal-DkQxyhXK.js          [39m[1m[2m 13.88 kB[22m[1m[22m[2m │ gzip:   3.43 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3523536Z [2mdist/[22m[2massets/[22m[36mSettings-Dm2BAopS.js                [39m[1m[2m 15.62 kB[22m[1m[22m[2m │ gzip:   4.19 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3525415Z [2mdist/[22m[2massets/[22m[36mProductDetails-DR5Yv0LS.js          [39m[1m[2m 15.75 kB[22m[1m[22m[2m │ gzip:   4.72 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3527319Z [2mdist/[22m[2massets/[22m[36mGuardianDashboard-BXbAkv0v.js       [39m[1m[2m 17.84 kB[22m[1m[22m[2m │ gzip:   4.69 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3529312Z [2mdist/[22m[2massets/[22m[36mBusinessDashboard-I5Ocvk5d.js       [39m[1m[2m 19.16 kB[22m[1m[22m[2m │ gzip:   4.63 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3531231Z [2mdist/[22m[2massets/[22m[36mSocialFeed-CIIL2jA_.js              [39m[1m[2m 22.98 kB[22m[1m[22m[2m │ gzip:   6.24 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3532829Z [2mdist/[22m[2massets/[22m[36mNegocioDashboard-Bbgl4p1J.js        [39m[1m[2m 35.46 kB[22m[1m[22m[2m │ gzip:   7.96 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3534326Z [2mdist/[22m[2massets/[22m[36mProfile-CqEgsGuX.js                 [39m[1m[2m 43.16 kB[22m[1m[22m[2m │ gzip:  10.69 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3535340Z [2mdist/[22m[2massets/[22m[36mPublishForm-oL62q87P.js             [39m[1m[2m 45.14 kB[22m[1m[22m[2m │ gzip:  11.78 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3536785Z [2mdist/[22m[2massets/[22m[36mMegaGuardianDashboard-BoMV0Ya3.js   [39m[1m[2m 72.06 kB[22m[1m[22m[2m │ gzip:  15.39 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3538544Z [2mdist/[22m[2massets/[22m[36mleaflet-u9Pg6yAV.js                 [39m[1m[2m155.07 kB[22m[1m[22m[2m │ gzip:  45.35 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3539743Z [2mdist/[22m[2massets/[22m[36mindex-Dw3BN9Eb.js                   [39m[1m[33m640.49 kB[39m[22m[2m │ gzip: 139.86 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3540738Z [2mdist/[22m[2massets/[22m[36mvendor-lBBZ4009.js                  [39m[1m[33m665.80 kB[39m[22m[2m │ gzip: 204.11 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3542848Z [2mdist/[22m[2massets/[22m[36micons-B4QUk2Eo.js                   [39m[1m[33m852.94 kB[39m[22m[2m │ gzip: 157.81 kB[22m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3544133Z [33m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3544868Z (!) Some chunks are larger than 500 kB after minification. Consider:
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3545669Z - Using dynamic import() to code-split the application
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3546661Z - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3547710Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+deploy	Install and Build Frontend	2026-06-28T00:34:23.3548279Z [32m✓ built in 8.61s[39m
+deploy	Install and Build Backend	﻿2026-06-28T00:34:23.4521410Z ##[group]Run cd apps/vuttik-pos-web/server
+deploy	Install and Build Backend	2026-06-28T00:34:23.4521820Z [36;1mcd apps/vuttik-pos-web/server[0m
+deploy	Install and Build Backend	2026-06-28T00:34:23.4522123Z [36;1mnpm install --no-package-lock[0m
+deploy	Install and Build Backend	2026-06-28T00:34:23.4522405Z [36;1mnpm install typescript[0m
+deploy	Install and Build Backend	2026-06-28T00:34:23.4522692Z [36;1mnpx tsc || true[0m
+deploy	Install and Build Backend	2026-06-28T00:34:23.4557619Z shell: /usr/bin/bash -e {0}
+deploy	Install and Build Backend	2026-06-28T00:34:23.4557894Z ##[endgroup]
+deploy	Install and Build Backend	2026-06-28T00:34:27.0423788Z npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+deploy	Install and Build Backend	2026-06-28T00:34:27.0945726Z npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+deploy	Install and Build Backend	2026-06-28T00:34:27.1139710Z npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+deploy	Install and Build Backend	2026-06-28T00:34:27.1639619Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+deploy	Install and Build Backend	2026-06-28T00:34:27.1652408Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+deploy	Install and Build Backend	2026-06-28T00:34:27.1934009Z npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+deploy	Install and Build Backend	2026-06-28T00:34:27.2019192Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+deploy	Install and Build Backend	2026-06-28T00:34:27.2071344Z npm warn deprecated gauge@4.0.4: This package is no longer supported.
+deploy	Install and Build Backend	2026-06-28T00:34:27.2170784Z npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+deploy	Install and Build Backend	2026-06-28T00:34:27.4444309Z npm warn deprecated tar@6.2.1: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+deploy	Install and Build Backend	2026-06-28T00:34:27.5209347Z npm warn deprecated uuid@9.0.1: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+deploy	Install and Build Backend	2026-06-28T00:34:28.1860370Z 
+deploy	Install and Build Backend	2026-06-28T00:34:28.1861032Z added 266 packages, and audited 267 packages in 5s
+deploy	Install and Build Backend	2026-06-28T00:34:28.1861686Z 
+deploy	Install and Build Backend	2026-06-28T00:34:28.1862075Z 34 packages are looking for funding
+deploy	Install and Build Backend	2026-06-28T00:34:28.1862677Z   run `npm fund` for details
+deploy	Install and Build Backend	2026-06-28T00:34:28.1935056Z 
+deploy	Install and Build Backend	2026-06-28T00:34:28.1935707Z 9 vulnerabilities (2 low, 1 moderate, 6 high)
+deploy	Install and Build Backend	2026-06-28T00:34:28.1936594Z 
+deploy	Install and Build Backend	2026-06-28T00:34:28.1946023Z To address all issues (including breaking changes), run:
+deploy	Install and Build Backend	2026-06-28T00:34:28.1947060Z   npm audit fix --force
+deploy	Install and Build Backend	2026-06-28T00:34:28.1947587Z 
+deploy	Install and Build Backend	2026-06-28T00:34:28.1948082Z Run `npm audit` for details.
+deploy	Install and Build Backend	2026-06-28T00:34:30.1937541Z 
+deploy	Install and Build Backend	2026-06-28T00:34:30.1938615Z added 2 packages, removed 4 packages, changed 13 packages, and audited 265 packages in 2s
+deploy	Install and Build Backend	2026-06-28T00:34:30.1939411Z 
+deploy	Install and Build Backend	2026-06-28T00:34:30.1939628Z 34 packages are looking for funding
+deploy	Install and Build Backend	2026-06-28T00:34:30.1940249Z   run `npm fund` for details
+deploy	Install and Build Backend	2026-06-28T00:34:30.2107912Z 
+deploy	Install and Build Backend	2026-06-28T00:34:30.2108659Z 12 vulnerabilities (3 low, 2 moderate, 7 high)
+deploy	Install and Build Backend	2026-06-28T00:34:30.2109011Z 
+deploy	Install and Build Backend	2026-06-28T00:34:30.2109722Z To address issues that do not require attention, run:
+deploy	Install and Build Backend	2026-06-28T00:34:30.2110519Z   npm audit fix
+deploy	Install and Build Backend	2026-06-28T00:34:30.2110813Z 
+deploy	Install and Build Backend	2026-06-28T00:34:30.2111389Z To address all issues (including breaking changes), run:
+deploy	Install and Build Backend	2026-06-28T00:34:30.2111795Z   npm audit fix --force
+deploy	Install and Build Backend	2026-06-28T00:34:30.2111966Z 
+deploy	Install and Build Backend	2026-06-28T00:34:30.2112100Z Run `npm audit` for details.
+deploy	Install and Build Backend	2026-06-28T00:34:33.1448216Z ##[error]tsconfig.json(1,84): error TS5107: Option 'moduleResolution=node10' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
+deploy	Install and Build Backend	2026-06-28T00:34:33.1459894Z   Visit https://aka.ms/ts6 for migration information.
+deploy	Create Deployment Archive	﻿2026-06-28T00:34:33.1741695Z ##[group]Run mkdir deploy_package
+deploy	Create Deployment Archive	2026-06-28T00:34:33.1742068Z [36;1mmkdir deploy_package[0m
+deploy	Create Deployment Archive	2026-06-28T00:34:33.1742419Z [36;1mcp -r apps/vuttik-pos-web/dist deploy_package/[0m
+deploy	Create Deployment Archive	2026-06-28T00:34:33.1742823Z [36;1mcp -r apps/vuttik-pos-web/server deploy_package/[0m
+deploy	Create Deployment Archive	2026-06-28T00:34:33.1743558Z [36;1mtar -czf deploy.tar.gz -C deploy_package .[0m
+deploy	Create Deployment Archive	2026-06-28T00:34:33.1775681Z shell: /usr/bin/bash -e {0}
+deploy	Create Deployment Archive	2026-06-28T00:34:33.1775959Z ##[endgroup]
+deploy	Create Deployment Scripts	﻿2026-06-28T00:34:36.8998297Z ##[group]Run mkdir -p ftp_upload/public_html
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.8998764Z [36;1mmkdir -p ftp_upload/public_html[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.8999078Z [36;1mcp deploy.tar.gz ftp_upload/[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.8999346Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.8999645Z [36;1m# Create a PHP script to trigger the bash deployment securely[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9000116Z [36;1mcat << 'EOF' > ftp_upload/public_html/deploy_script.php[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9000452Z [36;1m<?php[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9000674Z [36;1mini_set('display_errors', 1);[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9000954Z [36;1merror_reporting(E_ALL);[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9001326Z [36;1mif (!isset($_GET['key']) || $_GET['key'] !== 'vuttik_deploy_2026_xyz') {[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9001717Z [36;1m    http_response_code(403);[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9001996Z [36;1m    die('Unauthorized');[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9002244Z [36;1m}[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9002468Z [36;1mecho "Starting deployment...<br>\n";[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9002765Z [36;1mecho "<pre>";[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9003049Z [36;1mif (function_exists('shell_exec')) {[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9003823Z [36;1m    $output = shell_exec('cd ../ && bash run_deploy.sh 2>&1');[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9004228Z [36;1m    echo htmlspecialchars($output);[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9004511Z [36;1m} else {[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9004755Z [36;1m    echo "ERROR: shell_exec is disabled.";[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9005046Z [36;1m}[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9005241Z [36;1mecho "</pre>";[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9005489Z [36;1mecho "Deployment triggered.";[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9005749Z [36;1m?>[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9005946Z [36;1mEOF[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9006135Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9006347Z [36;1m# Create the bash deployment script[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9006669Z [36;1mcat << 'EOF' > ftp_upload/run_deploy.sh[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9006963Z [36;1mset -e[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9007193Z [36;1mecho "Running deployment in $(pwd)"[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9007500Z [36;1mcd /home/sinagjwx/domains/vuttik.com/[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9007807Z [36;1mrm -rf temp_deploy[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9008066Z [36;1mmkdir -p temp_deploy[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9008344Z [36;1mtar -xzf deploy.tar.gz -C temp_deploy[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9008625Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9008857Z [36;1mecho "Deploying frontend to vuttik.com..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9009178Z [36;1mrm -rf public_html/assets[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9009467Z [36;1mcp -a temp_deploy/dist/. public_html/[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9009751Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9009998Z [36;1mecho "Deploying frontend to pos.vuttik.com..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9010561Z [36;1mmkdir -p ../pos.vuttik.com/public_html[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9010915Z [36;1mrm -rf ../pos.vuttik.com/public_html/assets[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9011299Z [36;1mcp -a temp_deploy/dist/. ../pos.vuttik.com/public_html/[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9011636Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9011844Z [36;1mecho "Copying backend files..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9012140Z [36;1mcp -r temp_deploy/server/* server/[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9012585Z [36;1mrm -rf temp_deploy deploy.tar.gz run_deploy.sh public_html/deploy_script.php[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9013007Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9013567Z [36;1mcd server[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9013839Z [36;1mexport NODE_HOME="/home/sinagjwx/nodejs"[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9014246Z [36;1mexport PATH="$NODE_HOME/bin:/usr/local/bin:/usr/bin:/bin:$PATH"[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9014626Z [36;1mecho "Running npm install..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9014906Z [36;1mnpm install --production[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9015153Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9015387Z [36;1mecho "Stopping old server processes..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9015706Z [36;1mpkill -f "node index.js" || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9015988Z [36;1mpkill -f "npx tsx" || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9016253Z [36;1mpkill -9 lsnode || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9016509Z [36;1mfuser -k 3005/tcp || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9016772Z [36;1msleep 2[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9017160Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9017400Z [36;1mecho "Running database recovery scripts..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9017715Z [36;1mnpx tsc recover.ts || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9017981Z [36;1mnode recover.js || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9018260Z [36;1mnpx tsc restore_products.ts || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9018585Z [36;1mnode restore_products.js || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9018970Z [36;1mnpx tsc cleanup_orphaned_products.ts || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9019321Z [36;1mnode cleanup_orphaned_products.js || true[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9019612Z [36;1m[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9019820Z [36;1mecho "Starting backend server..."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9020119Z [36;1mexport NODE_ENV=production[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9020448Z [36;1mnohup node index.js >> backend.log 2>&1 < /dev/null &[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9020810Z [36;1mecho "Server started with PID $!"[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9021085Z [36;1msleep 3[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9021305Z [36;1mecho "=== TAIL BACKEND.LOG ==="[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9021585Z [36;1mtail -n 10 backend.log[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9021852Z [36;1mecho "Deployment successful."[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9022117Z [36;1mEOF[0m
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9054777Z shell: /usr/bin/bash -e {0}
+deploy	Create Deployment Scripts	2026-06-28T00:34:36.9055054Z ##[endgroup]
+deploy	Upload via FTP	﻿2026-06-28T00:34:36.9352196Z ##[group]Run sudo apt-get update && sudo apt-get install -y lftp
+deploy	Upload via FTP	2026-06-28T00:34:36.9352724Z [36;1msudo apt-get update && sudo apt-get install -y lftp[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9353530Z [36;1m# Set up FTP upload with SSL verification disabled in case of self-signed certs[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9353975Z [36;1mcat << 'EOF' > lftp_script.txt[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9354280Z [36;1mset ssl:verify-certificate no[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9354851Z [36;1mopen -u ***,*** ftp.vuttik.com[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9355156Z [36;1mput -O / ftp_upload/deploy.tar.gz[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9355454Z [36;1mput -O / ftp_upload/run_deploy.sh[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9355827Z [36;1mput -O /public_html/ ftp_upload/public_html/deploy_script.php[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9356202Z [36;1mbye[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9356396Z [36;1mEOF[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9356601Z [36;1mlftp -f lftp_script.txt[0m
+deploy	Upload via FTP	2026-06-28T00:34:36.9389166Z shell: /usr/bin/bash -e {0}
+deploy	Upload via FTP	2026-06-28T00:34:36.9389444Z ##[endgroup]
+deploy	Upload via FTP	2026-06-28T00:34:37.0501936Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+deploy	Upload via FTP	2026-06-28T00:34:37.0969388Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+deploy	Upload via FTP	2026-06-28T00:34:37.0974351Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+deploy	Upload via FTP	2026-06-28T00:34:37.0981763Z Get:7 https://dl.google.com/linux/chrome-stable/deb stable InRelease [1825 B]
+deploy	Upload via FTP	2026-06-28T00:34:37.0983893Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.1089153Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.1115012Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+deploy	Upload via FTP	2026-06-28T00:34:37.1116628Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3279161Z Get:9 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1210 B]
+deploy	Upload via FTP	2026-06-28T00:34:37.3408521Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1041 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3464408Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [261 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3485174Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [180 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3514541Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [17.5 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3535629Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1656 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3625877Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [326 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3658755Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3688045Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [34.8 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3704616Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1134 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.3772850Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [257 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.4205775Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+deploy	Upload via FTP	2026-06-28T00:34:37.4216341Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5768 B]
+deploy	Upload via FTP	2026-06-28T00:34:37.4226548Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [10.5 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.4532907Z Get:23 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [187 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.4599483Z Get:24 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [156 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5135732Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [788 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5178838Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [179 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5195170Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [44.9 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5205119Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [11.6 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5215239Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1171 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5268819Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [229 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5288655Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.2 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5300106Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [24.1 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5309295Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1071 kB]
+deploy	Upload via FTP	2026-06-28T00:34:37.5362468Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [245 kB]
+deploy	Upload via FTP	2026-06-28T00:34:42.4914912Z Fetched 9881 kB in 1s (7797 kB/s)
+deploy	Upload via FTP	2026-06-28T00:34:43.2215803Z Reading package lists...
+deploy	Upload via FTP	2026-06-28T00:34:43.2529151Z Reading package lists...
+deploy	Upload via FTP	2026-06-28T00:34:43.4418966Z Building dependency tree...
+deploy	Upload via FTP	2026-06-28T00:34:43.4426790Z Reading state information...
+deploy	Upload via FTP	2026-06-28T00:34:43.6198104Z The following NEW packages will be installed:
+deploy	Upload via FTP	2026-06-28T00:34:43.6204637Z   lftp
+deploy	Upload via FTP	2026-06-28T00:34:43.6382804Z 0 upgraded, 1 newly installed, 0 to remove and 11 not upgraded.
+deploy	Upload via FTP	2026-06-28T00:34:43.6384226Z Need to get 704 kB of archives.
+deploy	Upload via FTP	2026-06-28T00:34:43.6384995Z After this operation, 1892 kB of additional disk space will be used.
+deploy	Upload via FTP	2026-06-28T00:34:43.6385848Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+deploy	Upload via FTP	2026-06-28T00:34:43.6629107Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 lftp amd64 4.9.2-2ubuntu1.1 [704 kB]
+deploy	Upload via FTP	2026-06-28T00:34:43.9303694Z Fetched 704 kB in 0s (17.1 MB/s)
+deploy	Upload via FTP	2026-06-28T00:34:43.9534835Z Selecting previously unselected package lftp.
+deploy	Upload via FTP	2026-06-28T00:34:43.9873603Z (Reading database ... 
+deploy	Upload via FTP	2026-06-28T00:34:43.9874318Z (Reading database ... 5%
+deploy	Upload via FTP	2026-06-28T00:34:43.9874826Z (Reading database ... 10%
+deploy	Upload via FTP	2026-06-28T00:34:43.9875475Z (Reading database ... 15%
+deploy	Upload via FTP	2026-06-28T00:34:43.9876022Z (Reading database ... 20%
+deploy	Upload via FTP	2026-06-28T00:34:43.9876556Z (Reading database ... 25%
+deploy	Upload via FTP	2026-06-28T00:34:43.9877123Z (Reading database ... 30%
+deploy	Upload via FTP	2026-06-28T00:34:43.9877685Z (Reading database ... 35%
+deploy	Upload via FTP	2026-06-28T00:34:43.9878293Z (Reading database ... 40%
+deploy	Upload via FTP	2026-06-28T00:34:43.9878754Z (Reading database ... 45%
+deploy	Upload via FTP	2026-06-28T00:34:43.9879225Z (Reading database ... 50%
+deploy	Upload via FTP	2026-06-28T00:34:43.9938379Z (Reading database ... 55%
+deploy	Upload via FTP	2026-06-28T00:34:44.1096810Z (Reading database ... 60%
+deploy	Upload via FTP	2026-06-28T00:34:44.3136179Z (Reading database ... 65%
+deploy	Upload via FTP	2026-06-28T00:34:45.8065534Z (Reading database ... 70%
+deploy	Upload via FTP	2026-06-28T00:34:45.8563636Z (Reading database ... 75%
+deploy	Upload via FTP	2026-06-28T00:34:45.9695172Z (Reading database ... 80%
+deploy	Upload via FTP	2026-06-28T00:34:46.1588597Z (Reading database ... 85%
+deploy	Upload via FTP	2026-06-28T00:34:46.3176689Z (Reading database ... 90%
+deploy	Upload via FTP	2026-06-28T00:34:46.4682089Z (Reading database ... 95%
+deploy	Upload via FTP	2026-06-28T00:34:46.4682519Z (Reading database ... 100%
+deploy	Upload via FTP	2026-06-28T00:34:46.4683366Z (Reading database ... 202407 files and directories currently installed.)
+deploy	Upload via FTP	2026-06-28T00:34:46.4726406Z Preparing to unpack .../lftp_4.9.2-2ubuntu1.1_amd64.deb ...
+deploy	Upload via FTP	2026-06-28T00:34:46.4769167Z Unpacking lftp (4.9.2-2ubuntu1.1) ...
+deploy	Upload via FTP	2026-06-28T00:34:46.5446150Z Setting up lftp (4.9.2-2ubuntu1.1) ...
+deploy	Upload via FTP	2026-06-28T00:34:46.5504783Z Processing triggers for hicolor-icon-theme (0.17-2) ...
+deploy	Upload via FTP	2026-06-28T00:34:46.7363899Z Processing triggers for man-db (2.12.0-4build2) ...
+deploy	Upload via FTP	2026-06-28T00:34:46.7388343Z Not building database; man-db/auto-update is not 'true'.
+deploy	Upload via FTP	2026-06-28T00:34:47.3876032Z 
+deploy	Upload via FTP	2026-06-28T00:34:47.3876792Z Running kernel seems to be up-to-date.
+deploy	Upload via FTP	2026-06-28T00:34:47.3877170Z 
+deploy	Upload via FTP	2026-06-28T00:34:47.3877373Z No services need to be restarted.
+deploy	Upload via FTP	2026-06-28T00:34:47.3877594Z 
+deploy	Upload via FTP	2026-06-28T00:34:47.3877780Z No containers need to be restarted.
+deploy	Upload via FTP	2026-06-28T00:34:47.3878011Z 
+deploy	Upload via FTP	2026-06-28T00:34:47.3878231Z No user sessions are running outdated binaries.
+deploy	Upload via FTP	2026-06-28T00:34:47.3878500Z 
+deploy	Upload via FTP	2026-06-28T00:34:47.3878861Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+deploy	Trigger Deployment Script	﻿2026-06-28T00:34:57.0758406Z ##[group]Run echo "Triggering deployment webhook..."
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.0759157Z [36;1mecho "Triggering deployment webhook..."[0m
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.0760107Z [36;1mcurl -sS -i "https://vuttik.com/deploy_script.php?key=vuttik_deploy_2026_xyz"[0m
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.0806868Z shell: /usr/bin/bash -e {0}
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.0807338Z ##[endgroup]
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.0862111Z Triggering deployment webhook...
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8854456Z HTTP/2 200 
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8855198Z content-type: text/html; charset=UTF-8
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8856021Z date: Sun, 28 Jun 2026 00:34:57 GMT
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8856582Z server: LiteSpeed
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8857017Z vary: User-Agent
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8858676Z alt-svc: h3=":443"; ma=2592000, h3-29=":443"; ma=2592000, h3-Q050=":443"; ma=2592000, h3-Q046=":443"; ma=2592000, h3-Q043=":443"; ma=2592000, quic=":443"; ma=2592000; v="43,46"
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8859591Z 
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8859796Z Starting deployment...<br>
+deploy	Trigger Deployment Script	2026-06-28T00:34:57.8881958Z <pre>ERROR: shell_exec is disabled.</pre>Deployment triggered.
+deploy	Post Setup Node.js	﻿2026-06-28T00:34:57.8976545Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+deploy	Post Setup Node.js	2026-06-28T00:34:57.8977993Z Post job cleanup.
+deploy	Post Setup Node.js	2026-06-28T00:34:58.0210610Z (node:3089) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+deploy	Post Setup Node.js	2026-06-28T00:34:58.0211649Z (Use `node --trace-deprecation ...` to show where the warning was created)
+deploy	Post Checkout Code	﻿2026-06-28T00:34:58.0382979Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+deploy	Post Checkout Code	2026-06-28T00:34:58.0384599Z Post job cleanup.
+deploy	Post Checkout Code	2026-06-28T00:34:58.1272871Z [command]/usr/bin/git version
+deploy	Post Checkout Code	2026-06-28T00:34:58.1312108Z git version 2.54.0
+deploy	Post Checkout Code	2026-06-28T00:34:58.1351402Z Temporarily overriding HOME='/home/runner/work/_temp/c720be2c-f9cd-448c-8432-e8edb2debdb4' before making global git config changes
+deploy	Post Checkout Code	2026-06-28T00:34:58.1352496Z Adding repository directory to the temporary git global config as a safe directory
+deploy	Post Checkout Code	2026-06-28T00:34:58.1357532Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Vuttik-Market/Vuttik-Market
+deploy	Post Checkout Code	2026-06-28T00:34:58.1394766Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+deploy	Post Checkout Code	2026-06-28T00:34:58.1429958Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+deploy	Post Checkout Code	2026-06-28T00:34:58.1670095Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+deploy	Post Checkout Code	2026-06-28T00:34:58.1700418Z http.https://github.com/.extraheader
+deploy	Post Checkout Code	2026-06-28T00:34:58.1713374Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+deploy	Post Checkout Code	2026-06-28T00:34:58.1749562Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+deploy	Post Checkout Code	2026-06-28T00:34:58.1996030Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+deploy	Post Checkout Code	2026-06-28T00:34:58.2037750Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+deploy	Complete job	﻿2026-06-28T00:34:58.2503006Z Cleaning up orphan processes
+deploy	Complete job	2026-06-28T00:34:58.2812637Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
