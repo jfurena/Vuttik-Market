@@ -22,14 +22,14 @@ jobs:
         run: |
           cd apps/vuttik-web
           npm install --no-package-lock
-          npm run build
+          npx vite build
 
       # ─── Build POS Frontend (vuttik-pos-web) ──────────────────────────────
       - name: Build POS Frontend
         run: |
           cd apps/vuttik-pos-web
           npm install --no-package-lock
-          npm run build
+          npx vite build
 
       # ─── Build Backend ─────────────────────────────────────────────────────
       - name: Build Backend
