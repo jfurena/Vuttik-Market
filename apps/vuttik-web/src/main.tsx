@@ -8,27 +8,14 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 
 import { BrowserRouter } from 'react-router-dom';
 
-import PosApp from './pos/App.tsx';
-
-// Si el subdominio es 'pos', renderizar Vuttik POS
-const isPos = window.location.hostname.startsWith('pos.');
-
 // Proxy Google OAuth redirect back to pos.vuttik.com
 const params = new URLSearchParams(window.location.search);
-if (params.get('state') === 'pos_google' && !isPos) {
+if (params.get('state') === 'pos_google' && !window.location.hostname.startsWith('pos.')) {
   params.set('state', 'google');
   window.location.href = `https://pos.vuttik.com/login?${params.toString()}`;
 }
 
-if (isPos) {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <PosApp />
-    </StrictMode>
-  );
-} else {
-  // Renderizar Vuttik Market normal
-  createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ErrorBoundary>
         <AuthProvider>
@@ -43,4 +30,3 @@ if (isPos) {
       </ErrorBoundary>
     </StrictMode>,
   );
-}
