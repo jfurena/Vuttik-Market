@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy to VPS
 
 on:
   push:
@@ -11,51 +11,67 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install and Build Frontend
+      # ─── Build Marketplace Frontend (vuttik-web) ──────────────────────────
+      - name: Build Marketplace Frontend
+        run: |
+          cd apps/vuttik-web
+          npm install --no-package-lock
+          npm run build
+
+      # ─── Build POS Frontend (vuttik-pos-web) ──────────────────────────────
+      - name: Build POS Frontend
         run: |
           cd apps/vuttik-pos-web
           npm install --no-package-lock
           npm run build
 
-      - name: Install and Build Backend
+      # ─── Build Backend ─────────────────────────────────────────────────────
+      - name: Build Backend
         run: |
           cd apps/vuttik-pos-web/server
           npm install --no-package-lock
-          npm install typescript
-          npx tsc || true
+          npx tsc --noEmit false --outDir ./dist || true
 
-      - name: Create Deployment Archive
+      # ─── Package Artifacts ─────────────────────────────────────────────────
+      - name: Package Artifacts
         run: |
-          mkdir deploy_package
-          cp -r apps/vuttik-pos-web/dist deploy_package/
-          cp -r apps/vuttik-pos-web/server deploy_package/
-          tar -czf deploy.tar.gz -C deploy_package .
+          # Marketplace frontend
+          tar -czf /tmp/vuttik_marketplace.tar.gz -C apps/vuttik-web/dist .
 
-      - name: Deploy Frontend via FTP
+          # POS frontend
+          tar -czf /tmp/vuttik_pos.tar.gz -C apps/vuttik-pos-web/dist .
+
+          # Backend (server folder with compiled JS)
+          mkdir -p /tmp/backend_pkg/server
+          cp -r apps/vuttik-pos-web/server/. /tmp/backend_pkg/server/
+          # Remove heavy dev files
+          rm -rf /tmp/backend_pkg/server/node_modules
+          tar -czf /tmp/vuttik_backend.tar.gz -C /tmp/backend_pkg .
+
+      # ─── Setup SSH ─────────────────────────────────────────────────────────
+      - name: Setup SSH
         run: |
-          sudo apt-get update && sudo apt-get install -y lftp
-          
-          echo "Deploying to vuttik.com/public_html..."
-          cat << 'EOF' > lftp_script.txt
-          set ssl:verify-certificate no
-          open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ftp.vuttik.com
-          mirror -R apps/vuttik-pos-web/dist /public_html
-          bye
-          EOF
-          lftp -f lftp_script.txt
-          
-          # We try to deploy to pos.vuttik.com if accessible (might fail if jailed)
-          echo "Attempting to deploy to pos.vuttik.com..."
-          cat << 'EOF' > lftp_script_pos.txt
-          set ssl:verify-certificate no
-          open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ftp.vuttik.com
-          mirror -R apps/vuttik-pos-web/dist /pos.vuttik.com/public_html || echo "Could not access pos.vuttik.com folder via this FTP account"
-          bye
-          EOF
-          lftp -f lftp_script_pos.txt || true
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      # ─── Upload to VPS ─────────────────────────────────────────────────────
+      - name: Upload Artifacts to VPS
+        run: |
+          scp -i ~/.ssh/id_ed25519 \
+            /tmp/vuttik_marketplace.tar.gz \
+            /tmp/vuttik_pos.tar.gz \
+            /tmp/vuttik_backend.tar.gz \
+            root@${{ secrets.SSH_HOST }}:/tmp/
+
+      # ─── Deploy on VPS ─────────────────────────────────────────────────────
+      - name: Deploy on VPS
+        run: |
+          ssh -i ~/.ssh/id_ed25519 root@${{ secrets.SSH_HOST }} 'bash /var/www/vuttik/deploy.sh 2>&1'

@@ -12,7 +12,7 @@ dotenv.config({ path: '.env.local' });
 import rateLimit from 'express-rate-limit';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_FILE = process.env.VUTTIK_DB_PATH 
+const DB_FILE = process.env.VUTTIK_DB_JSON_PATH 
   || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
 
 // === DB STRUCTURE ===
