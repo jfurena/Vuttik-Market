@@ -131,7 +131,15 @@ app.post('/api/ai/scan-image', authenticateToken, aiLimiter, async (req, res) =>
         ]
       }]
     };
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // El escaner llevaba tiempo roto: gemini-1.5-flash fue retirado y devolvia
+    // 404. La copia anterior del .js apuntaba a gemini-3.5-flash, que tampoco
+    // existe, asi que ambos lados del drift estaban rotos.
+    //
+    // Verificado contra la API con esta clave: gemini-2.5-flash responde "no
+    // longer available to new users". Se usa gemini-3.6-flash, y se expone por
+    // entorno para cambiarlo sin desplegar cuando Google rote su catalogo.
+    const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -140,7 +148,12 @@ app.post('/api/ai/scan-image', authenticateToken, aiLimiter, async (req, res) =>
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Gemini API Error:', errText);
+      console.error(`Gemini API Error (modelo ${model}):`, errText);
+      if (response.status === 404) {
+        return res.status(503).json({
+          error: 'El modelo de IA configurado ya no está disponible. Revisa GEMINI_MODEL.',
+        });
+      }
       return res.status(500).json({ error: 'Error communicating with AI service' });
     }
 
