@@ -227,9 +227,17 @@ export default function P2PBoard({
     if (productIndex === -1) return;
     
     const product = products[productIndex];
+
+    // Un visitante sin cuenta puede navegar el catalogo, pero votar requiere
+    // identidad: se le invita a registrarse en lugar de fallar en silencio.
+    if (!user) {
+      navigate('/entrar');
+      return;
+    }
+
     const upVotes = [...(product.upVotes || [])];
     const downVotes = [...(product.downVotes || [])];
-    
+
     const isUpvoted = upVotes.includes(user.uid);
     const isDownvoted = downVotes.includes(user.uid);
     

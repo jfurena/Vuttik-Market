@@ -44,6 +44,7 @@ import { api } from './lib/api';
 import { trackMetric } from './utils/metrics';
 import { Ban, Mail } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
+import PublicShell from './components/PublicShell';
 
 function EditFormWrapper() {
   const { id } = useParams<{ id: string }>();
@@ -125,7 +126,52 @@ export default function App() {
     if (location.pathname === '/verificar') {
       return <VerifyEmail />;
     }
-    return <Auth onLogin={() => {}} />;
+    // El registro pasa a vivir en /entrar. El resto del catálogo es público:
+    // pedir cuenta antes de dejar ver un solo producto hundía la conversión e
+    // impedía que los buscadores indexaran nada.
+    if (location.pathname === '/entrar') {
+      return <Auth onLogin={() => {}} />;
+    }
+
+    const consulta = new URLSearchParams(location.search).get('q') || '';
+
+    return (
+      <PublicShell query={consulta}>
+        <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-vuttik-blue border-t-transparent" /></div>}>
+          <Routes location={location}>
+            <Route path="/" element={
+              (!marketCategory && !consulta)
+                ? <CategoryExplorer onSelectCategory={handleCategorySelect} />
+                : <P2PBoard
+                    initialCategory={marketCategory || 'GLOBAL'}
+                    initialType={marketType}
+                    onViewDetails={(id) => setSelectedProductId(id)}
+                    onBack={() => { setMarketCategory(null); if (consulta) navigate('/'); }}
+                  />
+            } />
+            <Route path="/producto/:id" element={
+              <P2PBoard
+                initialCategory={marketCategory || 'GLOBAL'}
+                initialType={marketType}
+                onViewDetails={(id) => setSelectedProductId(id)}
+                onBack={() => { setMarketCategory(null); if (consulta) navigate('/'); }}
+              />
+            } />
+            <Route path="/perfil/:userId" element={<Profile currentUserId={''} onViewProduct={(id) => setSelectedProductId(id)} />} />
+            <Route path="/@:username" element={<Profile currentUserId={''} onViewProduct={(id) => setSelectedProductId(id)} />} />
+            {/* Cualquier otra ruta exige cuenta: se lleva al registro. */}
+            <Route path="*" element={<Navigate to="/entrar" replace />} />
+          </Routes>
+        </Suspense>
+
+        {selectedProductId && (
+          <ProductDetails
+            productId={selectedProductId}
+            onClose={() => setSelectedProductId(null)}
+          />
+        )}
+      </PublicShell>
+    );
   }
 
   if (userProfile?.isBanned) {
