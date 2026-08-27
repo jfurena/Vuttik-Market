@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, AreaChart, Area, PieChart, Pie, Cell 
 } from 'recharts';
-import * as LucideIcons from 'lucide-react';
+import { getCategoryIcon } from '../lib/categoryIcons';
 import { 
   Shield, TrendingUp, Users, ShoppingBag, Download, Filter, 
   Search, ArrowUpRight, ArrowDownRight, MapPin, Store, BarChart2,
@@ -78,7 +78,7 @@ const COMMON_ICONS = [
 ];
 
 const CategoryIcon = ({ name, size = 24, className = "" }: { name: string, size?: number, className?: string }) => {
-  const IconComponent = (LucideIcons as any)[name] || LayoutGrid;
+  const IconComponent = getCategoryIcon(name);
   return <IconComponent size={size} className={className} />;
 };
 

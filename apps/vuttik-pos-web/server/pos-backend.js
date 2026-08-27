@@ -300,6 +300,33 @@ function validarEnlacesSociales(entrada) {
     }
     return { links, errores };
 }
+/**
+ * Imagen y oferta de un producto del POS, en el formato que espera el
+ * marketplace. Compartidos por el camino local (misma base de datos) y el
+ * remoto (/api/market-sync/product), que antes divergian.
+ */
+const POS_PUBLIC_ORIGIN = () => (process.env.POS_PUBLIC_URL || 'https://pos.vuttik.com').replace(/\/$/, '');
+function imagenesJson(prod) {
+    const ruta = prod?.imagen;
+    if (typeof ruta !== 'string' || !ruta.trim())
+        return '[]';
+    // vuttik.com no sirve /uploads, asi que la ruta relativa del POS se absolutiza.
+    const url = /^https?:\/\//i.test(ruta) || ruta.startsWith('data:')
+        ? ruta
+        : POS_PUBLIC_ORIGIN() + (ruta.startsWith('/') ? ruta : '/' + ruta);
+    return JSON.stringify([url]);
+}
+/** Una oferta solo se publica si esta activa y dentro de su ventana de fechas. */
+function ofertaVigente(prod) {
+    const ahora = new Date();
+    return !!prod?.oferta_activa
+        && Number(prod.precio_oferta) > 0
+        && (!prod.oferta_inicio || new Date(prod.oferta_inicio) <= ahora)
+        && (!prod.oferta_fin || new Date(prod.oferta_fin) >= ahora);
+}
+function precioOferta(prod) {
+    return ofertaVigente(prod) ? Number(prod.precio_oferta) : null;
+}
 async function startServer() {
     const app = express();
     app.use(express.json({ limit: '50mb' }));
@@ -362,10 +389,10 @@ async function startServer() {
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
                 await run(`
           INSERT INTO vuttik_products 
-          (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, type_id, posted_as, stock, images, is_on_sale, sale_price) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (id, title, description, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, type_id, posted_as, stock, images, is_on_sale, sale_price) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
-                    sqliteProductId, product.nombre, Number(product.precio_venta) || 0,
+                    sqliteProductId, product.nombre, (product.descripcion || '').slice(0, 500), Number(product.precio_venta) || 0,
                     bizId, ownerName, location, lat, lng, ownerName, 1,
                     new Date().toISOString(), product.codigo_barras || '', 'sell', 'business',
                     Number(product.cantidad_disponible) || 0,
@@ -378,11 +405,11 @@ async function startServer() {
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
                 await run(`
           UPDATE vuttik_products 
-          SET title = ?, price = ?, barcode = ?, location = ?, lat = ?, lng = ?, author_id = ?,
+          SET title = ?, description = ?, price = ?, barcode = ?, location = ?, lat = ?, lng = ?, author_id = ?,
               images = ?, is_on_sale = ?, sale_price = ?, stock = ?
           WHERE id = ? AND author_id = ?
         `, [
-                    product.nombre, Number(product.precio_venta) || 0, product.codigo_barras || '',
+                    product.nombre, (product.descripcion || '').slice(0, 500), Number(product.precio_venta) || 0, product.codigo_barras || '',
                     location, lat, lng, bizId,
                     imagesJson, ofertaVigente ? 1 : 0, precioOferta,
                     Number(product.cantidad_disponible) || 0,
@@ -1278,12 +1305,15 @@ async function startServer() {
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
                 await run(`
             INSERT INTO vuttik_products 
-            (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, type_id, posted_as, stock) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (id, title, description, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, type_id, posted_as, stock, images, is_on_sale, sale_price) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `, [
-                    sqliteProductId, newProduct.nombre, Number(newProduct.precio_venta) || 0,
+                    sqliteProductId, newProduct.nombre, (newProduct.descripcion || '').slice(0, 500),
+                    Number(newProduct.precio_venta) || 0,
                     biz.id, ownerName, location, lat, lng, ownerName, 1,
-                    new Date().toISOString(), newProduct.codigo_barras || '', 'sell', 'business', Number(newProduct.cantidad_disponible) || 0
+                    new Date().toISOString(), newProduct.codigo_barras || '', 'sell', 'business',
+                    Number(newProduct.cantidad_disponible) || 0,
+                    imagenesJson(newProduct), ofertaVigente(newProduct) ? 1 : 0, precioOferta(newProduct)
                 ]);
             }
             catch (err) {
@@ -1425,11 +1455,15 @@ async function startServer() {
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
                 await run(`
             UPDATE vuttik_products 
-            SET title = ?, price = ?, barcode = ?, location = ?, lat = ?, lng = ?, author_id = ?
+            SET title = ?, description = ?, price = ?, barcode = ?, location = ?, lat = ?, lng = ?, author_id = ?,
+                images = ?, is_on_sale = ?, sale_price = ?, stock = ?
             WHERE id = ? AND author_id IN (?, ?)
           `, [
-                    product.nombre, Number(product.precio_venta) || 0, product.codigo_barras || '',
-                    location, lat, lng, biz.id, sqliteProductId, biz.id, biz.owner_id
+                    product.nombre, (product.descripcion || '').slice(0, 500), Number(product.precio_venta) || 0, product.codigo_barras || '',
+                    location, lat, lng, biz.id,
+                    imagenesJson(product), ofertaVigente(product) ? 1 : 0, precioOferta(product),
+                    Number(product.cantidad_disponible) || 0,
+                    sqliteProductId, biz.id, biz.owner_id
                 ]);
             }
             catch (err) {

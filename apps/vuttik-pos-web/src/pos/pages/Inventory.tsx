@@ -87,6 +87,7 @@ export default function Inventory() {
     unidad_venta: UnitType.UNIDAD,
     estado: 'activo',
     fuente_pago: 'Caja',
+    descripcion: '',
     motivo_edicion: '',
     comision_activa: false,
     comision_porcentaje: 0,
@@ -134,6 +135,7 @@ export default function Inventory() {
       unidad_venta: UnitType.UNIDAD,
       estado: 'activo',
       fuente_pago: 'Caja',
+      descripcion: '',
       motivo_edicion: '',
       comision_activa: false,
       comision_porcentaje: 0,
@@ -169,6 +171,7 @@ export default function Inventory() {
       comision_activa: product.comision_activa || false,
       comision_porcentaje: product.comision_porcentaje || 0,
       imagen: product.imagen || '',
+      descripcion: (product as any).descripcion || '',
       oferta_activa: product.oferta_activa || false,
       precio_oferta: product.precio_oferta || 0,
       oferta_inicio: product.oferta_inicio || '',
@@ -649,6 +652,23 @@ export default function Inventory() {
 <div className="md:col-span-2">
 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Nombre del Producto</label>
                 <input required type="text" placeholder="Ej. Arroz Selecto 2lb" className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none font-bold" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                  Descripción <span className="text-gray-300">(opcional, se muestra en Vuttik)</span>
+                </label>
+                <textarea
+                  rows={2}
+                  maxLength={500}
+                  placeholder="Ej. Arroz de grano largo, saco de 2 libras. Ideal para consumo diario."
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none font-medium resize-none"
+                  value={formData.descripcion || ''}
+                  onChange={e => setFormData({...formData, descripcion: e.target.value})}
+                />
+                <p className="mt-1 text-[11px] text-gray-400">
+                  Los productos con descripción se entienden mejor en el marketplace y aparecen
+                  antes en las búsquedas.
+                </p>
               </div>
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Categoría</label>

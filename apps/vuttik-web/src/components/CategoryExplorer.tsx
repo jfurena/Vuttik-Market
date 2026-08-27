@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Utensils, Landmark, DollarSign, Car, Laptop, Home, Briefcase, Globe, ChevronRight, ArrowUpCircle, ArrowDownCircle, ShieldCheck, X, LayoutGrid, ShoppingBag, CarFront, Smartphone, BriefcaseBusiness, Key, Banknote, MapPin, Tag } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { getCategoryIcon } from '../lib/categoryIcons';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../lib/api';
 
@@ -38,7 +38,7 @@ interface CategoryExplorerProps {
 }
 
 const CategoryIcon = ({ name, size = 24, className = "" }: { name: string, size?: number, className?: string }) => {
-  const IconComponent = (LucideIcons as any)[name] || LayoutGrid;
+  const IconComponent = getCategoryIcon(name);
   return <IconComponent size={size} className={className} />;
 };
 
@@ -86,7 +86,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
     }
   };
 
-  const getIcon = (name: string) => (LucideIcons as any)[name] || LayoutGrid;
+  const getIcon = (name: string) => getCategoryIcon(name);
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 pb-6 px-4 md:px-6">

@@ -115,16 +115,17 @@ export async function initDB() {
 
                                 await run(`
                   INSERT INTO vuttik_products 
-                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock, images, is_on_sale, sale_price) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  (id, title, description, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock, images, is_on_sale, sale_price) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   ON CONFLICT(id) DO UPDATE SET
-                    title=excluded.title, price=excluded.price, barcode=excluded.barcode,
+                    title=excluded.title, description=excluded.description, price=excluded.price, barcode=excluded.barcode,
                     location=excluded.location, lat=excluded.lat, lng=excluded.lng,
                     category_id=excluded.category_id, type_id=excluded.type_id, stock=excluded.stock,
                     images=excluded.images, is_on_sale=excluded.is_on_sale, sale_price=excluded.sale_price
                 `, [
                                     sqliteProductId,
                                     p.nombre,
+                                    (p.descripcion || '').slice(0, 500),
                                     Number(p.precio_venta) || 0,
                                     biz.id,
                                     ownerName,
