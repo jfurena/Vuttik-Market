@@ -47,21 +47,35 @@ pm2 restart vuttik-backend-web vuttik-backend-pos --update-env
 4. Prueba el login en vuttik.com
 5. Solo entonces, vuelve a la consola de Google y **borra el secreto antiguo**
 
-## 2. Correo — verificación y recuperación de contraseña no funcionan
+## 2. Correo — RESUELTO (27/08/2026)
 
-Las credenciales SMTP están en `/var/www/vuttik/backend/server/.env`, pero la
-aplicación carga **únicamente `.env.local`**. Llevan tiempo sin llegar al
-proceso, así que esto ya estaba roto antes de esta auditoría.
+Contraseña de `soporte@vuttik.com` rotada y configuración movida de `.env` a
+`.env.local`, que es el único archivo que la aplicación carga. Ese era el motivo
+real de que los correos no salieran.
 
-La contraseña SMTP también fue pública, así que cámbiala en tu proveedor y pon
-la nueva en `.env.local` (no en `.env`):
+Verificado con un envío real: autenticación SMTP correcta y el servidor aceptó
+el mensaje (`250 OK`).
 
 ```
-SMTP_HOST=...
-SMTP_PORT=587
-SMTP_USER=...
-SMTP_PASS=<la NUEVA>
+SMTP_HOST=mail.vuttik.com   SMTP_PORT=587   SMTP_USER=soporte@vuttik.com
 ```
+
+El correo NO está en Hostinger: lo sirve DirectAdmin en `d1.neet-panel.com:2222`,
+que además es el DNS autoritativo del dominio (`ns3/ns4.neet-panel.com`).
+
+### Autenticación del dominio
+
+| | |
+|---|---|
+| SPF | `v=spf1 a mx ip4:37.27.67.172 ~all` |
+| DKIM | selector `x`, activado desde DirectAdmin |
+| DMARC | `v=DMARC1; p=none; rua=mailto:soporte@vuttik.com` |
+
+`p=none` solo monitoriza. Cuando lleves unas semanas de informes limpios, súbelo
+a `quarantine` y después a `reject`.
+
+Límite del buzón: **200 envíos diarios**. Si el registro de usuarios crece, habrá
+que pasar a un servicio transaccional (Resend, Brevo).
 
 </details>
 
