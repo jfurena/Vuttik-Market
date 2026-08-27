@@ -95,14 +95,33 @@ export async function initDB() {
                                     catId = seccion.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
                                     await run('INSERT OR IGNORE INTO vuttik_categories (id, name, order_index, allowed_types, fields, system_fields, is_service, requires_ean) VALUES (?, ?, ?, ?, ?, ?, 0, 0)', [catId, seccion, 100, '["sell"]', '[]', '{}']);
                                 }
+                                // La foto y la oferta del POS tambien se publican en el
+                                // marketplace. El endpoint /api/images/product redirige a la
+                                // primera entrada del array, y una ruta relativa daria 404 en
+                                // vuttik.com, que no sirve /uploads: por eso se absolutiza.
+                                const posOrigin = (process.env.POS_PUBLIC_URL || 'https://pos.vuttik.com').replace(/\/$/, '');
+                                let imagesJson = '[]';
+                                if (typeof p.imagen === 'string' && p.imagen.trim()) {
+                                    const url = /^https?:\/\//i.test(p.imagen) || p.imagen.startsWith('data:')
+                                        ? p.imagen
+                                        : posOrigin + (p.imagen.startsWith('/') ? p.imagen : '/' + p.imagen);
+                                    imagesJson = JSON.stringify([url]);
+                                }
+                                const ahora = new Date();
+                                const ofertaVigente = !!p.oferta_activa
+                                    && Number(p.precio_oferta) > 0
+                                    && (!p.oferta_inicio || new Date(p.oferta_inicio) <= ahora)
+                                    && (!p.oferta_fin || new Date(p.oferta_fin) >= ahora);
+
                                 await run(`
                   INSERT INTO vuttik_products 
-                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, posted_as, category_id, type_id, stock, images, is_on_sale, sale_price) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   ON CONFLICT(id) DO UPDATE SET
                     title=excluded.title, price=excluded.price, barcode=excluded.barcode,
                     location=excluded.location, lat=excluded.lat, lng=excluded.lng,
-                    category_id=excluded.category_id, type_id=excluded.type_id, stock=excluded.stock
+                    category_id=excluded.category_id, type_id=excluded.type_id, stock=excluded.stock,
+                    images=excluded.images, is_on_sale=excluded.is_on_sale, sale_price=excluded.sale_price
                 `, [
                                     sqliteProductId,
                                     p.nombre,
@@ -119,7 +138,10 @@ export async function initDB() {
                                     'business',
                                     catId,
                                     'sell',
-                                    Number(p.cantidad_disponible) || 0
+                                    Number(p.cantidad_disponible) || 0,
+                                    imagesJson,
+                                    ofertaVigente ? 1 : 0,
+                                    ofertaVigente ? Number(p.precio_oferta) : null
                                 ]);
                             }
                         }

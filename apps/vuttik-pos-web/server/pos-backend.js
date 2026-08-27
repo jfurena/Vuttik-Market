@@ -280,19 +280,43 @@ async function startServer() {
         }
         try {
             const sqliteProductId = 'pos-' + product.id;
+            /**
+             * El marketplace guarda las imágenes como un array JSON y su endpoint
+             * /api/images/product redirige a la primera entrada. Una ruta relativa
+             * daría 404 en vuttik.com, que no sirve /uploads, así que se convierte en
+             * URL absoluta apuntando al dominio del POS.
+             */
+            const POS_ORIGIN = process.env.POS_PUBLIC_URL || 'https://pos.vuttik.com';
+            const imagenAbsoluta = (ruta) => {
+                if (typeof ruta !== 'string' || !ruta.trim())
+                    return null;
+                if (/^https?:\/\//i.test(ruta) || ruta.startsWith('data:'))
+                    return ruta;
+                return POS_ORIGIN.replace(/\/$/, '') + (ruta.startsWith('/') ? ruta : '/' + ruta);
+            };
+            const img = imagenAbsoluta(product.imagen);
+            const imagesJson = img ? JSON.stringify([img]) : JSON.stringify([]);
+            // Una oferta solo cuenta si está activa y dentro de su ventana de fechas.
+            const ahora = new Date();
+            const ofertaVigente = !!product.oferta_activa &&
+                Number(product.precio_oferta) > 0 &&
+                (!product.oferta_inicio || new Date(product.oferta_inicio) <= ahora) &&
+                (!product.oferta_fin || new Date(product.oferta_fin) >= ahora);
+            const precioOferta = ofertaVigente ? Number(product.precio_oferta) : null;
             if (action === 'create') {
                 const location = typeof locationObj === 'object' ? locationObj.address : (locationObj || 'Ubicación no especificada');
                 const lat = typeof locationObj === 'object' ? locationObj.lat : null;
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
                 await run(`
           INSERT INTO vuttik_products 
-          (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, type_id, posted_as, stock) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (id, title, price, author_id, author_name, location, lat, lng, store_name, is_independent, created_at, barcode, type_id, posted_as, stock, images, is_on_sale, sale_price) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
                     sqliteProductId, product.nombre, Number(product.precio_venta) || 0,
                     bizId, ownerName, location, lat, lng, ownerName, 1,
                     new Date().toISOString(), product.codigo_barras || '', 'sell', 'business',
-                    Number(product.cantidad_disponible) || 0
+                    Number(product.cantidad_disponible) || 0,
+                    imagesJson, ofertaVigente ? 1 : 0, precioOferta
                 ]);
             }
             else if (action === 'update') {
@@ -301,11 +325,15 @@ async function startServer() {
                 const lng = typeof locationObj === 'object' ? locationObj.lng : null;
                 await run(`
           UPDATE vuttik_products 
-          SET title = ?, price = ?, barcode = ?, location = ?, lat = ?, lng = ?, author_id = ?
+          SET title = ?, price = ?, barcode = ?, location = ?, lat = ?, lng = ?, author_id = ?,
+              images = ?, is_on_sale = ?, sale_price = ?, stock = ?
           WHERE id = ? AND author_id = ?
         `, [
                     product.nombre, Number(product.precio_venta) || 0, product.codigo_barras || '',
-                    location, lat, lng, bizId, sqliteProductId, bizId
+                    location, lat, lng, bizId,
+                    imagesJson, ofertaVigente ? 1 : 0, precioOferta,
+                    Number(product.cantidad_disponible) || 0,
+                    sqliteProductId, bizId
                 ]);
             }
             else if (action === 'delete') {
