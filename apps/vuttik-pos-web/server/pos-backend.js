@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import rateLimit from 'express-rate-limit';
+import { enviarAlerta, DEFAULT_ALERT_SETTINGS } from './alerts.js';
 const __dirname = path.dirname(fileURLToPath(import.meta?.url || `file://${process.cwd()}/placeholder.js`));
 const DB_FILE = process.env.VUTTIK_DB_JSON_PATH
     || (process.env.USER_DATA_PATH ? path.join(process.env.USER_DATA_PATH, 'db.json') : path.join(__dirname, 'db.json'));
@@ -1726,6 +1727,11 @@ async function startServer() {
             }
         }
         logActivity(biz, { usuario_id: usuario_id || s.owner_id, usuario_nombre: usuario_nombre || 'Dueño', accion: 'Reembolso de Venta', detalles: `Venta #${sale.codigo_recibo} reembolsada. Monto: ${sale.total}. Motivo: ${motivo}`, modulo: 'Ventas' });
+        enviarAlerta(db, biz, 'sale_refunded', {
+            usuario: usuario_nombre || 'Dueño',
+            monto: sale.total,
+            filas: [['Recibo', '#' + sale.codigo_recibo], ['Motivo', motivo || 'No especificado']],
+        });
         if (sale.items) {
             sale.items.forEach((item) => { const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id); if (pIndex !== -1) {
                 biz.products[pIndex].cantidad_disponible += item.cantidad;
@@ -1776,6 +1782,11 @@ async function startServer() {
             }
         }
         logActivity(biz, { usuario_id: s.owner_id || s.employee_id, usuario_nombre: 'Administrador', accion: 'Cancelación de Venta', detalles: `Venta #${sale.codigo_recibo} cancelada. Monto: ${sale.total}`, modulo: 'Ventas' });
+        enviarAlerta(db, biz, 'sale_cancelled', {
+            usuario: 'Administrador',
+            monto: sale.total,
+            filas: [['Recibo', '#' + sale.codigo_recibo]],
+        });
         if (sale.items) {
             sale.items.forEach((item) => { const pIndex = (biz.products || []).findIndex((p) => p.id === item.producto_id); if (pIndex !== -1) {
                 biz.products[pIndex].cantidad_disponible += item.cantidad;
@@ -1897,6 +1908,21 @@ async function startServer() {
         shift.diferencia = diff;
         shift.motivo_diferencia = motivoDiferencia;
         shift.fecha_actualizacion = new Date();
+        // Aviso al dueño: es el evento que más directamente señala dinero que falta.
+        if (diff !== 0) {
+            enviarAlerta(db, biz, 'cash_discrepancy', {
+                usuario: shift.usuario_nombre || 'Sistema',
+                monto: diff,
+                detalle: diff < 0
+                    ? 'Falta dinero en caja respecto a lo esperado.'
+                    : 'Hay más dinero en caja del esperado.',
+                filas: [
+                    ['Esperado en caja', 'RD$' + Number(shift.monto_esperado || 0).toFixed(2)],
+                    ['Contado', 'RD$' + Number(montoContado).toFixed(2)],
+                    ['Motivo indicado', motivoDiferencia || 'No especificado'],
+                ],
+            });
+        }
         const usuarioNombre = shift.usuario_nombre || 'Sistema';
         logActivity(biz, {
             usuario_id: shift.usuario_id || s.owner_id || s.employee_id,
@@ -2064,6 +2090,11 @@ async function startServer() {
         // Record in Activity Log
         const user = biz.users?.find((u) => u.id === usuario_id) || biz.clientes?.find((c) => c.id === usuario_id);
         const userName = user ? user.nombre : 'Cajero / Dueño';
+        enviarAlerta(db, biz, 'funds_withdrawn', {
+            usuario: userName,
+            monto: Number(monto),
+            detalle: `Transferencia de fondos de ${origen} a ${destino}.`,
+        });
         if (!biz.activity_log)
             biz.activity_log = [];
         biz.activity_log.unshift({
@@ -2261,16 +2292,86 @@ async function startServer() {
         const s = req.session;
         const db = getDB();
         const biz = getBiz(db, s.business_id);
-        const { usuario_id, usuario_nombre, accion, detalles, modulo } = req.body;
+        // La autoría sale SIEMPRE de la sesión. Antes se tomaba usuario_id y
+        // usuario_nombre del cuerpo, así que un empleado podía escribir entradas
+        // atribuidas a otra persona o al dueño, justo en el registro que existe
+        // para poder auditarle.
+        const { accion, detalles, modulo } = req.body;
+        let autorId = s.owner_id;
+        let autorNombre = 'Dueño';
+        if (s.employee_id) {
+            const emp = (biz.employees || []).find((e) => e.id === s.employee_id);
+            autorId = s.employee_id;
+            autorNombre = emp?.nombre || 'Empleado';
+        }
         logActivity(biz, {
-            usuario_id: usuario_id || s.owner_id || s.employee_id,
-            usuario_nombre: usuario_nombre || 'Sistema',
-            accion: accion || 'Acción General',
-            detalles: detalles || '',
-            modulo: modulo || 'General'
+            usuario_id: autorId,
+            usuario_nombre: autorNombre,
+            accion: typeof accion === 'string' ? accion.slice(0, 120) : 'Acción General',
+            detalles: typeof detalles === 'string' ? detalles.slice(0, 500) : '',
+            modulo: typeof modulo === 'string' ? modulo.slice(0, 60) : 'General'
         });
         saveDB(db);
         res.json({ success: true });
+    });
+    /**
+     * Ajustes de alertas. Solo el dueño: es quien las recibe y no tendría sentido
+     * que un empleado pudiera desactivar los avisos sobre su propia actividad.
+     */
+    app.get('/api/alerts/settings', requireOwnerBizAccess, (req, res) => {
+        const s = req.session;
+        const db = getDB();
+        const biz = getBiz(db, s.business_id);
+        res.json({
+            alerts: { ...DEFAULT_ALERT_SETTINGS, ...(biz.settings?.alerts || {}) },
+            alertEmail: biz.settings?.alert_email || null,
+            minAmount: biz.settings?.alert_min_amount ?? 100,
+        });
+    });
+    app.post('/api/alerts/settings', requireOwnerBizAccess, (req, res) => {
+        const s = req.session;
+        const db = getDB();
+        const biz = getBiz(db, s.business_id);
+        const { alerts, alertEmail, minAmount } = req.body;
+        if (!biz.settings)
+            biz.settings = {};
+        if (alerts && typeof alerts === 'object') {
+            const limpio = {};
+            for (const clave of Object.keys(DEFAULT_ALERT_SETTINGS)) {
+                if (clave in alerts)
+                    limpio[clave] = !!alerts[clave];
+            }
+            biz.settings.alerts = { ...DEFAULT_ALERT_SETTINGS, ...limpio };
+        }
+        if (alertEmail !== undefined) {
+            const correo = String(alertEmail || '').trim();
+            if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+                return res.status(400).json({ error: 'Correo inválido' });
+            }
+            biz.settings.alert_email = correo || null;
+        }
+        if (minAmount !== undefined) {
+            const n = Number(minAmount);
+            if (!Number.isFinite(n) || n < 0) {
+                return res.status(400).json({ error: 'El importe mínimo debe ser un número positivo' });
+            }
+            biz.settings.alert_min_amount = n;
+        }
+        saveDB(db);
+        res.json({ success: true });
+    });
+    /** Envía una alerta de prueba para que el dueño confirme que le llega. */
+    app.post('/api/alerts/test', requireOwnerBizAccess, async (req, res) => {
+        const s = req.session;
+        const db = getDB();
+        const biz = getBiz(db, s.business_id);
+        // Se salta el filtro de importe mínimo forzando el tipo y un monto alto.
+        await enviarAlerta(db, biz, 'cash_discrepancy', {
+            usuario: 'Prueba',
+            monto: 9999,
+            detalle: 'Esto es una alerta de prueba. Si la recibes, los avisos funcionan.',
+        });
+        res.json({ success: true, message: 'Alerta de prueba enviada al correo del dueño.' });
     });
     // Approval requests
     app.get('/api/approval-requests', requireBizAccess, (req, res) => {
@@ -2570,6 +2671,11 @@ async function startServer() {
         activeShift.fecha_actualizacion = new Date();
         pendingCommissions.forEach((c) => c.estado = 'retirada');
         logActivity(biz, { usuario_id: userId, usuario_nombre: newExpense.usuario_nombre, accion: 'Retiro de Comisiones', detalles: `Retiro por ${totalToWithdraw} desde caja.`, modulo: 'Caja' });
+        enviarAlerta(db, biz, 'funds_withdrawn', {
+            usuario: newExpense.usuario_nombre,
+            monto: totalToWithdraw,
+            detalle: 'Se retiró efectivo de la caja.',
+        });
         saveDB(db);
         res.json({ success: true, withdrawnAmount: totalToWithdraw });
     });
