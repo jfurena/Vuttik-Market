@@ -11,6 +11,10 @@ interface AuthProps {
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
+// La app de Meta sigue sin publicar: fuera del modo desarrollo, el login falla
+// para cualquiera que no tenga un rol asignado en ella. Se muestra el botón solo
+// cuando Meta apruebe la verificación de empresa y la revisión de la app.
+const FACEBOOK_ENABLED = import.meta.env.VITE_FACEBOOK_ENABLED === 'true';
 
 declare global {
   interface Window {
@@ -442,11 +446,13 @@ function Auth({ onLogin }: AuthProps) {
               <button type="button" onClick={handleGoogleLogin} disabled={loading} className="w-14 h-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center hover:bg-gray-50 transition-all hover:-translate-y-1 shadow-sm" title="Continuar con Google">
                 <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
               </button>
+              {FACEBOOK_ENABLED && (
               <button type="button" onClick={handleFacebookLogin} disabled={loading} className="w-14 h-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center hover:bg-gray-50 transition-all hover:-translate-y-1 shadow-sm" title="Continuar con Facebook">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="#1877F2">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
               </button>
+              )}
               <button type="button" onClick={handleWalletLogin} disabled={loading} className="w-14 h-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center hover:bg-orange-50 transition-all hover:-translate-y-1 shadow-sm" title="Conectar Billetera">
                 <svg width="28" height="28" viewBox="0 0 118 118" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M116.326 47.9304L59.0003 4.20508L1.67432 47.9304L23.491 113.795H94.5097L116.326 47.9304Z" fill="#E2761B"/>

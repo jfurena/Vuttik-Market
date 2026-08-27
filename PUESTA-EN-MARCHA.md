@@ -108,8 +108,24 @@ ADSENSE_CLIENT_ID=ca-pub-XXXXXXXXXXXXXXXX
 ADSENSE_SLOT_FEED=1234567890
 ```
 
-**Facebook Login** — sin `FACEBOOK_APP_ID` y `FACEBOOK_APP_SECRET` ese botón no
-funciona.
+**Facebook Login** — credenciales ya configuradas en el servidor y verificadas
+contra Meta. El botón está **oculto** porque la app de Meta (`844646971982835`)
+sigue sin publicar: en ese estado el login solo funciona para cuentas con un rol
+asignado en la app, y fallaría para el resto de usuarios.
+
+Publicarla exige verificación de empresa (documentación legal, días o semanas) y
+revisión de la aplicación. Cuando Meta la apruebe:
+
+```
+VITE_FACEBOOK_ENABLED="true"   # en apps/vuttik-web/.env.production
+```
+
+```bash
+python scripts/deploy_web.py
+```
+
+Mientras tanto, se pueden añadir cuentas concretas en *Roles de la aplicación →
+Probadores* para probarlo.
 
 ## Comprobación final
 
