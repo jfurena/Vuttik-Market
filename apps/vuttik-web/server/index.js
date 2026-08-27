@@ -674,10 +674,71 @@ app.get('/api/business-profiles/:uid', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+/**
+ * Los enlaces sociales de un negocio se muestran en su perfil público con el
+ * icono oficial de cada red, así que un dominio suplantado (1nstagram.com,
+ * faceb00k-login.com) resulta muy convincente: el usuario ve el logo de
+ * Instagram y confía. Antes se guardaban sin validar, lo que convertía a Vuttik
+ * en canal de distribución de phishing.
+ *
+ * Cada red se restringe a sus dominios reales. El sitio web propio no se puede
+ * restringir por dominio, pero sí exigir http/https para descartar
+ * `javascript:` y `data:`.
+ */
+const SOCIAL_DOMINIOS = {
+    instagram: ['instagram.com', 'instagr.am'],
+    facebook: ['facebook.com', 'fb.com', 'fb.me', 'm.facebook.com'],
+    twitter: ['twitter.com', 'x.com'],
+    tiktok: ['tiktok.com'],
+    youtube: ['youtube.com', 'youtu.be'],
+    linkedin: ['linkedin.com'],
+};
+function normalizarEnlacesSociales(entrada) {
+    const links = {};
+    const errores = [];
+    if (!entrada || typeof entrada !== 'object')
+        return { links, errores };
+    for (const [red, valor] of Object.entries(entrada)) {
+        const bruto = String(valor ?? '').trim();
+        if (!bruto)
+            continue;
+        if (bruto.length > 500) {
+            errores.push(`${red}: enlace demasiado largo`);
+            continue;
+        }
+        let url;
+        try {
+            url = new URL(bruto);
+        }
+        catch {
+            errores.push(`${red}: no es una URL válida`);
+            continue;
+        }
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+            errores.push(`${red}: solo se permiten enlaces http o https`);
+            continue;
+        }
+        const permitidos = SOCIAL_DOMINIOS[red.toLowerCase()];
+        if (permitidos) {
+            const host = url.hostname.toLowerCase().replace(/^www\./, '');
+            const ok = permitidos.some(d => host === d || host.endsWith('.' + d));
+            if (!ok) {
+                errores.push(`${red}: el enlace debe apuntar a ${permitidos[0]}`);
+                continue;
+            }
+        }
+        links[red] = url.toString();
+    }
+    return { links, errores };
+}
 app.put('/api/business-profiles/:uid', authenticateToken, requireBusinessAccess('uid'), async (req, res) => {
-    const { name, description, location, phone, workingHours, socialLinks, logo } = req.body;
+    const { name, description, location, phone, workingHours, logo } = req.body;
     const uid = req.params.uid;
     const requesterUid = req.user.uid;
+    const { links: socialLinks, errores: erroresSociales } = normalizarEnlacesSociales(req.body.socialLinks);
+    if (erroresSociales.length) {
+        return res.status(400).json({ error: erroresSociales.join('. ') });
+    }
     // Check if editing an existing business
     const existingBiz = await get('SELECT owner_uid FROM vuttik_business_profiles WHERE uid = ?', [uid]);
     if (existingBiz) {

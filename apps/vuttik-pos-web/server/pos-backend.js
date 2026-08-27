@@ -247,6 +247,59 @@ const authLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
+/**
+ * Validación de enlaces sociales del negocio.
+ *
+ * Se muestran en el perfil público del marketplace con el icono oficial de cada
+ * red, así que un dominio suplantado (1nstagram.com, faceb00k-login.com) engaña
+ * con facilidad: el usuario ve el logo de Instagram y confía. Antes se
+ * almacenaban sin comprobación alguna.
+ */
+const SOCIAL_DOMINIOS = {
+    instagram: ['instagram.com', 'instagr.am'],
+    facebook: ['facebook.com', 'fb.com', 'fb.me', 'm.facebook.com'],
+    twitter: ['twitter.com', 'x.com'],
+    tiktok: ['tiktok.com'],
+    youtube: ['youtube.com', 'youtu.be'],
+    linkedin: ['linkedin.com'],
+};
+function validarEnlacesSociales(entrada) {
+    const links = {};
+    const errores = [];
+    if (!entrada || typeof entrada !== 'object')
+        return { links, errores };
+    for (const [red, valor] of Object.entries(entrada)) {
+        const bruto = String(valor ?? '').trim();
+        if (!bruto)
+            continue;
+        if (bruto.length > 500) {
+            errores.push(`${red}: enlace demasiado largo`);
+            continue;
+        }
+        let url;
+        try {
+            url = new URL(bruto);
+        }
+        catch {
+            errores.push(`${red}: no es una URL válida`);
+            continue;
+        }
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+            errores.push(`${red}: solo se permiten enlaces http o https`);
+            continue;
+        }
+        const permitidos = SOCIAL_DOMINIOS[red.toLowerCase()];
+        if (permitidos) {
+            const host = url.hostname.toLowerCase().replace(/^www\./, '');
+            if (!permitidos.some(d => host === d || host.endsWith('.' + d))) {
+                errores.push(`${red}: el enlace debe apuntar a ${permitidos[0]}`);
+                continue;
+            }
+        }
+        links[red] = url.toString();
+    }
+    return { links, errores };
+}
 async function startServer() {
     const app = express();
     app.use(express.json({ limit: '50mb' }));
@@ -789,7 +842,10 @@ async function startServer() {
     });
     // Create business
     app.post('/api/businesses', requireOwnerAuth, async (req, res) => {
-        const { nombre, location, logo, description, working_hours, phone, social_links, market_sync_url, market_api_key } = req.body;
+        const { nombre, location, logo, description, working_hours, phone, market_sync_url, market_api_key } = req.body;
+        const { links: social_links, errores: erroresSociales } = validarEnlacesSociales(req.body.social_links);
+        if (erroresSociales.length)
+            return res.status(400).json({ error: erroresSociales.join('. ') });
         if (!nombre || !nombre.trim())
             return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
         const s = req.session;
@@ -909,7 +965,10 @@ async function startServer() {
     // Update business name and location
     app.patch('/api/businesses/:bizId', requireOwnerAuth, (req, res) => {
         const { bizId } = req.params;
-        const { nombre, location, logo, description, working_hours, phone, social_links, market_sync_url, market_api_key } = req.body;
+        const { nombre, location, logo, description, working_hours, phone, market_sync_url, market_api_key } = req.body;
+        const { links: social_links, errores: erroresSociales } = validarEnlacesSociales(req.body.social_links);
+        if (erroresSociales.length)
+            return res.status(400).json({ error: erroresSociales.join('. ') });
         const s = req.session;
         const db = getDB();
         const idx = db.businesses.findIndex((b) => b.id === bizId && b.owner_id === s.owner_id);
@@ -925,7 +984,10 @@ async function startServer() {
     // Update a business
     app.put('/api/businesses/:bizId', requireOwnerAuth, async (req, res) => {
         const { bizId } = req.params;
-        const { nombre, location, logo, description, working_hours, phone, social_links, market_sync_url, market_api_key } = req.body;
+        const { nombre, location, logo, description, working_hours, phone, market_sync_url, market_api_key } = req.body;
+        const { links: social_links, errores: erroresSociales } = validarEnlacesSociales(req.body.social_links);
+        if (erroresSociales.length)
+            return res.status(400).json({ error: erroresSociales.join('. ') });
         if (!nombre || !nombre.trim())
             return res.status(400).json({ error: 'Nombre inválido.' });
         const s = req.session;
