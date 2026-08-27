@@ -309,6 +309,7 @@ export default function Layout() {
     { name: 'Gastos del Colmado', description: 'Anotar pagos, luz, agua, suplidores', href: '/expenses', icon: Wallet, roles: [UserRole.ADMIN, UserRole.CAJERO] },
     { name: 'Contabilidad y Ganancias', description: 'Ver cuánto dinero neto estás ganando', href: '/admin', icon: LayoutDashboard, roles: [UserRole.ADMIN], permissionKey: 'view_finances' },
     { name: 'Historial / Auditoría', description: 'Ver quién cambió o borró mercancías', href: '/audit', icon: Shield, roles: [UserRole.ADMIN], permissionKey: 'view_audit' },
+    { name: 'Alertas por correo', description: 'Enterarte de descuadres y cancelaciones sin entrar a revisar', href: '/alerts', icon: Bell, roles: [UserRole.ADMIN], permissionKey: 'view_audit' },
     { name: 'Histórico de Ventas', description: 'Revisar recibos, facturas antiguas y buscar', href: '/sales', icon: History, roles: [UserRole.ADMIN], permissionKey: 'view_history' },
     { name: 'Mis Comisiones', icon: HandCoins, href: '/commissions', description: 'Ganancias por ventas' },
     { name: 'Mis Empleados', description: 'Crear y gestionar accesos de empleados', href: '/employees', icon: Users, roles: [UserRole.ADMIN], permissionKey: 'manage_employees' },

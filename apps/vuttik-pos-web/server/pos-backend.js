@@ -2282,11 +2282,26 @@ async function startServer() {
         res.json((biz.inventory_movements || []).sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()));
     });
     // Activity Log
+    /**
+     * Registro de actividad.
+     *
+     * El dueño y los supervisores ven el negocio entero; un cajero ve solo sus
+     * propias entradas. La interfaz ya lo restringía, pero la API no, así que un
+     * empleado podía consultarla directamente y ver la actividad de sus compañeros
+     * y del dueño.
+     */
     app.get('/api/activity-log', requireBizAccess, (req, res) => {
         const s = req.session;
         const db = getDB();
         const biz = getBiz(db, s.business_id);
-        res.json((biz.activity_log || []).sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()));
+        const registro = (biz.activity_log || [])
+            .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+        if (s.owner_id)
+            return res.json(registro);
+        const emp = (biz.employees || []).find((e) => e.id === s.employee_id);
+        if (emp?.rol === 'supervisor')
+            return res.json(registro);
+        return res.json(registro.filter((r) => r.usuario_id === s.employee_id));
     });
     app.post('/api/activity-log', requireBizAccess, (req, res) => {
         const s = req.session;

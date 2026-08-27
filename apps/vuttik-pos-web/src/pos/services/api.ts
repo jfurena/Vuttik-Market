@@ -1227,6 +1227,26 @@ export const ApiService = {
     });
   },
 
+  // --- Alertas por correo al dueño ---
+
+  async getAlertSettings(): Promise<{ alerts: Record<string, boolean>; alertEmail: string | null; minAmount: number }> {
+    const res = await apiFetch(`${API_BASE}/alerts/settings`);
+    return res.json();
+  },
+
+  async saveAlertSettings(data: { alerts?: Record<string, boolean>; alertEmail?: string | null; minAmount?: number }): Promise<void> {
+    await apiFetch(`${API_BASE}/alerts/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  },
+
+  async sendTestAlert(): Promise<{ message: string }> {
+    const res = await apiFetch(`${API_BASE}/alerts/test`, { method: 'POST' });
+    return res.json();
+  },
+
   async getApprovalRequests() {
     if (isPracticeModeActive()) {
       return [];

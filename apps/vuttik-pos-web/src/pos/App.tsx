@@ -17,6 +17,7 @@ import Layout from './components/Layout';
 import Expenses from './pages/Expenses';
 import SalesHistory from './pages/SalesHistory';
 import ActivityLog from './pages/ActivityLog';
+import Alerts from './pages/Alerts';
 import Quotations from './pages/Quotations';
 import EmployeeManager from './pages/EmployeeManager';
 import ClientsManager from './pages/ClientsManager';
@@ -90,6 +91,7 @@ export default function App() {
             {/* Admin-only routes */}
             <Route path="admin" element={<RequireAdmin permission="view_finances"><Dashboard /></RequireAdmin>} />
             <Route path="audit" element={<RequireAdmin permission="view_audit"><ActivityLog /></RequireAdmin>} />
+            <Route path="alerts" element={<RequireAdmin permission="view_audit"><Alerts /></RequireAdmin>} />
             <Route path="employees" element={<RequireAdmin permission="manage_employees"><EmployeeManager /></RequireAdmin>} />
           </Route>
 
