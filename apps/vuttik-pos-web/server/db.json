@@ -1,0 +1,2634 @@
+{
+  "owners": [
+    {
+      "id": "owner-1786837396984-aa3e7632",
+      "nombre": "Admin Furena",
+      "correo": "jfurena02@gmail.com",
+      "password": "$2b$10$56wMxC9diOzVV414pLRBK.Adm7ZN.oy1VNzLKcstOeaFNPtGf4W32",
+      "rol": "admin",
+      "estado": "activo",
+      "fecha_creacion": "2026-08-15T23:43:16.985Z"
+    }
+  ],
+  "businesses": [
+    {
+      "id": "biz-1786840720968",
+      "codigo": "XTI-001",
+      "nombre": "X Tienda",
+      "owner_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3",
+      "fecha_creacion": "2026-08-16T00:38:40.968Z",
+      "employees": [
+        {
+          "id": "emp-1786843615117",
+          "nombre": "Miguel",
+          "username": "miguel5",
+          "password_hash": "$2a$10$D7GJwYsqfF3TGUySvJrwD.LiuF7mPsbaYX5h4eRrXA/d5sQ4ChC9i",
+          "rol": "cajero",
+          "estado": "activo",
+          "fecha_creacion": "2026-08-16T01:26:55.117Z"
+        }
+      ],
+      "products": [],
+      "sales": [],
+      "shifts": [],
+      "expenses": [],
+      "cash_movements": [],
+      "inventory_movements": [],
+      "activity_log": [
+        {
+          "id": "log-17868436459340.46515623417210616",
+          "fecha": "2026-08-16T01:27:25.934Z",
+          "usuario_id": "emp-1786843615117",
+          "usuario_nombre": "Miguel",
+          "accion": "Inicio de Sesión (Empleado)",
+          "detalles": "El empleado Miguel ingresó al sistema.",
+          "modulo": "Seguridad"
+        }
+      ],
+      "approval_requests": [],
+      "clientes": [],
+      "pagos_clientes": [],
+      "transfers": [],
+      "ncf_counter": 1,
+      "settings": {
+        "allowed_location": {
+          "lat": 18.41667,
+          "lng": -70.1,
+          "radius_meters": 200,
+          "address": "Ubicación sugerida automáticamente (la más concurrida)"
+        },
+        "whitelisted_locations": [],
+        "login_locations": [
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-16T00:53:42.303Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-16T00:53:51.466Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:53:54.595Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:53:57.455Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:54:00.529Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:54:06.856Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:54:08.892Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:54:18.804Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42920661228557,
+            "lng": -69.99292812864755,
+            "timestamp": "2026-08-16T00:54:29.599Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429188944102215,
+            "lng": -69.99294500492198,
+            "timestamp": "2026-08-16T00:55:21.709Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429188944102215,
+            "lng": -69.99294500492198,
+            "timestamp": "2026-08-16T00:55:24.856Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:48.512Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:50.173Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:51.296Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:53.050Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:54.375Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:57.349Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:58.189Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:59.062Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:58:59.868Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:00.763Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:01.681Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:14.263Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:15.846Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:17.337Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:18.592Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:20.269Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918356043532,
+            "lng": -69.99296847022035,
+            "timestamp": "2026-08-16T00:59:21.541Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42919829156916,
+            "lng": -69.99285864659629,
+            "timestamp": "2026-08-16T01:03:02.209Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42919829156916,
+            "lng": -69.99285864659629,
+            "timestamp": "2026-08-16T01:03:02.220Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429182938121567,
+            "lng": -69.99296916671629,
+            "timestamp": "2026-08-16T01:06:11.903Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42917938939609,
+            "lng": -69.99287499069052,
+            "timestamp": "2026-08-16T01:09:35.005Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429185970630243,
+            "lng": -69.99297165535673,
+            "timestamp": "2026-08-16T01:17:49.992Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429185970630243,
+            "lng": -69.99297165535673,
+            "timestamp": "2026-08-16T01:17:50.006Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429185970630243,
+            "lng": -69.99297165535673,
+            "timestamp": "2026-08-16T01:18:41.626Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918501693704,
+            "lng": -69.99297407941643,
+            "timestamp": "2026-08-16T01:19:00.974Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.42918501693704,
+            "lng": -69.99297407941643,
+            "timestamp": "2026-08-16T01:19:00.999Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429186600695335,
+            "lng": -69.99296933433978,
+            "timestamp": "2026-08-16T01:20:17.325Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429198289571193,
+            "lng": -69.99289581673888,
+            "timestamp": "2026-08-16T01:26:39.545Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429198289571193,
+            "lng": -69.99289581673888,
+            "timestamp": "2026-08-16T01:26:39.564Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          },
+          {
+            "lat": 18.429198289571193,
+            "lng": -69.99289581673888,
+            "timestamp": "2026-08-16T01:27:04.518Z",
+            "usuario_id": "6fd53cad-c4f4-49df-bb07-a4bec4ee53e3"
+          }
+        ],
+        "most_frequent_location": {
+          "lat": 18.42920661228557,
+          "lng": -69.99292812864755,
+          "count": 39
+        }
+      },
+      "location": {
+        "address": "Megatelas, Calle Euclides Morillo, Residencial Aurora, Santo Domingo de Guzmán, Distrito Nacional, 03201, República Dominicana",
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "lat": 18.48713884920562,
+        "lng": -69.93569592156126
+      },
+      "description": null,
+      "phone": null,
+      "working_hours": null,
+      "logo": null
+    },
+    {
+      "id": "biz-1787144465602",
+      "codigo": "MAR-001",
+      "nombre": "Mar Cado",
+      "owner_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+      "fecha_creacion": "2026-08-19T13:01:05.602Z",
+      "employees": [
+        {
+          "id": "emp-1787194954467",
+          "nombre": "Miguel",
+          "username": "miguel5",
+          "password_hash": "$2a$10$0f1izSVt1/ZnNK.HFi/pmur4.RuFenDmsVfmes2BebMJ8/xyySd/O",
+          "rol": "cajero",
+          "estado": "activo",
+          "fecha_creacion": "2026-08-20T03:02:34.467Z"
+        }
+      ],
+      "products": [
+        {
+          "nombre": "xaxa",
+          "codigo_barra": "8489434",
+          "categoria": "as",
+          "marca": "",
+          "costo_compra": 10,
+          "precio_venta": 10,
+          "cantidad_disponible": 4,
+          "stock_minimo": 5,
+          "unidad_venta": "Unidad",
+          "estado": "activo",
+          "fuente_pago": "Caja",
+          "motivo_edicion": "asd",
+          "usuario_nombre": "Mega Guardian",
+          "id": "1787144680427",
+          "fecha_creacion": "2026-08-19T13:04:40.427Z",
+          "fecha_actualizacion": "2026-08-22T13:31:35.742Z",
+          "comision_activa": true,
+          "comision_porcentaje": 19.86,
+          "imagen": "/uploads/prod-1787325753336-564992181.png",
+          "oferta_activa": true,
+          "precio_oferta": 4,
+          "oferta_inicio": "2026-08-22",
+          "oferta_fin": "2026-08-31"
+        },
+        {
+          "nombre": "Aguax",
+          "codigo_barra": "12345698",
+          "categoria": "asd",
+          "marca": "",
+          "costo_compra": 12,
+          "precio_venta": 212,
+          "cantidad_disponible": 850.75,
+          "stock_minimo": 5,
+          "unidad_venta": "Unidad",
+          "estado": "activo",
+          "fuente_pago": "Caja",
+          "motivo_edicion": "promocion",
+          "usuario_nombre": "Mega Guardian",
+          "id": "1787152913007",
+          "fecha_creacion": "2026-08-19T15:21:53.007Z",
+          "fecha_actualizacion": "2026-08-19T16:17:36.716Z",
+          "comision_activa": true,
+          "comision_porcentaje": 10
+        }
+      ],
+      "sales": [
+        {
+          "codigo_recibo": "REC-180457-153",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "subtotal": 30,
+          "descuento": 0,
+          "impuesto": 0,
+          "total": 30,
+          "metodo_pago": "Efectivo",
+          "monto_recibido": 100,
+          "cambio": 70,
+          "estado": "completada",
+          "fecha": "2026-08-19T15:09:42.403Z",
+          "turno_id": "shift-1787144647082",
+          "tipo_comprobante": "Consumidor Final",
+          "ncf": "B01000000001",
+          "id": "sale-1787152182403",
+          "costo_total": 30,
+          "metadata": {
+            "lat": 18.42920924783554,
+            "lng": -69.99298665450475,
+            "timestamp": "2026-08-19T15:09:42.390Z"
+          },
+          "items": [
+            {
+              "producto_id": "1787144680427",
+              "nombre": "xaxa",
+              "unidad_venta": "Unidad",
+              "cantidad": 3,
+              "costo_unitario": 10,
+              "precio_unitario": 10,
+              "ganancia_unitaria": 0,
+              "ganancia_total": 0,
+              "total_linea": 30,
+              "itbis_gravado": false
+            }
+          ]
+        },
+        {
+          "id": "sale-test-1787155358842",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "turno_id": "shift-1787144647082",
+          "subtotal": 10,
+          "total": 10,
+          "metodo_pago": "Efectivo",
+          "estado": "completada",
+          "fecha": "2026-08-19T16:02:38.842Z",
+          "codigo_recibo": "REC-TEST-001",
+          "items": [
+            {
+              "producto_id": "1787144680427",
+              "nombre": "xaxa",
+              "cantidad": 1,
+              "precio_unitario": 10,
+              "total_linea": 10
+            }
+          ]
+        },
+        {
+          "codigo_recibo": "REC-256492-502",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "subtotal": 212,
+          "descuento": 0,
+          "impuesto": 0,
+          "total": 212,
+          "metodo_pago": "Efectivo",
+          "monto_recibido": 212,
+          "cambio": 0,
+          "estado": "completada",
+          "fecha": "2026-08-19T16:17:36.717Z",
+          "turno_id": "shift-1787144647082",
+          "tipo_comprobante": "Consumidor Final",
+          "ncf": "B01000000002",
+          "id": "sale-1787156256717",
+          "costo_total": 12,
+          "metadata": {
+            "lat": 18.429191915355876,
+            "lng": -69.99289736131767,
+            "timestamp": "2026-08-19T16:17:36.702Z"
+          },
+          "items": [
+            {
+              "producto_id": "1787152913007",
+              "nombre": "Aguax",
+              "unidad_venta": "Unidad",
+              "cantidad": 1,
+              "costo_unitario": 12,
+              "precio_unitario": 212,
+              "ganancia_unitaria": 200,
+              "ganancia_total": 200,
+              "total_linea": 212,
+              "itbis_gravado": false
+            }
+          ]
+        },
+        {
+          "codigo_recibo": "REC-188283-542",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "subtotal": 20,
+          "descuento": 0,
+          "impuesto": 0,
+          "total": 20,
+          "metodo_pago": "Efectivo",
+          "monto_recibido": 20,
+          "cambio": 0,
+          "estado": "completada",
+          "fecha": "2026-08-22T03:09:48.445Z",
+          "turno_id": "shift-1787365013596",
+          "cliente_id": "cli-1787367283127",
+          "cliente": "MIke",
+          "cliente_rnc": "8099619362",
+          "tipo_comprobante": "Consumidor Final",
+          "ncf": "B01000000003",
+          "id": "sale-1787368188445",
+          "costo_total": 20,
+          "metadata": {
+            "lat": 18.429207863351074,
+            "lng": -69.99299351269958,
+            "timestamp": "2026-08-22T03:09:48.439Z"
+          },
+          "items": [
+            {
+              "producto_id": "1787144680427",
+              "nombre": "xaxa",
+              "unidad_venta": "Unidad",
+              "cantidad": 2,
+              "costo_unitario": 10,
+              "precio_unitario": 10,
+              "ganancia_unitaria": 0,
+              "ganancia_total": 0,
+              "total_linea": 20,
+              "itbis_gravado": false
+            }
+          ]
+        }
+      ],
+      "shifts": [
+        {
+          "id": "shift-1787405446592",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "fecha_apertura": "2026-08-22T13:30:46.592Z",
+          "monto_inicial": 100,
+          "total_ventas": 0,
+          "total_efectivo": 0,
+          "total_tarjeta": 0,
+          "total_transferencia": 0,
+          "total_mixto": 0,
+          "total_reembolsos": 0,
+          "total_cancelaciones": 0,
+          "total_entradas": 0,
+          "total_salidas": 0,
+          "monto_esperado": 100,
+          "diferencia_apertura": -400,
+          "estado": "abierto",
+          "fecha_creacion": "2026-08-22T13:30:46.592Z",
+          "fecha_actualizacion": "2026-08-22T13:30:46.592Z"
+        },
+        {
+          "id": "shift-1787365013596",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "fecha_apertura": "2026-08-22T02:16:53.596Z",
+          "monto_inicial": 450,
+          "total_ventas": 20,
+          "total_efectivo": 20,
+          "total_tarjeta": 0,
+          "total_transferencia": 0,
+          "total_mixto": 0,
+          "total_reembolsos": 0,
+          "total_cancelaciones": 0,
+          "total_entradas": 0,
+          "total_salidas": 0,
+          "monto_esperado": 470,
+          "diferencia_apertura": -50,
+          "estado": "con_diferencia",
+          "fecha_creacion": "2026-08-22T02:16:53.596Z",
+          "fecha_actualizacion": "2026-08-22T13:30:23.745Z",
+          "fecha_cierre": "2026-08-22T13:30:23.745Z",
+          "monto_contado": 50,
+          "desglose_denominaciones": {
+            "b2000": 0,
+            "b1000": 0,
+            "b500": 0,
+            "b200": 0,
+            "b100": 0,
+            "b50": 0,
+            "m25": 2,
+            "m10": 0,
+            "m5": 0,
+            "m1": 0,
+            "otros": 0
+          },
+          "diferencia": -420,
+          "motivo_diferencia": "no sé"
+        },
+        {
+          "id": "shift-1787144647082",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "fecha_apertura": "2026-08-19T13:04:07.082Z",
+          "monto_inicial": 500,
+          "total_ventas": 242,
+          "total_efectivo": 242,
+          "total_tarjeta": 0,
+          "total_transferencia": 0,
+          "total_mixto": 0,
+          "total_reembolsos": 0,
+          "total_cancelaciones": 0,
+          "total_entradas": 0,
+          "total_salidas": 10321,
+          "monto_esperado": -9608.144,
+          "diferencia_apertura": 0,
+          "estado": "con_diferencia",
+          "fecha_creacion": "2026-08-19T13:04:07.082Z",
+          "fecha_actualizacion": "2026-08-19T16:19:58.306Z",
+          "total_gastos": null,
+          "fecha_cierre": "2026-08-19T16:19:58.306Z",
+          "monto_contado": 500,
+          "desglose_denominaciones": {
+            "b2000": 0,
+            "b1000": 0,
+            "b500": 1,
+            "b200": 0,
+            "b100": 0,
+            "b50": 0,
+            "m25": 0,
+            "m10": 0,
+            "m5": 0,
+            "m1": 0,
+            "otros": 0
+          },
+          "diferencia": 10108.144,
+          "motivo_diferencia": "Money prubea"
+        }
+      ],
+      "expenses": [
+        {
+          "id": "exp-compra-1787144680430",
+          "descripcion": "Compra Inicial: xaxa (10 Unidad a RD$10)",
+          "monto": 100,
+          "categoria": "Compras de Mercancía",
+          "fecha": "2026-08-19T13:04:40.430Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fuente_pago": "Caja",
+          "es_compra_mercancia": true,
+          "producto_id": "1787144680427",
+          "pagado_desde_caja": true
+        },
+        {
+          "id": "exp-compra-1787152913008",
+          "descripcion": "Compra Inicial: Aguax (851.75 Unidad a RD$12)",
+          "monto": 10221,
+          "categoria": "Compras de Mercancía",
+          "fecha": "2026-08-19T15:21:53.008Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fuente_pago": "Caja",
+          "es_compra_mercancia": true,
+          "producto_id": "1787152913007",
+          "pagado_desde_caja": true
+        },
+        {
+          "id": "47d792de-2df3-4392-a8bc-f0dac6a692ae",
+          "turno_id": "shift-1787144647082",
+          "concepto": "Retiro de comisiones generadas por ventas",
+          "monto": 29.144000000000002,
+          "categoria": "Comisiones",
+          "fecha": "2026-08-19T16:19:01.558Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian"
+        }
+      ],
+      "cash_movements": [
+        {
+          "id": "mov-caja-1787144680430",
+          "turno_id": "shift-1787144647082",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "tipo": "salida",
+          "monto": 100,
+          "motivo": "Compra Inicial: xaxa",
+          "fecha": "2026-08-19T13:04:40.430Z"
+        },
+        {
+          "id": "mov-caja-1787152913008",
+          "turno_id": "shift-1787144647082",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "tipo": "salida",
+          "monto": 10221,
+          "motivo": "Compra Inicial: Aguax",
+          "fecha": "2026-08-19T15:21:53.008Z"
+        }
+      ],
+      "inventory_movements": [
+        {
+          "id": "mov-17871446804300.12691492207097033",
+          "producto_id": "1787144680427",
+          "tipo_movimiento": "Compra",
+          "cantidad": 10,
+          "costo_unitario": 10,
+          "monto_total": 100,
+          "fuente_pago": "Caja",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fecha": "2026-08-19T13:04:40.430Z",
+          "motivo": "Inventario inicial de nuevo producto",
+          "metadata": null
+        },
+        {
+          "id": "mov-17871521824030.9846821841500286",
+          "producto_id": "1787144680427",
+          "tipo_movimiento": "Venta",
+          "cantidad": -3,
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fecha": "2026-08-19T15:09:42.403Z",
+          "motivo": "Venta REC-180457-153"
+        },
+        {
+          "id": "mov-17871529130080.5018339414886189",
+          "producto_id": "1787152913007",
+          "tipo_movimiento": "Compra",
+          "cantidad": 851.75,
+          "costo_unitario": 12,
+          "monto_total": 10221,
+          "fuente_pago": "Caja",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fecha": "2026-08-19T15:21:53.008Z",
+          "motivo": "Inventario inicial de nuevo producto",
+          "metadata": null
+        },
+        {
+          "id": "mov-17871562567160.8850439962493722",
+          "producto_id": "1787152913007",
+          "tipo_movimiento": "Venta",
+          "cantidad": -1,
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fecha": "2026-08-19T16:17:36.716Z",
+          "motivo": "Venta REC-256492-502"
+        },
+        {
+          "id": "mov-17873681884450.8279821527093079",
+          "producto_id": "1787144680427",
+          "tipo_movimiento": "Venta",
+          "cantidad": -2,
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "fecha": "2026-08-22T03:09:48.445Z",
+          "motivo": "Venta REC-188283-542"
+        }
+      ],
+      "activity_log": [
+        {
+          "id": "log-17873650135960.7947805481375592",
+          "fecha": "2026-08-22T02:16:53.596Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Apertura de Caja",
+          "detalles": "El usuario Mega Guardian abrió la caja con un monto inicial de RD$450. Diferencia con cierre anterior: RD$-50.",
+          "modulo": "Caja"
+        },
+        {
+          "id": "log-17873257600340.5621493650162506",
+          "fecha": "2026-08-21T15:22:40.034Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: hg. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17873239303010.7121794405787196",
+          "fecha": "2026-08-21T14:52:10.301Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: as. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17873227961700.35483336884573513",
+          "fecha": "2026-08-21T14:33:16.170Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: as. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17872844745690.7411559133484001",
+          "fecha": "2026-08-21T03:54:34.569Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: as. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17872836081000.3271579947745934",
+          "fecha": "2026-08-21T03:40:08.100Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: as. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17871563983060.48444887946794435",
+          "fecha": "2026-08-19T16:19:58.306Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Cierre de Caja",
+          "detalles": "El usuario Mega Guardian cerró la caja. Efectivo contado: RD$500. Diferencia: RD$10108.144 (Money prubea).",
+          "modulo": "Caja"
+        },
+        {
+          "id": "log-17871563415590.10739375669358575",
+          "fecha": "2026-08-19T16:19:01.559Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Retiro de Comisiones",
+          "detalles": "Retiro por 29.144000000000002 desde caja.",
+          "modulo": "Caja"
+        },
+        {
+          "id": "log-17871562567170.849755869830788",
+          "fecha": "2026-08-19T16:17:36.717Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Venta Realizada",
+          "detalles": "Venta #REC-256492-502 por 212. Método: Efectivo",
+          "modulo": "Ventas"
+        },
+        {
+          "id": "log-17871534406410.3391048732627564",
+          "fecha": "2026-08-19T15:30:40.641Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: as. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17871529324660.9638031358838414",
+          "fecha": "2026-08-19T15:22:12.466Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: Aguax. Motivo: promocion. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17871529130080.769294724261578",
+          "fecha": "2026-08-19T15:21:53.008Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Creación de Producto",
+          "detalles": "Producto creado: Aguax",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17871522569920.002660446716689968",
+          "fecha": "2026-08-19T15:10:56.992Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: asdad. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17871521824030.5523725707950722",
+          "fecha": "2026-08-19T15:09:42.403Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Venta Realizada",
+          "detalles": "Venta #REC-180457-153 por 30. Método: Efectivo",
+          "modulo": "Ventas"
+        },
+        {
+          "id": "log-17871521365880.523903814449625",
+          "fecha": "2026-08-19T15:08:56.588Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: QUise. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17871446804300.2926576045253316",
+          "fecha": "2026-08-19T13:04:40.430Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Creación de Producto",
+          "detalles": "Producto creado: xaxa",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "act-1787144647082-inv",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Inversión Externa",
+          "detalle": "Se registró Inversión Externa por RD$500 como apertura de la primera caja.",
+          "fecha": "2026-08-19T13:04:07.082Z",
+          "modulo": "Finanzas"
+        },
+        {
+          "id": "log-17871446470820.5262585696212075",
+          "fecha": "2026-08-19T13:04:07.082Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Apertura de Caja",
+          "detalles": "El usuario Mega Guardian abrió la caja con un monto inicial de RD$500.",
+          "modulo": "Caja"
+        },
+        {
+          "id": "log-17873672831280.5756504469503033",
+          "fecha": "2026-08-22T02:54:43.128Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Sistema",
+          "accion": "Creación de Cliente",
+          "detalles": "Cliente de crédito creado: MIke (Límite: RD$0)",
+          "modulo": "Clientes"
+        },
+        {
+          "id": "log-17873681475180.9586821828036304",
+          "fecha": "2026-08-22T03:09:07.518Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Sistema",
+          "accion": "Edición de Cliente",
+          "detalles": "Cliente MIke actualizado.",
+          "modulo": "Clientes"
+        },
+        {
+          "id": "log-17873681884450.42058578747856157",
+          "fecha": "2026-08-22T03:09:48.445Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Venta Realizada",
+          "detalles": "Venta #REC-188283-542 por 20. Método: Efectivo",
+          "modulo": "Ventas"
+        },
+        {
+          "id": "log-17874053967410.9052282732466135",
+          "fecha": "2026-08-22T13:29:56.742Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: oferta. ",
+          "modulo": "Inventario"
+        },
+        {
+          "id": "log-17874054237450.9356537846211412",
+          "fecha": "2026-08-22T13:30:23.745Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Cierre de Caja",
+          "detalles": "El usuario Mega Guardian cerró la caja. Efectivo contado: RD$50. Diferencia: RD$-420 (no sé).",
+          "modulo": "Caja"
+        },
+        {
+          "id": "log-17874054465920.40111976051007825",
+          "fecha": "2026-08-22T13:30:46.592Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Apertura de Caja",
+          "detalles": "El usuario Mega Guardian abrió la caja con un monto inicial de RD$100. Diferencia con cierre anterior: RD$-400.",
+          "modulo": "Caja"
+        },
+        {
+          "id": "log-17874054957420.9703563979160995",
+          "fecha": "2026-08-22T13:31:35.742Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "accion": "Edición de Producto",
+          "detalles": "Producto editado: xaxa. Motivo: asd. ",
+          "modulo": "Inventario"
+        }
+      ],
+      "approval_requests": [],
+      "clientes": [
+        {
+          "id": "cli-1787367283127",
+          "nombre": "MIke",
+          "telefono": "8099619362",
+          "limite_credito": 0,
+          "deuda_actual": 0,
+          "estado": "activo",
+          "fecha_creacion": "2026-08-22T02:54:43.127Z"
+        }
+      ],
+      "pagos_clientes": [],
+      "transfers": [
+        {
+          "id": "trans-1787144647082",
+          "origen": "Inversion Externa",
+          "destino": "Caja",
+          "monto": 500,
+          "fecha": "2026-08-19T13:04:07.082Z",
+          "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "usuario_nombre": "Mega Guardian",
+          "notas": "Capital Inicial de Primera Caja",
+          "fecha_creacion": "2026-08-19T13:04:07.082Z"
+        }
+      ],
+      "ncf_counter": 4,
+      "settings": {
+        "allowed_location": {
+          "lat": 18.429212735956394,
+          "lng": -69.99288178021399,
+          "radius_meters": 200,
+          "address": "Ubicación sugerida automáticamente (la más concurrida)"
+        },
+        "whitelisted_locations": [],
+        "login_locations": [
+          {
+            "lat": 18.429212735956394,
+            "lng": -69.99288178021399,
+            "timestamp": "2026-08-19T13:01:17.995Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212735956394,
+            "lng": -69.99288178021399,
+            "timestamp": "2026-08-19T13:01:18.901Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212735956394,
+            "lng": -69.99288178021399,
+            "timestamp": "2026-08-19T13:01:18.913Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212008713098,
+            "lng": -69.99288642337599,
+            "timestamp": "2026-08-19T13:13:16.454Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429218562387238,
+            "lng": -69.99298240786368,
+            "timestamp": "2026-08-19T13:18:57.540Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429218562387238,
+            "lng": -69.99298240786368,
+            "timestamp": "2026-08-19T13:19:00.617Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429218562387238,
+            "lng": -69.99298240786368,
+            "timestamp": "2026-08-19T13:19:02.609Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429218562387238,
+            "lng": -69.99298240786368,
+            "timestamp": "2026-08-19T13:19:05.776Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429218562387238,
+            "lng": -69.99298240786368,
+            "timestamp": "2026-08-19T13:19:05.785Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429198349351044,
+            "lng": -69.99297556574902,
+            "timestamp": "2026-08-19T13:42:23.358Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:43:27.429Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:43:33.600Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:43:39.015Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:44:18.275Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:44:20.595Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:44:24.006Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921776345828,
+            "lng": -69.99295405251881,
+            "timestamp": "2026-08-19T13:44:24.012Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T13:59:31.180Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T13:59:31.337Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429198505204457,
+            "lng": -69.99297026144826,
+            "timestamp": "2026-08-19T14:05:17.259Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429198847676805,
+            "lng": -69.99297072408517,
+            "timestamp": "2026-08-19T14:06:49.046Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196132818543,
+            "lng": -69.99298026372841,
+            "timestamp": "2026-08-19T14:11:35.519Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196132818543,
+            "lng": -69.99298026372841,
+            "timestamp": "2026-08-19T14:11:38.437Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196132818543,
+            "lng": -69.99298026372841,
+            "timestamp": "2026-08-19T14:11:38.445Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196132818543,
+            "lng": -69.99298026372841,
+            "timestamp": "2026-08-19T14:12:19.325Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922111919159,
+            "lng": -69.99287854488671,
+            "timestamp": "2026-08-19T14:13:35.089Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429218200656447,
+            "lng": -69.99295626980555,
+            "timestamp": "2026-08-19T14:20:58.764Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922695760663,
+            "lng": -69.99286881548224,
+            "timestamp": "2026-08-19T14:33:26.730Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922695760663,
+            "lng": -69.99286881548224,
+            "timestamp": "2026-08-19T14:33:26.736Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T14:34:19.597Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T14:34:19.723Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T14:34:19.910Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429222854097823,
+            "lng": -69.99295697762436,
+            "timestamp": "2026-08-19T14:34:39.344Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429222854097823,
+            "lng": -69.99295697762436,
+            "timestamp": "2026-08-19T14:34:41.602Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429222854097823,
+            "lng": -69.99295697762436,
+            "timestamp": "2026-08-19T14:35:10.814Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429214882063963,
+            "lng": -69.99289837493406,
+            "timestamp": "2026-08-19T14:39:21.944Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429214882063963,
+            "lng": -69.99289837493406,
+            "timestamp": "2026-08-19T14:39:24.423Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429214882063963,
+            "lng": -69.99289837493406,
+            "timestamp": "2026-08-19T14:39:24.433Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922186174149,
+            "lng": -69.99298525434403,
+            "timestamp": "2026-08-19T14:42:15.140Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922186174149,
+            "lng": -69.99298525434403,
+            "timestamp": "2026-08-19T14:42:15.148Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T14:44:51.148Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-19T14:44:51.326Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919375333696,
+            "lng": -69.99293111429621,
+            "timestamp": "2026-08-19T14:45:28.820Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919375333696,
+            "lng": -69.99293111429621,
+            "timestamp": "2026-08-19T14:45:28.831Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429192601486587,
+            "lng": -69.99294140566894,
+            "timestamp": "2026-08-19T14:46:33.274Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429192601486587,
+            "lng": -69.99294140566894,
+            "timestamp": "2026-08-19T14:46:35.303Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429192601486587,
+            "lng": -69.99294140566894,
+            "timestamp": "2026-08-19T14:46:35.318Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921799436213,
+            "lng": -69.99295024260522,
+            "timestamp": "2026-08-19T15:03:02.493Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921799436213,
+            "lng": -69.99295024260522,
+            "timestamp": "2026-08-19T15:03:02.501Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429217615884912,
+            "lng": -69.9928836142285,
+            "timestamp": "2026-08-19T15:06:58.655Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429217615884912,
+            "lng": -69.9928836142285,
+            "timestamp": "2026-08-19T15:06:58.664Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429217615884912,
+            "lng": -69.9928836142285,
+            "timestamp": "2026-08-19T15:07:30.896Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429217615884912,
+            "lng": -69.9928836142285,
+            "timestamp": "2026-08-19T15:07:32.748Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429217615884912,
+            "lng": -69.9928836142285,
+            "timestamp": "2026-08-19T15:07:36.416Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429210040598228,
+            "lng": -69.99290572959147,
+            "timestamp": "2026-08-19T15:08:15.841Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429210040598228,
+            "lng": -69.99290572959147,
+            "timestamp": "2026-08-19T15:08:21.115Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429210040598228,
+            "lng": -69.99290572959147,
+            "timestamp": "2026-08-19T15:08:21.126Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220397108555,
+            "lng": -69.99286541159454,
+            "timestamp": "2026-08-19T15:14:43.832Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429219268465975,
+            "lng": -69.99295497576108,
+            "timestamp": "2026-08-19T15:20:12.145Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429219268465975,
+            "lng": -69.99295497576108,
+            "timestamp": "2026-08-19T15:20:24.804Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429219268465975,
+            "lng": -69.99295497576108,
+            "timestamp": "2026-08-19T15:21:08.993Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429219268465975,
+            "lng": -69.99295497576108,
+            "timestamp": "2026-08-19T15:21:11.516Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429219268465975,
+            "lng": -69.99295497576108,
+            "timestamp": "2026-08-19T15:21:16.001Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429219268465975,
+            "lng": -69.99295497576108,
+            "timestamp": "2026-08-19T15:21:16.010Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922421533655,
+            "lng": -69.99295379262527,
+            "timestamp": "2026-08-19T15:24:35.057Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:28:33.448Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:28:35.683Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:28:44.280Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:28:45.995Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:28:51.273Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:28:57.692Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:29:00.930Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:29:02.657Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:29:09.554Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429175526933854,
+            "lng": -69.99295135126266,
+            "timestamp": "2026-08-19T15:29:12.427Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188404753535,
+            "lng": -69.99298846545291,
+            "timestamp": "2026-08-19T15:30:11.907Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188404753535,
+            "lng": -69.99298846545291,
+            "timestamp": "2026-08-19T15:30:14.148Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188404753535,
+            "lng": -69.99298846545291,
+            "timestamp": "2026-08-19T15:30:16.379Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188404753535,
+            "lng": -69.99298846545291,
+            "timestamp": "2026-08-19T15:30:16.392Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919109300727,
+            "lng": -69.99301635511607,
+            "timestamp": "2026-08-19T15:34:13.875Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919109300727,
+            "lng": -69.99301635511607,
+            "timestamp": "2026-08-19T15:34:13.884Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919109300727,
+            "lng": -69.99301635511607,
+            "timestamp": "2026-08-19T15:34:44.413Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919109300727,
+            "lng": -69.99301635511607,
+            "timestamp": "2026-08-19T15:34:46.804Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919109300727,
+            "lng": -69.99301635511607,
+            "timestamp": "2026-08-19T15:34:46.823Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921786831001,
+            "lng": -69.99286297037693,
+            "timestamp": "2026-08-19T15:52:58.066Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921786831001,
+            "lng": -69.99286297037693,
+            "timestamp": "2026-08-19T15:53:00.087Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921786831001,
+            "lng": -69.99286297037693,
+            "timestamp": "2026-08-19T15:53:04.291Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921786831001,
+            "lng": -69.99286297037693,
+            "timestamp": "2026-08-19T15:53:36.783Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921786831001,
+            "lng": -69.99286297037693,
+            "timestamp": "2026-08-19T15:53:38.642Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921786831001,
+            "lng": -69.99286297037693,
+            "timestamp": "2026-08-19T15:53:38.654Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429160734944496,
+            "lng": -69.99302367515173,
+            "timestamp": "2026-08-19T16:09:59.690Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429160734944496,
+            "lng": -69.99302367515173,
+            "timestamp": "2026-08-19T16:10:03.013Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429160734944496,
+            "lng": -69.99302367515173,
+            "timestamp": "2026-08-19T16:10:03.025Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429221196778077,
+            "lng": -69.992984834466,
+            "timestamp": "2026-08-19T16:15:21.039Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429221196778077,
+            "lng": -69.992984834466,
+            "timestamp": "2026-08-19T16:15:24.091Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429221196778077,
+            "lng": -69.992984834466,
+            "timestamp": "2026-08-19T16:15:26.823Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429221196778077,
+            "lng": -69.992984834466,
+            "timestamp": "2026-08-19T16:15:32.164Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429216202472116,
+            "lng": -69.99295239329616,
+            "timestamp": "2026-08-19T16:17:11.384Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429216202472116,
+            "lng": -69.99295239329616,
+            "timestamp": "2026-08-19T16:17:11.398Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429248233394667,
+            "lng": -69.99293519303207,
+            "timestamp": "2026-08-19T16:27:29.074Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429248233394667,
+            "lng": -69.99293519303207,
+            "timestamp": "2026-08-19T16:28:02.025Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:28:38.998Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:28:41.498Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:28:43.814Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:28:45.517Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:28:50.618Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:28:57.775Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429211249939936,
+            "lng": -69.99297586641431,
+            "timestamp": "2026-08-19T16:29:06.963Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188356369902,
+            "lng": -69.9930156368056,
+            "timestamp": "2026-08-19T16:37:08.881Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188356369902,
+            "lng": -69.9930156368056,
+            "timestamp": "2026-08-19T16:37:11.131Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188356369902,
+            "lng": -69.9930156368056,
+            "timestamp": "2026-08-19T16:37:13.047Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429188356369902,
+            "lng": -69.9930156368056,
+            "timestamp": "2026-08-19T16:37:13.058Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429197037323398,
+            "lng": -69.99296758051013,
+            "timestamp": "2026-08-19T16:45:00.726Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429177278764023,
+            "lng": -69.99300517853764,
+            "timestamp": "2026-08-19T16:57:17.511Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429177278764023,
+            "lng": -69.99300517853764,
+            "timestamp": "2026-08-19T16:57:19.594Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429177278764023,
+            "lng": -69.99300517853764,
+            "timestamp": "2026-08-19T16:57:21.893Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429177278764023,
+            "lng": -69.99300517853764,
+            "timestamp": "2026-08-19T16:57:37.602Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429192458888593,
+            "lng": -69.99301572968935,
+            "timestamp": "2026-08-19T17:00:02.332Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429236522742013,
+            "lng": -69.99294254791447,
+            "timestamp": "2026-08-20T03:01:43.557Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429236522742013,
+            "lng": -69.99294254791447,
+            "timestamp": "2026-08-20T03:01:43.579Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429236522742013,
+            "lng": -69.99294254791447,
+            "timestamp": "2026-08-20T03:01:43.587Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4291963068109,
+            "lng": -69.99297075830388,
+            "timestamp": "2026-08-20T03:07:56.751Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429195165588272,
+            "lng": -69.9929781557075,
+            "timestamp": "2026-08-20T03:09:41.999Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429195165588272,
+            "lng": -69.9929781557075,
+            "timestamp": "2026-08-20T03:09:42.006Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429195165588272,
+            "lng": -69.9929781557075,
+            "timestamp": "2026-08-20T03:09:42.011Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429242795134353,
+            "lng": -69.99288228058441,
+            "timestamp": "2026-08-20T03:12:13.720Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:20:58.167Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:20:58.176Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:20:58.180Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:21:19.206Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:21:19.215Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:21:22.368Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:21:22.375Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:21:29.775Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922315600566,
+            "lng": -69.99285896223293,
+            "timestamp": "2026-08-20T03:21:29.784Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429236732676376,
+            "lng": -69.99285831104405,
+            "timestamp": "2026-08-20T03:25:56.284Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429236732676376,
+            "lng": -69.99285831104405,
+            "timestamp": "2026-08-20T03:25:56.292Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429209364475042,
+            "lng": -69.99297022108665,
+            "timestamp": "2026-08-20T03:40:25.924Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429209364475042,
+            "lng": -69.99297022108665,
+            "timestamp": "2026-08-20T03:40:25.930Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921478367255,
+            "lng": -69.99289512821261,
+            "timestamp": "2026-08-20T03:49:37.625Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921478367255,
+            "lng": -69.99289512821261,
+            "timestamp": "2026-08-20T03:49:37.632Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921478367255,
+            "lng": -69.99289512821261,
+            "timestamp": "2026-08-20T03:49:37.635Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42917625402344,
+            "lng": -69.99292650844147,
+            "timestamp": "2026-08-20T03:59:29.054Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42917625402344,
+            "lng": -69.99292650844147,
+            "timestamp": "2026-08-20T03:59:29.059Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42917625402344,
+            "lng": -69.99292650844147,
+            "timestamp": "2026-08-20T03:59:29.063Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429238795990926,
+            "lng": -69.99287399328317,
+            "timestamp": "2026-08-20T04:04:40.583Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429238795990926,
+            "lng": -69.99287399328317,
+            "timestamp": "2026-08-20T04:04:40.588Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:10:43.984Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:10:43.990Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:10:43.994Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:11:00.295Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:11:00.300Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:11:00.304Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:11:32.104Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:11:32.108Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920695951649,
+            "lng": -69.99291211534688,
+            "timestamp": "2026-08-20T04:11:32.112Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919691263012,
+            "lng": -69.99297453196056,
+            "timestamp": "2026-08-20T04:12:28.131Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919691263012,
+            "lng": -69.99297453196056,
+            "timestamp": "2026-08-20T04:12:28.142Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429243317820713,
+            "lng": -69.99293259313772,
+            "timestamp": "2026-08-20T05:18:31.636Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429243317820713,
+            "lng": -69.99293259313772,
+            "timestamp": "2026-08-20T05:18:31.648Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429243317820713,
+            "lng": -69.99293259313772,
+            "timestamp": "2026-08-20T05:18:31.653Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196752353505,
+            "lng": -69.99296748162119,
+            "timestamp": "2026-08-21T03:36:03.770Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196752353505,
+            "lng": -69.99296748162119,
+            "timestamp": "2026-08-21T03:36:03.784Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220707594844,
+            "lng": -69.9929278621857,
+            "timestamp": "2026-08-21T03:38:46.239Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220707594844,
+            "lng": -69.9929278621857,
+            "timestamp": "2026-08-21T03:38:46.250Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220707594844,
+            "lng": -69.9929278621857,
+            "timestamp": "2026-08-21T03:38:46.257Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220707594844,
+            "lng": -69.9929278621857,
+            "timestamp": "2026-08-21T03:39:43.959Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220707594844,
+            "lng": -69.9929278621857,
+            "timestamp": "2026-08-21T03:39:43.975Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921958626142,
+            "lng": -69.99293135405549,
+            "timestamp": "2026-08-21T03:44:42.552Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921958626142,
+            "lng": -69.99293135405549,
+            "timestamp": "2026-08-21T03:44:42.566Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921958626142,
+            "lng": -69.99293135405549,
+            "timestamp": "2026-08-21T03:44:42.573Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429223010692567,
+            "lng": -69.99291960935055,
+            "timestamp": "2026-08-21T03:50:28.199Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429223010692567,
+            "lng": -69.99291960935055,
+            "timestamp": "2026-08-21T03:50:28.208Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429223010692567,
+            "lng": -69.99291960935055,
+            "timestamp": "2026-08-21T03:51:00.818Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429223010692567,
+            "lng": -69.99291960935055,
+            "timestamp": "2026-08-21T03:51:00.834Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429197704141842,
+            "lng": -69.99297140123142,
+            "timestamp": "2026-08-21T03:52:32.979Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429197704141842,
+            "lng": -69.99297140123142,
+            "timestamp": "2026-08-21T03:52:32.985Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429197704141842,
+            "lng": -69.99297140123142,
+            "timestamp": "2026-08-21T03:52:32.991Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922897367683,
+            "lng": -69.99292680106079,
+            "timestamp": "2026-08-21T03:54:21.905Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922897367683,
+            "lng": -69.99292680106079,
+            "timestamp": "2026-08-21T03:54:21.914Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196828940633,
+            "lng": -69.99299589065086,
+            "timestamp": "2026-08-21T14:33:00.289Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429196828940633,
+            "lng": -69.99299589065086,
+            "timestamp": "2026-08-21T14:33:00.308Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429199564537612,
+            "lng": -69.99301793826697,
+            "timestamp": "2026-08-21T14:35:07.993Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429199564537612,
+            "lng": -69.99301793826697,
+            "timestamp": "2026-08-21T14:35:08.007Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429199564537612,
+            "lng": -69.99301793826697,
+            "timestamp": "2026-08-21T14:35:08.013Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212181999944,
+            "lng": -69.99288683228417,
+            "timestamp": "2026-08-21T14:51:32.608Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212181999944,
+            "lng": -69.99288683228417,
+            "timestamp": "2026-08-21T14:51:32.619Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212181999944,
+            "lng": -69.99288683228417,
+            "timestamp": "2026-08-21T14:51:32.625Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212181999944,
+            "lng": -69.99288683228417,
+            "timestamp": "2026-08-21T14:51:57.561Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429212181999944,
+            "lng": -69.99288683228417,
+            "timestamp": "2026-08-21T14:51:57.573Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429222363472395,
+            "lng": -69.99296235938218,
+            "timestamp": "2026-08-21T15:03:46.040Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429222363472395,
+            "lng": -69.99296235938218,
+            "timestamp": "2026-08-21T15:03:46.054Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920233296912,
+            "lng": -69.99297485861284,
+            "timestamp": "2026-08-21T15:16:21.251Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920233296912,
+            "lng": -69.99297485861284,
+            "timestamp": "2026-08-21T15:16:21.275Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42920233296912,
+            "lng": -69.99297485861284,
+            "timestamp": "2026-08-21T15:16:21.288Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429243124462882,
+            "lng": -69.99284844017305,
+            "timestamp": "2026-08-21T15:22:22.375Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429243124462882,
+            "lng": -69.99284844017305,
+            "timestamp": "2026-08-21T15:22:22.386Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921907189649,
+            "lng": -69.99295324170087,
+            "timestamp": "2026-08-22T02:16:22.222Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921907189649,
+            "lng": -69.99295324170087,
+            "timestamp": "2026-08-22T02:16:22.239Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429233704660703,
+            "lng": -69.99295563711647,
+            "timestamp": "2026-08-22T02:28:27.088Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429233704660703,
+            "lng": -69.99295563711647,
+            "timestamp": "2026-08-22T02:28:27.117Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429233704660703,
+            "lng": -69.99295563711647,
+            "timestamp": "2026-08-22T02:28:27.128Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429233704660703,
+            "lng": -69.99295563711647,
+            "timestamp": "2026-08-22T02:28:30.256Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429233704660703,
+            "lng": -69.99295563711647,
+            "timestamp": "2026-08-22T02:28:30.269Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429233704660703,
+            "lng": -69.99295563711647,
+            "timestamp": "2026-08-22T02:28:30.287Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922695760663,
+            "lng": -69.99286881548224,
+            "timestamp": "2026-08-22T02:30:41.748Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922695760663,
+            "lng": -69.99286881548224,
+            "timestamp": "2026-08-22T02:30:41.766Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42922695760663,
+            "lng": -69.99286881548224,
+            "timestamp": "2026-08-22T02:30:41.778Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:38:24.324Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:38:24.340Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:38:24.348Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:39:13.564Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:39:13.577Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:39:13.582Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:39:17.482Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:39:17.874Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429239713900508,
+            "lng": -69.99293110657244,
+            "timestamp": "2026-08-22T02:39:17.907Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220432039653,
+            "lng": -69.9929529160979,
+            "timestamp": "2026-08-22T02:42:33.712Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220432039653,
+            "lng": -69.9929529160979,
+            "timestamp": "2026-08-22T02:42:33.725Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:09.449Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:09.463Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:09.472Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:17.561Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:17.568Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:17.579Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292262200883,
+            "lng": -69.99284018176732,
+            "timestamp": "2026-08-22T02:47:54.264Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220435841685,
+            "lng": -69.99295458981327,
+            "timestamp": "2026-08-22T02:54:15.695Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220435841685,
+            "lng": -69.99295458981327,
+            "timestamp": "2026-08-22T02:54:15.710Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429220435841685,
+            "lng": -69.99295458981327,
+            "timestamp": "2026-08-22T02:54:15.722Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429224576264115,
+            "lng": -69.992973948941,
+            "timestamp": "2026-08-22T03:04:42.879Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429224576264115,
+            "lng": -69.992973948941,
+            "timestamp": "2026-08-22T03:04:42.886Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429207863351074,
+            "lng": -69.99299351269958,
+            "timestamp": "2026-08-22T03:08:52.635Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429207863351074,
+            "lng": -69.99299351269958,
+            "timestamp": "2026-08-22T03:08:52.646Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429207863351074,
+            "lng": -69.99299351269958,
+            "timestamp": "2026-08-22T03:08:52.659Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292455730395,
+            "lng": -69.99296665320595,
+            "timestamp": "2026-08-22T03:14:09.700Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292455730395,
+            "lng": -69.99296665320595,
+            "timestamp": "2026-08-22T03:14:09.714Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.4292455730395,
+            "lng": -69.99296665320595,
+            "timestamp": "2026-08-22T03:14:09.725Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-22T12:28:08.601Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-22T12:28:08.630Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.41667,
+            "lng": -70.1,
+            "timestamp": "2026-08-22T12:28:08.650Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42923068019165,
+            "lng": -69.993003002561,
+            "timestamp": "2026-08-22T13:29:27.220Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42923068019165,
+            "lng": -69.993003002561,
+            "timestamp": "2026-08-22T13:29:27.239Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42923068019165,
+            "lng": -69.993003002561,
+            "timestamp": "2026-08-22T13:29:27.251Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919720206738,
+            "lng": -69.99300490365238,
+            "timestamp": "2026-08-22T13:32:56.123Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919720206738,
+            "lng": -69.99300490365238,
+            "timestamp": "2026-08-22T13:32:56.142Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42919720206738,
+            "lng": -69.99300490365238,
+            "timestamp": "2026-08-22T13:32:56.151Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:00.412Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:00.430Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:00.440Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:00.451Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:48.301Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:48.308Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.429193419082047,
+            "lng": -69.99301704821411,
+            "timestamp": "2026-08-22T13:39:48.316Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921445580857,
+            "lng": -69.99294758180048,
+            "timestamp": "2026-08-22T13:43:44.872Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          },
+          {
+            "lat": 18.42921445580857,
+            "lng": -69.99294758180048,
+            "timestamp": "2026-08-22T13:43:44.887Z",
+            "usuario_id": "5401db71-7ed3-440a-a133-02a5e324ea51"
+          }
+        ],
+        "most_frequent_location": {
+          "lat": 18.429212735956394,
+          "lng": -69.99288178021399,
+          "count": 245
+        }
+      },
+      "location": {
+        "address": "Calle Licenciado Juan Tomás Mejía y Cotes, La Agustina, Santo Domingo de Guzmán, Distrito Nacional, 03201, República Dominicana",
+        "country": "República Dominicana",
+        "state": "Distrito Nacional",
+        "lat": 18.48795286110708,
+        "lng": -69.93483738040814
+      },
+      "logo": null,
+      "description": null,
+      "social_links": {
+        "instagram": "",
+        "facebook": "",
+        "twitter": "",
+        "website": ""
+      },
+      "phone": null,
+      "working_hours": null,
+      "commissions": [
+        {
+          "id": "70d3f220-e79a-4696-8150-332e6694faa3",
+          "employee_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "employee_nombre": "Mega Guardian",
+          "sale_id": "sale-1787152182403",
+          "product_id": "1787144680427",
+          "product_nombre": "xaxa",
+          "monto": 5.958,
+          "porcentaje": 19.86,
+          "fecha": "2026-08-19T15:09:42.403Z",
+          "estado": "retirada"
+        },
+        {
+          "id": "test-commission-1787155358842",
+          "employee_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "employee_nombre": "Mega Guardian",
+          "sale_id": "sale-test-1787155358842",
+          "product_id": "1787144680427",
+          "product_nombre": "xaxa",
+          "monto": 1.986,
+          "porcentaje": 19.86,
+          "fecha": "2026-08-19T16:02:38.842Z",
+          "estado": "retirada"
+        },
+        {
+          "id": "039e758f-8b09-4752-8a7b-c8fa99e1ec14",
+          "employee_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "employee_nombre": "Mega Guardian",
+          "sale_id": "sale-1787156256717",
+          "product_id": "1787152913007",
+          "product_nombre": "Aguax",
+          "monto": 21.200000000000003,
+          "porcentaje": 10,
+          "fecha": "2026-08-19T16:17:36.717Z",
+          "estado": "retirada"
+        },
+        {
+          "id": "9ad71070-e7f3-4bd7-8702-3ad03c2136ba",
+          "employee_id": "5401db71-7ed3-440a-a133-02a5e324ea51",
+          "employee_nombre": "Mega Guardian",
+          "sale_id": "sale-1787368188445",
+          "product_id": "1787144680427",
+          "product_nombre": "xaxa",
+          "monto": 3.972,
+          "porcentaje": 19.86,
+          "fecha": "2026-08-22T03:09:48.445Z",
+          "estado": "pendiente"
+        }
+      ],
+      "notifications": [
+        {
+          "id": "5b41a9c8-9ab1-4a9d-ac9f-d75c561e044c",
+          "type": "descuadre",
+          "title": "Descuadre en Cierre de Caja",
+          "message": "El cajero Mega Guardian cerró su turno con un descuadre de RD$10108.144. Motivo: Money prubea",
+          "isRead": true,
+          "timestamp": "2026-08-19T16:19:58.306Z",
+          "metadata": {
+            "shiftId": "shift-1787144647082"
+          }
+        },
+        {
+          "id": "9b7add0b-dac3-45b3-bb23-9818ee4929d6",
+          "type": "descuadre",
+          "title": "Descuadre en Cierre de Caja",
+          "message": "El cajero Mega Guardian cerró su turno con un descuadre de RD$-420. Motivo: no sé",
+          "isRead": true,
+          "timestamp": "2026-08-22T13:30:23.745Z",
+          "metadata": {
+            "shiftId": "shift-1787365013596"
+          }
+        }
+      ]
+    }
+  ]
+}

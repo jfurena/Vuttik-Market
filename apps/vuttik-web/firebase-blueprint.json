@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Marketplace categories managed by Mega Guardians",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name of the category"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Lucide icon name"
+        },
+        "allowedTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of allowed transaction type IDs (sell, buy, rent, etc.)"
+        },
+        "order": {
+          "type": "number",
+          "description": "Display order"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the category is visible"
+        }
+      },
+      "required": ["name", "allowedTypes", "order"]
+    },
+    "TransactionType": {
+      "title": "Transaction Type",
+      "description": "Available transaction types (subcategories)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier (e.g., sell, buy)"
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label (e.g., Venta, Compra)"
+        }
+      },
+      "required": ["id", "label"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and roles",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { 
+          "type": "string",
+          "enum": ["user", "admin", "mega_guardian", "guardian", "business"]
+        },
+        "planId": {
+          "type": "string",
+          "description": "ID of the subscription plan"
+        }
+      }
+    },
+    "SubscriptionPlan": {
+      "title": "Subscription Plan",
+      "description": "Subscription tiers and their features",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "features": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "isDefault": { "type": "boolean" }
+      },
+      "required": ["name", "price", "features"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Marketplace listing",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "categoryId": { "type": "string" },
+        "typeId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "barcode": { "type": "string" },
+        "isOnSale": { "type": "boolean" },
+        "salePrice": { "type": "number" },
+        "upVotes": { "type": "array", "items": { "type": "string" } },
+        "downVotes": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "price", "categoryId", "authorId"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Social feed post",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "content": { "type": "string" },
+        "image": { "type": "string" },
+        "likes": { "type": "array", "items": { "type": "string" } },
+        "comments": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "location": { "type": "string" }
+      },
+      "required": ["authorId", "authorName", "content", "createdAt"]
+    },
+    "Promotion": {
+      "title": "Promotion",
+      "description": "Paid promotional campaign for posts or products",
+      "type": "object",
+      "properties": {
+        "businessId": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["post", "product"] },
+        "targetId": { "type": "string" },
+        "audience": { "type": "string", "enum": ["global", "segmented"] },
+        "segment": { 
+          "type": "object",
+          "properties": {
+            "category": { "type": "string" },
+            "location": { "type": "string" }
+          }
+        },
+        "status": { "type": "string", "enum": ["pending", "active", "completed"] },
+        "budget": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessId", "targetType", "targetId", "audience", "budget", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Marketplace categories"
+    },
+    "/transactionTypes/{typeId}": {
+      "schema": "TransactionType",
+      "description": "Available transaction types"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/subscriptionPlans/{planId}": {
+      "schema": "SubscriptionPlan",
+      "description": "Subscription tiers"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Marketplace listings"
+    },
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Social feed posts"
+    },
+    "/promotions/{promotionId}": {
+      "schema": "Promotion",
+      "description": "Paid promotional campaigns"
+    }
+  }
+}

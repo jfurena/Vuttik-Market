@@ -1,0 +1,23 @@
+{
+  "//": "Compiles server/*.ts to the sibling server/*.js that production runs. Previously both were edited by hand, which is how they drifted apart.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "allowJs": false,
+    "checkJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": false,
+    "noEmitOnError": false,
+    "removeComments": false,
+    "sourceMap": false,
+    "outDir": "./server",
+    "rootDir": "./server"
+  },
+  "include": ["server/**/*.ts"],
+  "exclude": ["node_modules", "server/**/*.backup"]
+}

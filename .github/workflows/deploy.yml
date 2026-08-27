@@ -1,0 +1,132 @@
+name: Deploy to VPS
+
+# Production layout this workflow targets:
+#
+#   vuttik.com      root /var/www/vuttik/marketplace/public_html
+#                   /api/ -> 127.0.0.1:3005/api/
+#   pos.vuttik.com  root /var/www/vuttik/pos/public_html
+#                   /api/ -> 127.0.0.1:3006/pos/api/
+#
+# Both pm2 processes run the SAME /var/www/vuttik/backend/server/index.js, which
+# comes from apps/vuttik-web/server and mounts apps/vuttik-pos-web's
+# pos-backend.js at /pos.
+#
+# This workflow previously packaged the backend from apps/vuttik-pos-web/server,
+# which holds an older, unhardened copy of index.js/auth.js. Deploying it
+# silently reverted the marketplace authorization fixes and deleted
+# middleware.js and ads.js.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ─── Marketplace (vuttik.com) ─────────────────────────────────────────
+      - name: Build Marketplace Frontend
+        run: |
+          cd apps/vuttik-web
+          npm install --no-package-lock
+          npx vite build
+
+      - name: Build Shared Backend
+        run: |
+          cd apps/vuttik-web
+          npx tsc -p tsconfig.server.json
+
+      # ─── POS (pos.vuttik.com) ─────────────────────────────────────────────
+      - name: Build POS Frontend
+        run: |
+          cd apps/vuttik-pos-web
+          npm install --no-package-lock
+          npx vite build
+
+      - name: Build POS Backend
+        run: |
+          cd apps/vuttik-pos-web
+          npx tsc -p tsconfig.server.json
+
+      # ─── Sanity check before anything reaches the server ──────────────────
+      - name: Verify hardened backend
+        run: |
+          cd apps/vuttik-web/server
+          for f in index.js auth.js middleware.js ads.js db.js; do
+            test -f "$f" || { echo "FALTA $f"; exit 1; }
+          done
+          # A build that lost the authorization layer must never ship.
+          guards=$(grep -c requireMegaGuardian index.js || true)
+          if [ "$guards" -lt 10 ]; then
+            echo "index.js solo tiene $guards guards de administrador; se esperaban 10 o mas."
+            exit 1
+          fi
+          # The dev fallback secret must never be reachable in production.
+          if grep -q "vuttik-dev-only-secret" *.js; then
+            echo "El secreto por defecto antiguo sigue presente en el build."
+            exit 1
+          fi
+          # And the boot-time refusal to run without real secrets must be intact.
+          if ! grep -q "REQUIRED_PROD_SECRETS" index.js; then
+            echo "index.js perdio la comprobacion de secretos obligatorios."
+            exit 1
+          fi
+          echo "Backend verificado: $guards guards de administrador."
+
+      # ─── Package ──────────────────────────────────────────────────────────
+      - name: Package Artifacts
+        run: |
+          tar -czf /tmp/vuttik_marketplace.tar.gz -C apps/vuttik-web/dist .
+          tar -czf /tmp/vuttik_pos.tar.gz -C apps/vuttik-pos-web/dist .
+
+          # The shared backend comes from vuttik-web; only pos-backend.js is
+          # taken from the POS app, since that is the file index.js mounts.
+          mkdir -p /tmp/backend_pkg/server
+          cp -r apps/vuttik-web/server/. /tmp/backend_pkg/server/
+          cp apps/vuttik-pos-web/server/pos-backend.js /tmp/backend_pkg/server/pos-backend.js
+
+          # Never ship local state or secrets.
+          rm -rf /tmp/backend_pkg/server/node_modules
+          rm -f  /tmp/backend_pkg/server/.env /tmp/backend_pkg/server/.env.local
+          rm -f  /tmp/backend_pkg/server/*.db /tmp/backend_pkg/server/*.db-wal /tmp/backend_pkg/server/*.db-shm
+          rm -f  /tmp/backend_pkg/server/*.backup
+
+          tar -czf /tmp/vuttik_backend.tar.gz -C /tmp/backend_pkg .
+
+      # ─── Ship ─────────────────────────────────────────────────────────────
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload Artifacts to VPS
+        run: |
+          scp -i ~/.ssh/id_ed25519 \
+            /tmp/vuttik_marketplace.tar.gz \
+            /tmp/vuttik_pos.tar.gz \
+            /tmp/vuttik_backend.tar.gz \
+            root@${{ secrets.SSH_HOST }}:/tmp/
+
+      - name: Deploy on VPS
+        run: |
+          ssh -i ~/.ssh/id_ed25519 root@${{ secrets.SSH_HOST }} 'bash /var/www/vuttik/deploy.sh 2>&1'
+
+      - name: Health check
+        run: |
+          for url in https://vuttik.com https://pos.vuttik.com; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url")
+            echo "$url -> $code"
+            [ "$code" = "200" ] || exit 1
+          done

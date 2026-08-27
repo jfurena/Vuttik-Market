@@ -1,0 +1,51 @@
+node_modules/  
+apps/vuttik-pos-web/node_modules/  
+apps/vuttik-web/node_modules/  
+pos-portable/  
+release/  
+apps/vuttik-pos-web/release/  
+
+backups/
+
+# Deployment credentials — never commit
+.env.deploy
+*.pem
+*.ppk
+id_rsa*
+
+# Ad-hoc debugging scripts generated during development. Many embedded server
+# credentials; keep them out of version control.
+check_*.py
+deploy_*.py
+apply_*.py
+add_*.py
+fix_*.py
+!scripts/deploy_web.py
+
+# Local databases
+*.db
+*.db-wal
+*.db-shm
+
+# Claves SSH de despliegue. La privada estuvo publicada en GitHub desde el
+# 27-06-2026 y daba acceso root; quedó revocada del servidor el 26-08-2026.
+vps_deploy_key
+vps_deploy_key*
+*.ppk
+
+# Clave de despliegue nueva (generada 2026-08-26). NUNCA commitear.
+vuttik_deploy_key_new
+vuttik_deploy_key_new.pub
+
+# Material archivado: no forma parte de vuttik.com ni de pos.vuttik.com
+_archivo/
+
+# Builds de Electron (2.5 GB, no forman parte de ningun sitio desplegado)
+release/
+release2/
+win-unpacked/
+*.asar
+
+# Credenciales de proveedores
+Login/
+*client_secret*.json
