@@ -8,7 +8,16 @@ sano. Lo que sigue son las piezas que aún faltan por configurar.
 Es lo primero. Si caduca, todo lo demás da igual. Panel de Hostinger → VPS →
 **Renew**.
 
-## 1. Google OAuth — el login con Google está caído ahora mismo
+## 1. Google OAuth — RESUELTO (26/08/2026)
+
+Secreto rotado y configurado en `.env.local`. Verificado contra Google: responde
+`invalid_grant` ante un código falso, que es la señal de que acepta el
+`client_id` y el secreto. **Queda pendiente borrar el secreto antiguo
+(`****NKyS`) en la consola de Google** una vez confirmes el login en el navegador.
+
+<details><summary>Procedimiento seguido</summary>
+
+## 1-bis. Google OAuth — cómo se hizo
 
 El `client_secret` estaba escrito en el código fuente y ha sido público en
 GitHub durante dos meses. Al moverlo a variables de entorno, el login dejó de
@@ -54,10 +63,26 @@ SMTP_USER=...
 SMTP_PASS=<la NUEVA>
 ```
 
-## 3. Contraseña root del VPS
+</details>
 
-Fue pública dos meses. Cámbiala desde el panel de Hostinger. Ya tienes acceso
-por clave SSH (`vuttik_deploy_key_new`), así que no dependes de ella.
+## 3. Contraseña root del VPS — RESUELTO (27/08/2026)
+
+En lugar de cambiarla, se **desactivó la autenticación por contraseña**: SSH
+ahora solo acepta clave. La contraseña filtrada quedó inservible sin necesidad
+de rotarla, y el puerto 22 dejó de ser atacable por fuerza bruta.
+
+```
+PasswordAuthentication no
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+```
+
+Se neutralizó además un `PasswordAuthentication yes` en
+`/etc/ssh/sshd_config.d/50-cloud-init.conf`, que se lee antes y habría anulado
+el cambio.
+
+Acceso: `ssh -i vuttik_deploy_key_new root@2.24.222.145`. Si perdieras la clave,
+Hostinger ofrece consola por navegador desde el panel.
 
 ## 4. Opcionales
 
