@@ -98,7 +98,7 @@ export default function P2PBoard({
     const loadCategories = async () => {
       try {
         const cats = await api.getCategories();
-        setCategories(cats);
+        setCategories(Array.isArray(cats) ? cats : []);
       } catch (error) {
         console.error('Error loading categories:', error);
       }
@@ -138,9 +138,9 @@ export default function P2PBoard({
       setLoadingProducts(true);
       const prods = await api.getProducts(activeCategory, undefined, undefined, pageNumber, 12, searchQuery.trim() !== '' ? searchQuery : undefined);
       if (pageNumber === 1) {
-        setProducts(prods);
+        setProducts(Array.isArray(prods) ? prods : []);
       } else {
-        setProducts(prev => [...prev, ...prods]);
+        setProducts(prev => [...prev, ...(Array.isArray(prods) ? prods : [])]);
       }
       setHasMore(prods.length === 12);
       setPage(pageNumber);
@@ -331,7 +331,7 @@ export default function P2PBoard({
 
   const allCategories = [
     { id: 'GLOBAL', name: 'GLOBAL' },
-    ...categories
+    ...(Array.isArray(categories) ? categories : [])
   ];
 
   return (

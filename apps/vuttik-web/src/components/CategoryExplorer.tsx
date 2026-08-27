@@ -53,7 +53,10 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
     const loadCategories = async () => {
       try {
         const cats = await api.getCategories();
-        setCategories(cats);
+        // La API puede devolver null si la respuesta viene vacia; sin esta
+        // comprobacion el spread de mas abajo lanza "not iterable" y tumba la
+        // pagina de inicio, que ahora es lo primero que ve un visitante.
+        setCategories(Array.isArray(cats) ? cats : []);
       } catch (error) {
         console.error('Error loading categories:', error);
       }
@@ -65,7 +68,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
     const loadTypes = async () => {
       try {
         const types = await api.getTransactionTypes();
-        setTransactionTypes(types);
+        setTransactionTypes(Array.isArray(types) ? types : []);
       } catch (error) {
         console.error('Error loading transaction types:', error);
       }
@@ -75,7 +78,7 @@ export default function CategoryExplorer({ onSelectCategory }: CategoryExplorerP
 
   const allCategories = [
     { id: 'GLOBAL', name: 'Todo el Mercado', icon: 'Globe', color: 'bg-vuttik-navy', description: 'Explora todas las publicaciones sin filtros', allowedTypes: ['sell', 'buy'], order: 0, active: true },
-    ...categories
+    ...(Array.isArray(categories) ? categories : [])
   ];
 
   const handleCategoryClick = (cat: Category) => {

@@ -119,60 +119,6 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    if (location.pathname === '/reset-password') {
-      return <ResetPassword />;
-    }
-    if (location.pathname === '/verificar') {
-      return <VerifyEmail />;
-    }
-    // El registro pasa a vivir en /entrar. El resto del catálogo es público:
-    // pedir cuenta antes de dejar ver un solo producto hundía la conversión e
-    // impedía que los buscadores indexaran nada.
-    if (location.pathname === '/entrar') {
-      return <Auth onLogin={() => {}} />;
-    }
-
-    const consulta = new URLSearchParams(location.search).get('q') || '';
-
-    return (
-      <PublicShell query={consulta}>
-        <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-vuttik-blue border-t-transparent" /></div>}>
-          <Routes location={location}>
-            <Route path="/" element={
-              (!marketCategory && !consulta)
-                ? <CategoryExplorer onSelectCategory={handleCategorySelect} />
-                : <P2PBoard
-                    initialCategory={marketCategory || 'GLOBAL'}
-                    initialType={marketType}
-                    onViewDetails={(id) => setSelectedProductId(id)}
-                    onBack={() => { setMarketCategory(null); if (consulta) navigate('/'); }}
-                  />
-            } />
-            <Route path="/producto/:id" element={
-              <P2PBoard
-                initialCategory={marketCategory || 'GLOBAL'}
-                initialType={marketType}
-                onViewDetails={(id) => setSelectedProductId(id)}
-                onBack={() => { setMarketCategory(null); if (consulta) navigate('/'); }}
-              />
-            } />
-            <Route path="/perfil/:userId" element={<Profile currentUserId={''} onViewProduct={(id) => setSelectedProductId(id)} />} />
-            <Route path="/@:username" element={<Profile currentUserId={''} onViewProduct={(id) => setSelectedProductId(id)} />} />
-            {/* Cualquier otra ruta exige cuenta: se lleva al registro. */}
-            <Route path="*" element={<Navigate to="/entrar" replace />} />
-          </Routes>
-        </Suspense>
-
-        {selectedProductId && (
-          <ProductDetails
-            productId={selectedProductId}
-            onClose={() => setSelectedProductId(null)}
-          />
-        )}
-      </PublicShell>
-    );
-  }
 
   if (userProfile?.isBanned) {
     return (
@@ -253,7 +199,63 @@ export default function App() {
 
   const activeTab = getActiveTab();
 
+  if (!user) {
+    if (location.pathname === '/reset-password') {
+      return <ResetPassword />;
+    }
+    if (location.pathname === '/verificar') {
+      return <VerifyEmail />;
+    }
+    // El registro pasa a vivir en /entrar. El resto del catálogo es público:
+    // pedir cuenta antes de dejar ver un solo producto hundía la conversión e
+    // impedía que los buscadores indexaran nada.
+    if (location.pathname === '/entrar') {
+      return <Auth onLogin={() => {}} />;
+    }
+
+    const consulta = new URLSearchParams(location.search).get('q') || '';
+
+    return (
+      <PublicShell query={consulta}>
+        <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-vuttik-blue border-t-transparent" /></div>}>
+          <Routes location={location}>
+            <Route path="/" element={
+              (!marketCategory && !consulta)
+                ? <CategoryExplorer onSelectCategory={handleCategorySelect} />
+                : <P2PBoard
+                    initialCategory={marketCategory || 'GLOBAL'}
+                    initialType={marketType}
+                    onViewDetails={(id) => setSelectedProductId(id)}
+                    onBack={() => { setMarketCategory(null); if (consulta) navigate('/'); }}
+                  />
+            } />
+            <Route path="/producto/:id" element={
+              <P2PBoard
+                initialCategory={marketCategory || 'GLOBAL'}
+                initialType={marketType}
+                onViewDetails={(id) => setSelectedProductId(id)}
+                onBack={() => { setMarketCategory(null); if (consulta) navigate('/'); }}
+              />
+            } />
+            <Route path="/perfil/:userId" element={<Profile currentUserId={''} onViewProduct={(id) => setSelectedProductId(id)} />} />
+            <Route path="/@:username" element={<Profile currentUserId={''} onViewProduct={(id) => setSelectedProductId(id)} />} />
+            {/* Cualquier otra ruta exige cuenta: se lleva al registro. */}
+            <Route path="*" element={<Navigate to="/entrar" replace />} />
+          </Routes>
+        </Suspense>
+
+        {selectedProductId && (
+          <ProductDetails
+            productId={selectedProductId}
+            onClose={() => setSelectedProductId(null)}
+          />
+        )}
+      </PublicShell>
+    );
+  }
+
   if (!user.emailVerified && user.role !== 'mega_guardian' && !skipVerify && location.pathname !== '/verificar') {
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-lg text-center flex flex-col items-center gap-4">
